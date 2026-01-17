@@ -11,14 +11,12 @@ from .utils import (
     load_vector_store, get_conversational_chain
 )
 from langchain_community.vectorstores import FAISS
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
-import google.generativeai as genai
 from dotenv import load_dotenv
 from datetime import datetime, date
 from django.utils import timezone
+from .bytez_client import BytezClient
 
 load_dotenv()
-genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
 
 
@@ -77,12 +75,10 @@ def question_answer(request):
         vector_store = load_vector_store("faiss_index")
         if vector_store:
             docs = vector_store.similarity_search(user_question, k=3)
+            # Combine context from similar documents
+            context = "\n\n".join([doc.page_content for doc in docs])
             chain = get_conversational_chain()
-            response = chain(
-                {"input_documents": docs, "question": user_question},
-                return_only_outputs=True
-            )
-            answer = response["output_text"]
+            answer = chain(context, user_question)
         else:
             answer = "Vector database not initialized. Please upload documents first."
         

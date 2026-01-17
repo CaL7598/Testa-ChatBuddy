@@ -8,9 +8,9 @@ from PyPDF2 import PdfReader
 from docx import Document
 from pptx import Presentation
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 from langchain_community.vectorstores import FAISS
 from langchain_core.prompts import PromptTemplate
+from .bytez_client import BytezClient, EmbeddingClient
 
 
 def get_file_text(file):
@@ -71,8 +71,23 @@ def get_text_chunks(text, chunk_size=50000, chunk_overlap=1000):
 
 
 def get_vector_store(text_chunks, index_path="faiss_index"):
-    """Create or update FAISS vector store"""
-    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+    """Create or update FAISS vector store using local embeddings"""
+    embedding_client = EmbeddingClient()
+    
+    # Create LangChain-compatible embeddings wrapper
+    from langchain.embeddings.base import Embeddings
+    
+    class LocalEmbeddings(Embeddings):
+        def __init__(self, embedding_client):
+            self.embedding_client = embedding_client
+        
+        def embed_documents(self, texts):
+            return self.embedding_client.embed_documents(texts)
+        
+        def embed_query(self, text):
+            return self.embedding_client.embed_text(text)
+    
+    embeddings = LocalEmbeddings(embedding_client)
     vector_store = FAISS.from_texts(text_chunks, embedding=embeddings)
     vector_store.save_local(index_path)
     return vector_store
@@ -80,7 +95,21 @@ def get_vector_store(text_chunks, index_path="faiss_index"):
 
 def load_vector_store(index_path="faiss_index"):
     """Load existing FAISS vector store"""
-    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+    embedding_client = EmbeddingClient()
+    
+    from langchain.embeddings.base import Embeddings
+    
+    class LocalEmbeddings(Embeddings):
+        def __init__(self, embedding_client):
+            self.embedding_client = embedding_client
+        
+        def embed_documents(self, texts):
+            return self.embedding_client.embed_documents(texts)
+        
+        def embed_query(self, text):
+            return self.embedding_client.embed_text(text)
+    
+    embeddings = LocalEmbeddings(embedding_client)
     try:
         vector_store = FAISS.load_local(
             index_path, 
@@ -94,40 +123,30 @@ def load_vector_store(index_path="faiss_index"):
 
 
 def get_conversational_chain():
-    """Get conversational chain for question answering"""
-    prompt_template = """
-    You are an educational AI assistant for Computer and Electrical Engineering students.
-    Answer the following question based on the provided context.
-    If the answer is not in the provided context, use your knowledge but indicate uncertainty.
+    """Get conversational chain for question answering using Bytez"""
+    client = BytezClient()
     
-    Context:
-    {context}
+    def answer_with_context(context, question):
+        """Answer question with context using Bytez"""
+        prompt = f"""Context:
+{context}
+
+Question:
+{question}
+
+Provide a clear, educational answer with examples where appropriate.
+Include the course and topic if determinable."""
+        
+        return client.answer_question(question, context=context, temperature=0.3)
     
-    Question:
-    {question}
-    
-    Provide a clear, educational answer with examples where appropriate.
-    Include the course and topic if determinable.
-    """
-    model = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0.3)
-    prompt = PromptTemplate(
-        template=prompt_template, 
-        input_variables=["context", "question"]
-    )
-    from langchain.chains.question_answering import load_qa_chain
-    chain = load_qa_chain(model, chain_type="stuff", prompt=prompt)
-    return chain
+    return answer_with_context
 
 
 class QuizGenerator:
-    """Generate quizzes from documents using AI"""
+    """Generate quizzes from documents using AI via Bytez"""
     
     def __init__(self, api_key=None):
-        self.model = ChatGoogleGenerativeAI(
-            model="gemini-pro", 
-            temperature=0.7,
-            google_api_key=api_key or os.getenv("GOOGLE_API_KEY")
-        )
+        self.client = BytezClient(api_key=api_key)
     
     def generate_quiz(self, document_text, topic, num_questions=5, difficulty="medium"):
         """Generate quiz questions from document text"""
@@ -154,12 +173,13 @@ Return ONLY a JSON object with this structure:
 Ensure questions test understanding, not just memorization.
 """
         try:
-            response = self.model.invoke(prompt)
-            # Extract JSON from response
-            if hasattr(response, 'content'):
-                content = response.content
-            else:
-                content = str(response)
+            response = self.client.generate_text(
+                prompt,
+                system_prompt="You are an educational quiz generator. Always return valid JSON.",
+                temperature=0.7,
+                max_length=2048
+            )
+            content = response
             
             # Try to parse JSON
             json_start = content.find('{')
@@ -174,14 +194,10 @@ Ensure questions test understanding, not just memorization.
 
 
 class FlashcardGenerator:
-    """Generate flashcards from documents using AI"""
+    """Generate flashcards from documents using AI via Bytez"""
     
     def __init__(self, api_key=None):
-        self.model = ChatGoogleGenerativeAI(
-            model="gemini-pro", 
-            temperature=0.7,
-            google_api_key=api_key or os.getenv("GOOGLE_API_KEY")
-        )
+        self.client = BytezClient(api_key=api_key)
     
     def generate_flashcards(self, document_text, topic, num_cards=10):
         """Generate flashcards from document text"""
@@ -202,11 +218,13 @@ Return ONLY a JSON object:
 Focus on key concepts, definitions, and important facts.
 """
         try:
-            response = self.model.invoke(prompt)
-            if hasattr(response, 'content'):
-                content = response.content
-            else:
-                content = str(response)
+            response = self.client.generate_text(
+                prompt,
+                system_prompt="You are an educational flashcard generator. Always return valid JSON.",
+                temperature=0.7,
+                max_length=2048
+            )
+            content = response
             
             json_start = content.find('{')
             json_end = content.rfind('}') + 1
@@ -220,14 +238,10 @@ Focus on key concepts, definitions, and important facts.
 
 
 class SummaryGenerator:
-    """Generate summaries from documents"""
+    """Generate summaries from documents using Bytez"""
     
     def __init__(self, api_key=None):
-        self.model = ChatGoogleGenerativeAI(
-            model="gemini-pro", 
-            temperature=0.3,
-            google_api_key=api_key or os.getenv("GOOGLE_API_KEY")
-        )
+        self.client = BytezClient(api_key=api_key)
     
     def generate_summary(self, document_text, summary_type="concise"):
         """Generate summary based on type: concise, detailed, or bullet_points"""
@@ -244,10 +258,13 @@ class SummaryGenerator:
 {type_instructions.get(summary_type, type_instructions['concise'])}
 """
         try:
-            response = self.model.invoke(prompt)
-            if hasattr(response, 'content'):
-                return response.content
-            return str(response)
+            response = self.client.generate_text(
+                prompt,
+                system_prompt="You are an educational content summarizer.",
+                temperature=0.3,
+                max_length=2048
+            )
+            return response
         except Exception as e:
             print(f"Error generating summary: {e}")
             return None
@@ -270,10 +287,13 @@ The study guide should include:
 Format it in clear sections with headings.
 """
         try:
-            response = self.model.invoke(prompt)
-            if hasattr(response, 'content'):
-                return response.content
-            return str(response)
+            response = self.client.generate_text(
+                prompt,
+                system_prompt="You are an educational study guide creator. Format responses with clear sections and headings.",
+                temperature=0.3,
+                max_length=4096
+            )
+            return response
         except Exception as e:
             print(f"Error generating study guide: {e}")
             return None
