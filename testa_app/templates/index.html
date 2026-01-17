@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="relative min-h-[600px] w-full flex items-center justify-center overflow-hidden">
+    <!-- Background Image with Overlay -->
+    <div class="absolute inset-0 z-0">
+        <img src="{% static 'img/uenr.jpeg' %}" alt="UENR Background" class="w-full h-full object-contain opacity-20">
+        <div class="absolute inset-0 bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10"></div>
+    </div>
+    
+    <!-- Content -->
+    <div class="relative z-10 text-center px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto py-20">
+        <div class="space-y-6 animate-fade-in">
+            <!-- Welcome Text -->
+            <h1 class="font-montserrat font-bold text-5xl sm:text-6xl md:text-7xl lg:text-8xl bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent leading-tight">
+                Welcome to<br>
+                <span class="block mt-2">UENR Testa StudyBuddy</span>
+            </h1>
+            
+            <!-- Subtitle -->
+            <p class="font-poppins text-lg sm:text-xl md:text-2xl text-gray-700 dark:text-gray-300 font-medium max-w-3xl mx-auto leading-relaxed">
+                Anyone who stops learning is old, whether at twenty or eighty. Anyone who keeps learning stays young.
+            </p>
+            
+            <!-- CTA Buttons -->
+            {% if user.is_authenticated %}
+            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mt-8">
+                <a href="{% url 'question_answer' %}" class="font-montserrat font-semibold px-8 py-4 bg-gradient-primary text-white rounded-full shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 text-lg">
+                    Start Learning →
+                </a>
+                <a href="{% url 'analytics_dashboard' %}" class="font-montserrat font-semibold px-8 py-4 bg-white text-primary border-2 border-primary rounded-full shadow-md hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 text-lg">
+                    View Analytics
+                </a>
+            </div>
+            {% else %}
+            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mt-8">
+                <a href="{% url 'register' %}" class="font-montserrat font-semibold px-8 py-4 bg-gradient-primary text-white rounded-full shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 text-lg">
+                    Get Started →
+                </a>
+                <a href="{% url 'login' %}" class="font-montserrat font-semibold px-8 py-4 bg-white text-primary border-2 border-primary rounded-full shadow-md hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 text-lg">
+                    Sign In
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    @keyframes fade-in {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .animate-fade-in {
+        animation: fade-in 1s ease-out;
+    }
+    
+    /* Ensure gradient text works across browsers */
+    .bg-clip-text {
+        -webkit-background-clip: text;
+        background-clip: text;
+    }
+</style>
+
+{% endblock %}

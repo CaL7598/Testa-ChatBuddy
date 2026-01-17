@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Advanced Search - Testa StudyBuddy{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="text-center mb-4" style="color: #667eea; font-weight: 600;">Advanced Search</h1>
+    
+    <!-- Search Bar -->
+    <div class="card mb-4" style="border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <div class="card-body">
+            <form method="GET" id="searchForm">
+                <div class="input-group">
+                    <input type="text" class="form-control form-control-lg" name="q" id="searchQuery" value="{{ query }}" placeholder="Search questions, answers, topics..." autocomplete="off">
+                    <div class="input-group-append">
+                        <button class="btn btn-primary btn-lg" type="submit" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                    </div>
+                </div>
+                <div id="suggestions" class="list-group mt-2" style="display: none; position: absolute; z-index: 1000; width: 100%;"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4" style="border-radius: 15px;">
+        <div class="card-header" style="background: #667eea; color: white; border-radius: 15px 15px 0 0;">
+            <h5 class="mb-0">Filters</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label>Course:</label>
+                    <select name="courses" class="form-control" multiple size="3">
+                        {% for course in available_courses %}
+                        <option value="{{ course }}" {% if course in filters.courses %}selected{% endif %}>{{ course }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label>Topic:</label>
+                    <select name="topics" class="form-control" multiple size="3">
+                        {% for topic in available_topics %}
+                        <option value="{{ topic }}" {% if topic in filters.topics %}selected{% endif %}>{{ topic }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label>Difficulty:</label>
+                    <select name="difficulty" class="form-control" multiple size="3">
+                        <option value="beginner">Beginner</option>
+                        <option value="intermediate">Intermediate</option>
+                        <option value="advanced">Advanced</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label>Sort By:</label>
+                    <select name="sort" class="form-control">
+                        <option value="relevance" {% if sort_by == 'relevance' %}selected{% endif %}>Most Relevant</option>
+                        <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>Newest First</option>
+                        <option value="oldest" {% if sort_by == 'oldest' %}selected{% endif %}>Oldest First</option>
+                        <option value="popular" {% if sort_by == 'popular' %}selected{% endif %}>Most Popular</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <label>
+                        <input type="checkbox" name="my_content_only" value="true" {% if filters.my_content_only %}checked{% endif %}>
+                        My Content Only
+                    </label>
+                    <label class="ml-3">
+                        <input type="checkbox" name="bookmarked_only" value="true" {% if filters.bookmarked_only %}checked{% endif %}>
+                        Bookmarked Only
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Filters -->
+    <div class="mb-3">
+        <a href="?q={{ query }}" class="btn btn-sm btn-outline-primary mr-2">All</a>
+        <a href="?q={{ query }}&date_from=today" class="btn btn-sm btn-outline-primary mr-2">Today</a>
+        <a href="?q={{ query }}&date_from=week" class="btn btn-sm btn-outline-primary mr-2">This Week</a>
+        <a href="?q={{ query }}&date_from=month" class="btn btn-sm btn-outline-primary">This Month</a>
+    </div>
+
+    <!-- Results -->
+    <div class="mb-3">
+        <p class="text-muted">Found {{ total_count }} result{{ total_count|pluralize }}</p>
+    </div>
+
+    {% for result in results %}
+    <div class="card mb-3" style="border-radius: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <div class="card-body">
+            <h5 class="card-title">{{ result.question|truncatewords:20 }}</h5>
+            <p class="card-text">{{ result.answer|truncatewords:30 }}</p>
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    {% if result.course %}
+                    <span class="badge badge-info mr-2">{{ result.course }}</span>
+                    {% endif %}
+                    {% if result.topic %}
+                    <span class="badge badge-secondary mr-2">{{ result.topic }}</span>
+                    {% endif %}
+                    <small class="text-muted">{{ result.created_at|date:"M d, Y" }}</small>
+                </div>
+                <div>
+                    <span class="badge badge-success mr-2">👍 {{ result.upvotes }}</span>
+                    <a href="{% url 'create_bookmark' %}?qa_id={{ result.id }}" class="btn btn-sm btn-outline-primary">⭐ Bookmark</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="alert alert-info text-center">
+        <h4>No results found</h4>
+        <p>Try adjusting your search query or filters.</p>
+    </div>
+    {% endfor %}
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <nav aria-label="Search results pagination">
+        <ul class="pagination justify-content-center">
+            {% if page > 1 %}
+            <li class="page-item"><a class="page-link" href="?q={{ query }}&page={{ page|add:"-1" }}">Previous</a></li>
+            {% endif %}
+            <li class="page-item disabled"><span class="page-link">Page {{ page }} of {{ total_pages }}</span></li>
+            {% if page < total_pages %}
+            <li class="page-item"><a class="page-link" href="?q={{ query }}&page={{ page|add:"1" }}">Next</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<script>
+    // Autocomplete suggestions
+    const searchInput = document.getElementById('searchQuery');
+    const suggestionsDiv = document.getElementById('suggestions');
+
+    searchInput.addEventListener('input', function() {
+        const query = this.value;
+        if (query.length > 2) {
+            fetch(`/search/suggestions/?q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.suggestions.length > 0) {
+                        suggestionsDiv.innerHTML = data.suggestions.map(s => 
+                            `<a href="#" class="list-group-item list-group-item-action" onclick="selectSuggestion('${s}'); return false;">${s}</a>`
+                        ).join('');
+                        suggestionsDiv.style.display = 'block';
+                    } else {
+                        suggestionsDiv.style.display = 'none';
+                    }
+                });
+        } else {
+            suggestionsDiv.style.display = 'none';
+        }
+    });
+
+    function selectSuggestion(text) {
+        searchInput.value = text;
+        suggestionsDiv.style.display = 'none';
+        document.getElementById('searchForm').submit();
+    }
+</script>
+{% endblock %}

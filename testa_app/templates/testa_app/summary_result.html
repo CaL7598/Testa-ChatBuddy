@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Summary Result - Testa StudyBuddy{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="text-center mb-4" style="color: #667eea; font-weight: 600;">Document Summary</h1>
+    
+    <div class="card mb-3" style="border-radius: 15px;">
+        <div class="card-body">
+            <p><strong>Document:</strong> {{ document.title|default:document.file.name }}</p>
+            <p><strong>Summary Type:</strong> {{ summary_type|title }}</p>
+        </div>
+    </div>
+
+    <div class="card" style="border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3>Summary</h3>
+                <div>
+                    <button onclick="copySummary()" class="btn btn-sm btn-outline-primary">📋 Copy</button>
+                    <button onclick="window.print()" class="btn btn-sm btn-outline-secondary ml-2">🖨️ Print</button>
+                </div>
+            </div>
+            <div id="summary-content" style="white-space: pre-wrap; font-size: 16px; line-height: 1.6;">{{ summary }}</div>
+        </div>
+    </div>
+
+    <div class="text-center mt-4 mb-4">
+        <a href="{% url 'generate_summary' %}" class="btn btn-primary" style="border-radius: 25px; padding: 10px 30px;">
+            Generate New Summary
+        </a>
+    </div>
+</div>
+
+<script>
+    function copySummary() {
+        const summaryText = document.getElementById('summary-content').textContent;
+        navigator.clipboard.writeText(summaryText).then(function() {
+            alert('Summary copied to clipboard!');
+        });
+    }
+</script>
+{% endblock %}

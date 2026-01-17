@@ -1,0 +1,264 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Analytics Dashboard - Testa StudyBuddy{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="text-center mb-4" style="color: #667eea; font-weight: 600;">Analytics Dashboard</h1>
+    
+    <!-- Date Range Filters -->
+    <div class="text-center mb-4">
+        <div class="btn-group" role="group">
+            <a href="?range=7" class="btn btn-primary {% if date_range == '7' %}active{% endif %}">7 Days</a>
+            <a href="?range=30" class="btn btn-primary {% if date_range == '30' %}active{% endif %}">30 Days</a>
+            <a href="?range=90" class="btn btn-primary {% if date_range == '90' %}active{% endif %}">90 Days</a>
+        </div>
+    </div>
+
+    <!-- Overview Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card text-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 15px;">
+                <div class="card-body">
+                    <h2 class="mb-0">{{ stats.total_questions }}</h2>
+                    <p class="mb-0">Total Questions</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-center" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; border-radius: 15px;">
+                <div class="card-body">
+                    <h2 class="mb-0">{{ stats.total_quizzes }}</h2>
+                    <p class="mb-0">Quizzes Taken</p>
+                    <small>{{ stats.average_quiz_score }}% Average</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-center" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; border-radius: 15px;">
+                <div class="card-body">
+                    <h2 class="mb-0">{{ stats.total_study_time }}</h2>
+                    <p class="mb-0">Study Minutes</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-center" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white; border-radius: 15px;">
+                <div class="card-body">
+                    <h2 class="mb-0">{{ stats.current_streak }}</h2>
+                    <p class="mb-0">Day Streak</p>
+                    <small>Best: {{ stats.longest_streak }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Stats Row -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card text-center" style="border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <div class="card-body">
+                    <h3 class="mb-0">{{ stats.total_flashcards }}</h3>
+                    <p class="mb-0">Flashcards</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card text-center" style="border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <div class="card-body">
+                    <h3 class="mb-0">{{ stats.satisfaction_score }}%</h3>
+                    <p class="mb-0">Satisfaction Score</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card" style="border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <div class="card-header" style="background: #667eea; color: white; border-radius: 15px 15px 0 0;">
+                    <h4 class="mb-0">Questions Asked Over Time</h4>
+                </div>
+                <div class="card-body">
+                    <canvas id="questionsChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card" style="border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <div class="card-header" style="background: #764ba2; color: white; border-radius: 15px 15px 0 0;">
+                    <h4 class="mb-0">Study Minutes</h4>
+                </div>
+                <div class="card-body">
+                    <canvas id="studyTimeChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card" style="border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <div class="card-header" style="background: #f093fb; color: white; border-radius: 15px 15px 0 0;">
+                    <h4 class="mb-0">Quizzes Completed</h4>
+                </div>
+                <div class="card-body">
+                    <canvas id="quizzesChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Topic Mastery Section -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card" style="border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <div class="card-header" style="background: #43e97b; color: white; border-radius: 15px 15px 0 0;">
+                    <h4 class="mb-0">Top Mastered Topics</h4>
+                </div>
+                <div class="card-body">
+                    {% for topic in topic_mastery.top_mastered %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span><strong>{{ topic.topic }}</strong> - {{ topic.course }}</span>
+                            <span>{{ topic.mastery }}%</span>
+                        </div>
+                        <div class="progress" style="height: 20px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: {{ topic.mastery }}%">
+                                {{ topic.mastery }}%
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p>No mastered topics yet. Keep studying!</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card" style="border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <div class="card-header" style="background: #f5576c; color: white; border-radius: 15px 15px 0 0;">
+                    <h4 class="mb-0">Areas for Improvement</h4>
+                </div>
+                <div class="card-body">
+                    {% for topic in topic_mastery.weak_areas %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span><strong>{{ topic.topic }}</strong> - {{ topic.course }}</span>
+                            <span>{{ topic.mastery }}%</span>
+                        </div>
+                        <div class="progress" style="height: 20px;">
+                            <div class="progress-bar bg-danger" role="progressbar" style="width: {{ topic.mastery }}%">
+                                {{ topic.mastery }}%
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p>Great job! All topics are well mastered.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trending Topics -->
+    {% if trending_topics %}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card" style="border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <div class="card-header" style="background: #667eea; color: white; border-radius: 15px 15px 0 0;">
+                    <h4 class="mb-0">Trending Topics</h4>
+                </div>
+                <div class="card-body">
+                    {% for topic in trending_topics %}
+                    <span class="badge badge-primary mr-2 mb-2" style="font-size: 14px; padding: 8px 12px;">
+                        {{ topic.topic }} ({{ topic.count }})
+                    </span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+    // Questions Chart
+    const questionsCtx = document.getElementById('questionsChart').getContext('2d');
+    new Chart(questionsCtx, {
+        type: 'line',
+        data: {
+            labels: {{ chart_data.questions_over_time.labels|safe }},
+            datasets: [{
+                label: 'Questions Asked',
+                data: {{ chart_data.questions_over_time.data }},
+                borderColor: '#667eea',
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+
+    // Study Time Chart
+    const studyTimeCtx = document.getElementById('studyTimeChart').getContext('2d');
+    new Chart(studyTimeCtx, {
+        type: 'line',
+        data: {
+            labels: {{ chart_data.study_minutes_over_time.labels|safe }},
+            datasets: [{
+                label: 'Study Minutes',
+                data: {{ chart_data.study_minutes_over_time.data }},
+                borderColor: '#764ba2',
+                backgroundColor: 'rgba(118, 75, 162, 0.1)',
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+
+    // Quizzes Chart
+    const quizzesCtx = document.getElementById('quizzesChart').getContext('2d');
+    new Chart(quizzesCtx, {
+        type: 'line',
+        data: {
+            labels: {{ chart_data.quizzes_over_time.labels|safe }},
+            datasets: [{
+                label: 'Quizzes Completed',
+                data: {{ chart_data.quizzes_over_time.data }},
+                borderColor: '#f093fb',
+                backgroundColor: 'rgba(240, 147, 251, 0.1)',
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

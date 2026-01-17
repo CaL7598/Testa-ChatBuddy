@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Bookmarks - Testa StudyBuddy{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 style="color: #667eea; font-weight: 600;">My Bookmarks</h1>
+        <div>
+            <a href="{% url 'create_bookmark_folder' %}" class="btn btn-sm btn-outline-primary mr-2">+ New Folder</a>
+            <a href="{% url 'export_bookmarks' %}" class="btn btn-sm btn-outline-secondary">Export</a>
+        </div>
+    </div>
+
+    <!-- Folders Sidebar -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card" style="border-radius: 15px;">
+                <div class="card-header" style="background: #667eea; color: white; border-radius: 15px 15px 0 0;">
+                    <h5 class="mb-0">Folders</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{% url 'bookmarks' %}" class="list-group-item list-group-item-action {% if not current_folder %}active{% endif %}">
+                        All Bookmarks
+                    </a>
+                    {% for folder in folders %}
+                    <a href="{% url 'bookmarks' %}?folder={{ folder.id }}" class="list-group-item list-group-item-action {% if current_folder == folder.id|stringformat:'s' %}active{% endif %}">
+                        {{ folder.icon }} {{ folder.name }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            <!-- Sort Controls -->
+            <div class="mb-3 d-flex justify-content-between">
+                <div>
+                    <a href="?sort=recent" class="btn btn-sm btn-outline-primary {% if sort_by == 'recent' %}active{% endif %}">Recent</a>
+                    <a href="?sort=title" class="btn btn-sm btn-outline-primary {% if sort_by == 'title' %}active{% endif %}">Title (A-Z)</a>
+                    <a href="?sort=favorites" class="btn btn-sm btn-outline-primary {% if sort_by == 'favorites' %}active{% endif %}">Favorites</a>
+                </div>
+                <div>
+                    <a href="?view=list" class="btn btn-sm btn-outline-secondary {% if view_mode == 'list' %}active{% endif %}">List</a>
+                    <a href="?view=grid" class="btn btn-sm btn-outline-secondary {% if view_mode == 'grid' %}active{% endif %}">Grid</a>
+                </div>
+            </div>
+
+            <!-- Bookmarks List/Grid -->
+            {% if bookmarks %}
+            <div class="{% if view_mode == 'grid' %}row{% endif %}">
+                {% for bookmark in bookmarks %}
+                <div class="{% if view_mode == 'grid' %}col-md-6 mb-3{% endif %}">
+                    <div class="card" style="border-radius: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); {% if bookmark.is_favorite %}border: 2px solid #ffc107;{% endif %}">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="card-title mb-0">
+                                    {% if bookmark.is_favorite %}⭐ {% endif %}
+                                    {{ bookmark.title|default:bookmark.question_answer.question|truncatewords:10 }}
+                                </h5>
+                                <button onclick="toggleFavorite({{ bookmark.id }})" class="btn btn-sm btn-link" style="color: {% if bookmark.is_favorite %}#ffc107{% else %}#ccc{% endif %};">
+                                    ⭐
+                                </button>
+                            </div>
+                            
+                            <p class="card-text"><strong>Q:</strong> {{ bookmark.question_answer.question|truncatewords:15 }}</p>
+                            <p class="card-text text-muted"><strong>A:</strong> {{ bookmark.question_answer.answer|truncatewords:20 }}</p>
+                            
+                            {% if bookmark.notes %}
+                            <p class="card-text"><em>{{ bookmark.notes|truncatewords:10 }}</em></p>
+                            {% endif %}
+                            
+                            {% if bookmark.tags %}
+                            <div class="mb-2">
+                                {% for tag in bookmark.tags %}
+                                <span class="badge badge-secondary mr-1">{{ tag }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            
+                            {% if bookmark.folder %}
+                            <span class="badge badge-info mb-2">{{ bookmark.folder.icon }} {{ bookmark.folder.name }}</span>
+                            {% endif %}
+                            
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <small class="text-muted">{{ bookmark.created_at|date:"M d, Y" }}</small>
+                                <button onclick="deleteBookmark({{ bookmark.id }})" class="btn btn-sm btn-danger">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="alert alert-info text-center">
+                <h4>No bookmarks found!</h4>
+                <p>Start bookmarking questions and answers to save them for later.</p>
+                <a href="{% url 'advanced_search' %}" class="btn btn-primary">Search & Bookmark</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleFavorite(bookmarkId) {
+        fetch(`/bookmarks/${bookmarkId}/favorite/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            }
+        });
+    }
+
+    function deleteBookmark(bookmarkId) {
+        if (confirm('Are you sure you want to delete this bookmark?')) {
+            fetch(`/bookmarks/${bookmarkId}/delete/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                }
+            });
+        }
+    }
+</script>
+{% endblock %}

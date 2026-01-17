@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Upload Document - Testa StudyBuddy{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-3xl mx-auto animate-fade-in">
+        {% if user.is_superuser %}
+        <!-- Header -->
+        <div class="text-center mb-10">
+            <div class="inline-block p-4 bg-gradient-primary rounded-2xl shadow-lg mb-6 transform hover:scale-110 transition-transform duration-300">
+                <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                </svg>
+            </div>
+            <h1 class="font-montserrat font-bold text-4xl sm:text-5xl bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent mb-4">
+                Upload Document
+            </h1>
+            <p class="font-poppins text-gray-600 text-lg">Upload PDF, Word, PowerPoint, or text files to enhance your learning experience</p>
+        </div>
+
+        <!-- Upload Card -->
+        <div class="glass-card rounded-3xl shadow-2xl p-8 sm:p-10 border border-gray-100">
+            <form method="post" enctype="multipart/form-data" class="space-y-6" id="uploadForm">
+                {% csrf_token %}
+                
+                <!-- File Upload -->
+                <div>
+                    <label for="id_file" class="block font-poppins font-semibold text-gray-700 mb-4 text-lg">
+                        Select Document
+                    </label>
+                    <div class="relative">
+                        <div id="dropZone" class="border-4 border-dashed border-primary/30 rounded-2xl p-12 text-center hover:border-primary hover:bg-primary/5 transition-all duration-300 cursor-pointer group">
+                            <input 
+                                type="file" 
+                                id="id_file" 
+                                name="file" 
+                                accept=".pdf,.docx,.pptx,.txt" 
+                                required
+                                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                onchange="handleFileSelect(event)"
+                            >
+                            <div class="space-y-4">
+                                <div class="mx-auto w-20 h-20 bg-gradient-primary rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="font-montserrat font-semibold text-gray-700 text-lg">Click to upload or drag and drop</p>
+                                    <p class="font-poppins text-gray-500 text-sm mt-2">PDF, DOCX, PPTX, or TXT files (Max 10MB)</p>
+                                    <p id="fileName" class="font-poppins text-primary font-medium mt-3 hidden"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Document Metadata -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="id_title" class="block font-poppins font-medium text-gray-700 mb-2">
+                            Document Title (Optional)
+                        </label>
+                        <input 
+                            type="text" 
+                            id="id_title" 
+                            name="title" 
+                            class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary focus:ring-4 focus:ring-primary/20 transition-all duration-300 font-poppins"
+                            placeholder="e.g., Digital Electronics Notes"
+                        >
+                    </div>
+
+                    <div>
+                        <label for="id_course" class="block font-poppins font-medium text-gray-700 mb-2">
+                            Course (Optional)
+                        </label>
+                        <input 
+                            type="text" 
+                            id="id_course" 
+                            name="course" 
+                            class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary focus:ring-4 focus:ring-primary/20 transition-all duration-300 font-poppins"
+                            placeholder="e.g., Digital Electronics"
+                        >
+                    </div>
+                </div>
+
+                <div>
+                    <label for="id_difficulty_level" class="block font-poppins font-medium text-gray-700 mb-2">
+                        Difficulty Level (Optional)
+                    </label>
+                    <select 
+                        id="id_difficulty_level" 
+                        name="difficulty_level"
+                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary focus:ring-4 focus:ring-primary/20 transition-all duration-300 font-poppins bg-white"
+                    >
+                        <option value="">Select difficulty...</option>
+                        <option value="beginner">Beginner</option>
+                        <option value="intermediate">Intermediate</option>
+                        <option value="advanced">Advanced</option>
+                    </select>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="pt-4">
+                    <button 
+                        type="submit" 
+                        class="w-full py-4 px-6 bg-gradient-primary text-white font-montserrat font-bold rounded-xl shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 flex items-center justify-center gap-3 group"
+                    >
+                        <svg class="w-6 h-6 group-hover:rotate-180 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                        </svg>
+                        <span>Upload Document</span>
+                    </button>
+                </div>
+
+                <!-- Progress Bar -->
+                <div id="uploadProgress" class="hidden">
+                    <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                        <div id="progressBar" class="bg-gradient-primary h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                    <p id="progressText" class="font-poppins text-gray-600 text-sm mt-2 text-center">Uploading...</p>
+                </div>
+            </form>
+        </div>
+
+        <!-- Supported Formats Info -->
+        <div class="mt-8 glass-card rounded-2xl p-6 border border-gray-100">
+            <h3 class="font-montserrat font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                Supported File Formats
+            </h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="text-center p-3 bg-gray-50 rounded-lg">
+                    <span class="text-3xl mb-2 block">📄</span>
+                    <p class="font-poppins font-medium text-gray-700">PDF</p>
+                </div>
+                <div class="text-center p-3 bg-gray-50 rounded-lg">
+                    <span class="text-3xl mb-2 block">📝</span>
+                    <p class="font-poppins font-medium text-gray-700">Word</p>
+                </div>
+                <div class="text-center p-3 bg-gray-50 rounded-lg">
+                    <span class="text-3xl mb-2 block">📊</span>
+                    <p class="font-poppins font-medium text-gray-700">PowerPoint</p>
+                </div>
+                <div class="text-center p-3 bg-gray-50 rounded-lg">
+                    <span class="text-3xl mb-2 block">📋</span>
+                    <p class="font-poppins font-medium text-gray-700">Text</p>
+                </div>
+            </div>
+        </div>
+
+        {% else %}
+        <!-- Unauthorized Message -->
+        <div class="glass-card rounded-3xl shadow-2xl p-12 text-center">
+            <div class="mx-auto w-24 h-24 bg-gradient-to-br from-red-400 to-pink-500 rounded-full flex items-center justify-center mb-6">
+                <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+            </div>
+            <h2 class="font-montserrat font-bold text-3xl text-gray-800 mb-4">Access Restricted</h2>
+            <p class="font-poppins text-gray-600 text-lg">Only administrators can upload documents. Please contact your administrator for access.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function handleFileSelect(event) {
+    const file = event.target.files[0];
+    const fileName = document.getElementById('fileName');
+    const dropZone = document.getElementById('dropZone');
+    
+    if (file) {
+        fileName.textContent = `Selected: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+        fileName.classList.remove('hidden');
+        dropZone.classList.add('border-primary', 'bg-primary/10');
+        dropZone.classList.remove('border-primary/30');
+    }
+}
+
+// Drag and drop functionality
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('id_file');
+
+if (dropZone) {
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('border-primary', 'bg-primary/10');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('border-primary', 'bg-primary/10');
+        if (!fileInput.files[0]) {
+            dropZone.classList.add('border-primary/30');
+        }
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        if (e.dataTransfer.files.length > 0) {
+            fileInput.files = e.dataTransfer.files;
+            handleFileSelect({ target: { files: e.dataTransfer.files } });
+        }
+    });
+}
+
+// Upload progress simulation
+document.getElementById('uploadForm')?.addEventListener('submit', function() {
+    const progressDiv = document.getElementById('uploadProgress');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    
+    progressDiv.classList.remove('hidden');
+    let progress = 0;
+    
+    const interval = setInterval(() => {
+        progress += Math.random() * 15;
+        if (progress > 90) progress = 90;
+        progressBar.style.width = progress + '%';
+        progressText.textContent = `Uploading... ${Math.round(progress)}%`;
+        
+        if (progress >= 90) {
+            clearInterval(interval);
+        }
+    }, 200);
+});
+</script>
+{% endblock %}

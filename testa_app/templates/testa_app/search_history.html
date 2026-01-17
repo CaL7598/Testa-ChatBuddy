@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Search History - Testa StudyBuddy{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 style="color: #667eea; font-weight: 600;">Search History</h1>
+        <button onclick="clearHistory()" class="btn btn-sm btn-danger">Clear History</button>
+    </div>
+    
+    {% if history %}
+    <div class="list-group">
+        {% for search in history %}
+        <div class="list-group-item">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="mb-1">{{ search.query }}</h6>
+                    <small class="text-muted">
+                        {{ search.searched_at|date:"M d, Y H:i" }} - 
+                        {{ search.results_count }} result{{ search.results_count|pluralize }}
+                    </small>
+                </div>
+                <a href="{% url 'advanced_search' %}?q={{ search.query }}" class="btn btn-sm btn-outline-primary">🔍 Re-run</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Pagination -->
+    {% if history.has_other_pages %}
+    <nav aria-label="Search history pagination" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if history.has_previous %}
+            <li class="page-item"><a class="page-link" href="?page={{ history.previous_page_number }}">Previous</a></li>
+            {% endif %}
+            <li class="page-item disabled"><span class="page-link">Page {{ history.number }} of {{ history.paginator.num_pages }}</span></li>
+            {% if history.has_next %}
+            <li class="page-item"><a class="page-link" href="?page={{ history.next_page_number }}">Next</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+    {% else %}
+    <div class="alert alert-info text-center">
+        <h4>No search history!</h4>
+        <p>Your search history will appear here.</p>
+        <a href="{% url 'advanced_search' %}" class="btn btn-primary">Start Searching</a>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    function clearHistory() {
+        if (confirm('Are you sure you want to clear all search history?')) {
+            fetch('{% url "clear_search_history" %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                }
+            });
+        }
+    }
+</script>
+{% endblock %}

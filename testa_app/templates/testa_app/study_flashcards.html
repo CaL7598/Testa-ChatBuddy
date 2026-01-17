@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Study Flashcards - Testa StudyBuddy{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="text-center mb-4" style="color: #667eea; font-weight: 600;">Study Flashcards</h1>
+    
+    <!-- Filters -->
+    <div class="card mb-4" style="border-radius: 15px;">
+        <div class="card-body">
+            <form method="GET" class="row">
+                <div class="col-md-4">
+                    <input type="text" class="form-control" name="course" placeholder="Filter by course" value="{{ current_course }}">
+                </div>
+                <div class="col-md-4">
+                    <input type="text" class="form-control" name="topic" placeholder="Filter by topic" value="{{ current_topic }}">
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary w-100">Filter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if flashcards %}
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card mb-4" style="border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); min-height: 300px;">
+                <div class="card-body d-flex flex-column align-items-center justify-content-center" style="min-height: 300px; position: relative;">
+                    <!-- Flashcard Content -->
+                    <div id="flashcard" class="text-center" style="width: 100%; cursor: pointer; perspective: 1000px;">
+                        <div id="card-inner" style="position: relative; width: 100%; height: 250px; transition: transform 0.6s; transform-style: preserve-3d;">
+                            <div id="card-front" class="d-flex align-items-center justify-content-center" style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 15px; padding: 30px;">
+                                <h3 id="front-text" class="mb-0">{{ flashcards.0.front }}</h3>
+                            </div>
+                            <div id="card-back" class="d-flex align-items-center justify-content-center" style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: linear-gradient(135deg, #764ba2 0%, #667eea 100%); color: white; border-radius: 15px; padding: 30px; transform: rotateY(180deg);">
+                                <h4 id="back-text" class="mb-0">{{ flashcards.0.back }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <p class="mt-3 text-muted">Click card to flip</p>
+                </div>
+            </div>
+
+            <!-- Confidence Level Buttons -->
+            <div class="card" style="border-radius: 15px;">
+                <div class="card-body text-center">
+                    <p class="mb-3"><strong>How confident are you with this card?</strong></p>
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-outline-secondary" onclick="updateConfidence(0)">0️⃣ Not Learned</button>
+                        <button type="button" class="btn btn-outline-warning" onclick="updateConfidence(1)">1️⃣ Learning</button>
+                        <button type="button" class="btn btn-outline-info" onclick="updateConfidence(2)">2️⃣ Comfortable</button>
+                        <button type="button" class="btn btn-outline-success" onclick="updateConfidence(3)">3️⃣ Mastered</button>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <button type="button" class="btn btn-primary" onclick="nextCard()">Next Card →</button>
+                    </div>
+                    
+                    <p class="mt-3 text-muted">
+                        Card <span id="currentIndex">1</span> of <span id="totalCards">{{ flashcards|length }}</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center">
+        <h4>No flashcards found!</h4>
+        <p>Generate flashcards from documents to start studying.</p>
+        <a href="{% url 'generate_flashcards' %}" class="btn btn-primary">Generate Flashcards</a>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    let currentCardIndex = 0;
+    let isFlipped = false;
+    const flashcards = {{ flashcards|safe|default:"[]" }};
+    const totalCards = flashcards.length;
+
+    document.getElementById('flashcard').addEventListener('click', function() {
+        const cardInner = document.getElementById('card-inner');
+        isFlipped = !isFlipped;
+        cardInner.style.transform = isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)';
+    });
+
+    function nextCard() {
+        if (currentCardIndex < totalCards - 1) {
+            currentCardIndex++;
+            updateCardDisplay();
+            isFlipped = false;
+            document.getElementById('card-inner').style.transform = 'rotateY(0deg)';
+        }
+    }
+
+    function updateCardDisplay() {
+        if (currentCardIndex < totalCards) {
+            document.getElementById('front-text').textContent = flashcards[currentCardIndex].front;
+            document.getElementById('back-text').textContent = flashcards[currentCardIndex].back;
+            document.getElementById('currentIndex').textContent = currentCardIndex + 1;
+        }
+    }
+
+    function updateConfidence(level) {
+        if (currentCardIndex < totalCards) {
+            const cardId = flashcards[currentCardIndex].id;
+            fetch(`/flashcards/${cardId}/update-confidence/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `confidence=${level}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    nextCard();
+                }
+            });
+        }
+    }
+
+    document.getElementById('totalCards').textContent = totalCards;
+</script>
+{% endblock %}

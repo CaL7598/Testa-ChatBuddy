@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Recommendations - Testa StudyBuddy{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="text-center mb-4" style="color: #667eea; font-weight: 600;">Smart Recommendations</h1>
+    
+    <!-- Daily Focus Card -->
+    {% if daily_focus %}
+    <div class="card mb-4" style="border-radius: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <div class="card-body p-4">
+            <h3 class="mb-3">⭐ Today's Focus</h3>
+            <h4>{{ daily_focus.title }}</h4>
+            <p>{{ daily_focus.description }}</p>
+            {% if daily_focus.related_course %}
+            <p><strong>Course:</strong> {{ daily_focus.related_course }}</p>
+            {% endif %}
+            <button onclick="completeRecommendation({{ daily_focus.id }})" class="btn btn-light mt-2">Mark as Complete</button>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Filter by Type -->
+    <div class="mb-3 text-center">
+        <a href="{% url 'recommendations' %}" class="btn btn-sm btn-outline-primary {% if not filter_type %}active{% endif %}">All</a>
+        <a href="?type=weak_area" class="btn btn-sm btn-outline-primary {% if filter_type == 'weak_area' %}active{% endif %}">Weak Areas</a>
+        <a href="?type=quiz" class="btn btn-sm btn-outline-primary {% if filter_type == 'quiz' %}active{% endif %}">Quizzes</a>
+        <a href="?type=flashcard" class="btn btn-sm btn-outline-primary {% if filter_type == 'flashcard' %}active{% endif %}">Flashcards</a>
+        <a href="?type=document" class="btn btn-sm btn-outline-primary {% if filter_type == 'document' %}active{% endif %}">Documents</a>
+        <a href="?type=topic" class="btn btn-sm btn-outline-primary {% if filter_type == 'topic' %}active{% endif %}">Topics</a>
+    </div>
+
+    <!-- All Recommendations -->
+    {% if recommendations %}
+    <div class="row">
+        {% for rec in recommendations %}
+        <div class="col-md-6 mb-3">
+            <div class="card" style="border-radius: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 4px solid {% if rec.priority >= 90 %}#ef4444{% elif rec.priority >= 70 %}#f59e0b{% else %}#10b981{% endif %};">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="card-title mb-0">
+                            {% if rec.recommendation_type == 'weak_area' %}⚠️
+                            {% elif rec.recommendation_type == 'quiz' %}📝
+                            {% elif rec.recommendation_type == 'flashcard' %}🎴
+                            {% elif rec.recommendation_type == 'document' %}📄
+                            {% else %}📚
+                            {% endif %}
+                            {{ rec.title }}
+                        </h5>
+                        <span class="badge badge-primary">Priority: {{ rec.priority }}</span>
+                    </div>
+                    
+                    <p class="card-text">{{ rec.description }}</p>
+                    
+                    {% if rec.related_course %}
+                    <p class="text-muted"><strong>Course:</strong> {{ rec.related_course }}</p>
+                    {% endif %}
+                    
+                    {% if rec.related_topic %}
+                    <p class="text-muted"><strong>Topic:</strong> {{ rec.related_topic }}</p>
+                    {% endif %}
+                    
+                    <div class="mt-3">
+                        {% if rec.recommendation_type == 'quiz' %}
+                        <a href="{% url 'generate_quiz' %}" class="btn btn-sm btn-primary">Take Quiz</a>
+                        {% elif rec.recommendation_type == 'flashcard' %}
+                        <a href="{% url 'study_flashcards' %}" class="btn btn-sm btn-primary">Study Flashcards</a>
+                        {% elif rec.recommendation_type == 'document' %}
+                        <a href="{% url 'pdf_upload' %}" class="btn btn-sm btn-primary">View Documents</a>
+                        {% else %}
+                        <a href="{% url 'question_answer' %}" class="btn btn-sm btn-primary">Study Now</a>
+                        {% endif %}
+                        
+                        <button onclick="completeRecommendation({{ rec.id }})" class="btn btn-sm btn-outline-success ml-2">
+                            ✓ Complete
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center">
+        <h4>No recommendations yet!</h4>
+        <p>Start asking questions and taking quizzes to get personalized recommendations.</p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    function completeRecommendation(recId) {
+        fetch(`/recommendations/${recId}/complete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            }
+        });
+    }
+</script>
+{% endblock %}

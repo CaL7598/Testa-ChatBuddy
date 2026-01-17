@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Questions and Answers</title>
+</head>
+<body>
+    <div class="container" style="padding: 50px;">
+        <h4 style="font-weight: 600;font-size: 17px;">All Your Questions and Answers</h4>
+        <div id="all-qa-list" style="padding-bottom: 130px !important;">
+            {% for qa in all_qa_list %}
+                <div class="qa-item" data-qa-id="{{ qa.id }}">
+                    <p style="font-size: 15px;"><strong>{{ forloop.counter }}. Question:</strong> {{ qa.question }}</p>
+                    <p style="font-size: 14px;"><strong>Answer:</strong> {{ qa.answer }}</p>
+                    <div class="feedback-buttons">
+                        <button class="thumbs-up" onclick="handleVote('{{ qa.id }}', 'upvote')">
+                            👍 <span id="upvote-count-{{ qa.id }}">{{ qa.upvotes }}</span>
+                        </button>
+                        <button class="thumbs-down" onclick="handleVote('{{ qa.id }}', 'downvote')">
+                            👎 <span id="downvote-count-{{ qa.id }}">{{ qa.downvotes }}</span>
+                        </button>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="back-to-main">
+            <a href="{% url 'question_answer' %}">Back to Question and Answer Page</a>
+        </div>
+    </div>
+</body>
+</html>

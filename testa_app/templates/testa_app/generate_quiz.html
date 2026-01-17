@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Generate Quiz - Testa StudyBuddy{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="text-center mb-4" style="color: #667eea; font-weight: 600;">Generate Quiz from Document</h1>
+    
+    {% if error %}
+    <div class="alert alert-danger" role="alert">
+        {{ error }}
+    </div>
+    {% endif %}
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card" style="border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <div class="card-body p-4">
+                    <form method="POST">
+                        {% csrf_token %}
+                        
+                        <div class="form-group mb-3">
+                            <label for="document" class="font-weight-bold">Select Document:</label>
+                            <select class="form-control" id="document" name="document" required>
+                                <option value="">Choose a document...</option>
+                                {% for doc in documents %}
+                                <option value="{{ doc.id }}">{{ doc.title|default:doc.file.name }} - {{ doc.course|default:"No course" }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="topic" class="font-weight-bold">Topic:</label>
+                            <input type="text" class="form-control" id="topic" name="topic" placeholder="e.g., Digital Electronics, Flip Flops" required>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="difficulty" class="font-weight-bold">Difficulty Level:</label>
+                            <select class="form-control" id="difficulty" name="difficulty">
+                                <option value="easy">Easy</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="hard">Hard</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label for="num_questions" class="font-weight-bold">Number of Questions:</label>
+                            <input type="range" class="form-control-range" id="num_questions" name="num_questions" min="5" max="20" value="5" oninput="updateSliderValue(this.value)">
+                            <div class="d-flex justify-content-between">
+                                <span>5</span>
+                                <span class="font-weight-bold" id="questionCount">5</span>
+                                <span>20</span>
+                            </div>
+                        </div>
+
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary btn-lg" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 25px; padding: 12px 40px;">
+                                <i class="fas fa-magic mr-2"></i>Generate Quiz
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function updateSliderValue(value) {
+        document.getElementById('questionCount').textContent = value;
+    }
+</script>
+{% endblock %}

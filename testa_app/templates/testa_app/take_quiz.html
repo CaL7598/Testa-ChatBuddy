@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Take Quiz - Testa StudyBuddy{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 style="color: #667eea; font-weight: 600;">{{ quiz.title }}</h1>
+        <div class="text-center">
+            <div class="badge badge-primary" style="font-size: 16px; padding: 8px 16px;" id="timer">30:00</div>
+        </div>
+    </div>
+
+    <div class="card mb-3" style="border-radius: 15px;">
+        <div class="card-body">
+            <p><strong>Course:</strong> {{ quiz.course }}</p>
+            <p><strong>Topic:</strong> {{ quiz.topic }}</p>
+            <p><strong>Difficulty:</strong> {{ quiz.difficulty|title }}</p>
+            <p><strong>Time Limit:</strong> {{ quiz.time_limit }} minutes</p>
+        </div>
+    </div>
+
+    <form method="POST" id="quizForm">
+        {% csrf_token %}
+        <div class="card" style="border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <div class="card-body p-4">
+                {% for question in questions %}
+                <div class="mb-4 p-3" style="border: 2px solid #e0e0e0; border-radius: 10px;">
+                    <h5 class="mb-3">Question {{ question.order|add:1 }} ({{ question.points }} point{{ question.points|pluralize }})</h5>
+                    <p class="font-weight-bold mb-3">{{ question.question_text }}</p>
+                    
+                    {% if question.question_type == 'mcq' %}
+                        {% for option in question.options %}
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="question_{{ question.id }}" id="q{{ question.id }}_opt{{ forloop.counter0 }}" value="{{ option }}" required>
+                            <label class="form-check-label" for="q{{ question.id }}_opt{{ forloop.counter0 }}">
+                                {{ option }}
+                            </label>
+                        </div>
+                        {% endfor %}
+                    {% elif question.question_type == 'true_false' %}
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="question_{{ question.id }}" id="q{{ question.id }}_true" value="True" required>
+                            <label class="form-check-label" for="q{{ question.id }}_true">True</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="question_{{ question.id }}" id="q{{ question.id }}_false" value="False" required>
+                            <label class="form-check-label" for="q{{ question.id }}_false">False</label>
+                        </div>
+                    {% else %}
+                        <textarea class="form-control" name="question_{{ question.id }}" rows="3" required placeholder="Type your answer here..."></textarea>
+                    {% endif %}
+                </div>
+                {% endfor %}
+
+                <div class="text-center mt-4">
+                    <button type="submit" class="btn btn-success btn-lg" style="border-radius: 25px; padding: 12px 40px;">
+                        Submit Quiz
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Timer countdown
+    let timeLeft = {{ quiz.time_limit }} * 60; // Convert minutes to seconds
+    const timerElement = document.getElementById('timer');
+    const quizForm = document.getElementById('quizForm');
+
+    function updateTimer() {
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        
+        if (timeLeft <= 0) {
+            alert('Time is up! Submitting quiz...');
+            quizForm.submit();
+        } else {
+            timeLeft--;
+        }
+    }
+
+    // Update timer every second
+    const timerInterval = setInterval(updateTimer, 1000);
+    updateTimer(); // Initial call
+
+    // Prevent form submission after timeout
+    quizForm.addEventListener('submit', function() {
+        clearInterval(timerInterval);
+    });
+</script>
+{% endblock %}

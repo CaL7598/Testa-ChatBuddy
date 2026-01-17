@@ -1,0 +1,313 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Chat - Testa StudyBuddy{% endblock %}
+
+{% block extra_head %}
+<style>
+    @keyframes slideInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+    
+    .animate-slide-in {
+        animation: slideInUp 0.5s ease-out;
+    }
+    
+    .animate-pulse-slow {
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    
+    .glass-effect {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .gradient-border {
+        position: relative;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 2px;
+        border-radius: 16px;
+    }
+    
+    .gradient-border-inner {
+        background: white;
+        border-radius: 14px;
+        padding: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 py-8 px-4 sm:px-6 lg:px-8">
+    <!-- Header Section -->
+    <div class="max-w-7xl mx-auto mb-8 animate-slide-in">
+        <div class="text-center mb-8">
+            <h1 class="font-montserrat font-bold text-4xl sm:text-5xl md:text-6xl bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent mb-4">
+                Ask a Question
+            </h1>
+            <p class="font-poppins text-gray-600 text-lg">Get instant AI-powered answers from your course materials</p>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Left Sidebar - UENR Logo -->
+        <div class="lg:col-span-1 hidden lg:flex items-center justify-center">
+            <div class="glass-effect rounded-3xl p-8 shadow-2xl transform hover:scale-105 transition-transform duration-300">
+                <img src="https://auth.uenr.edu.gh/images/uenr-logo-768x998.png" alt="UENR Logo" class="w-full max-w-xs opacity-90">
+            </div>
+        </div>
+
+        <!-- Center - Question Form -->
+        <div class="lg:col-span-2">
+            <div class="gradient-border shadow-2xl animate-slide-in">
+                <div class="gradient-border-inner">
+                    <form id="question-form" class="space-y-6">
+                        {% csrf_token %}
+                        <div>
+                            <label for="question" class="block font-montserrat font-semibold text-gray-700 mb-3 text-lg">
+                                What would you like to know?
+                            </label>
+                            <textarea 
+                                id="question" 
+                                name="question" 
+                                rows="6"
+                                class="w-full px-6 py-4 border-2 border-gray-200 rounded-2xl focus:border-primary focus:ring-4 focus:ring-primary/20 transition-all duration-300 resize-none font-poppins text-gray-800 placeholder-gray-400"
+                                placeholder="Type your question here... (e.g., Explain digital circuits)"
+                                required
+                            ></textarea>
+                        </div>
+                        <div class="flex justify-end">
+                            <button 
+                                type="submit" 
+                                class="group relative px-8 py-4 bg-gradient-primary text-white font-montserrat font-semibold rounded-full shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 overflow-hidden"
+                            >
+                                <span class="relative z-10 flex items-center gap-2">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                    </svg>
+                                    Ask Question
+                                </span>
+                                <span class="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></span>
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <!-- Loading Indicator -->
+                    <div id="loading-message" class="hidden mt-6 text-center">
+                        <div class="inline-flex items-center gap-3 px-6 py-3 bg-primary/10 rounded-full">
+                            <div class="w-5 h-5 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                            <span class="font-poppins text-primary font-medium">AI is thinking...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Response Section -->
+            <div id="response-container" class="hidden mt-8 animate-slide-in">
+                <div class="bg-white rounded-3xl shadow-xl p-8 border-l-4 border-primary">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 bg-gradient-primary rounded-full flex items-center justify-center">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="font-montserrat font-bold text-2xl text-gray-800">AI Response</h3>
+                    </div>
+                    <div id="response" class="font-poppins text-gray-700 leading-relaxed text-lg prose prose-lg max-w-none"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Q&A History Section -->
+    <div class="max-w-7xl mx-auto mt-12">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="font-montserrat font-bold text-3xl text-gray-800">Recent Conversations</h2>
+            <a href="{% url 'all_questions' %}" class="font-poppins text-primary hover:text-secondary font-medium flex items-center gap-2 transition-colors">
+                View All
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+            </a>
+        </div>
+        
+        <div id="qa-list" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {% for qa in qa_list %}
+            <div class="group bg-white rounded-2xl shadow-lg hover:shadow-2xl p-6 border border-gray-100 hover:border-primary/30 transition-all duration-300 transform hover:-translate-y-2 animate-slide-in" data-qa-id="{{ qa.id }}">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex-1">
+                        <p class="font-montserrat font-semibold text-gray-800 mb-2 line-clamp-2">{{ qa.question|truncatewords:15 }}</p>
+                        <p class="font-poppins text-gray-600 text-sm line-clamp-3">{{ qa.answer|truncatewords:20 }}</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                    <div class="flex items-center gap-4">
+                        <button 
+                            onclick="handleVote('{{ qa.id }}', 'upvote')" 
+                            class="flex items-center gap-2 px-4 py-2 rounded-full hover:bg-green-50 transition-colors group/vote"
+                        >
+                            <span class="text-xl group-hover/vote:scale-125 transition-transform">👍</span>
+                            <span id="upvote-count-{{ qa.id }}" class="font-poppins font-medium text-gray-700">{{ qa.upvotes }}</span>
+                        </button>
+                        <button 
+                            onclick="handleVote('{{ qa.id }}', 'downvote')" 
+                            class="flex items-center gap-2 px-4 py-2 rounded-full hover:bg-red-50 transition-colors group/vote"
+                        >
+                            <span class="text-xl group-hover/vote:scale-125 transition-transform">👎</span>
+                            <span id="downvote-count-{{ qa.id }}" class="font-poppins font-medium text-gray-700">{{ qa.downvotes }}</span>
+                        </button>
+                    </div>
+                    <span class="font-poppins text-xs text-gray-500">{{ qa.created_at|date:"M d" }}</span>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-span-full text-center py-12">
+                <div class="inline-block p-6 bg-gray-100 rounded-full mb-4">
+                    <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+                    </svg>
+                </div>
+                <p class="font-poppins text-gray-600 text-lg">No questions yet. Start asking to see your history here!</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Show welcome toast instead of alert
+    const showToast = (message) => {
+        const toast = document.createElement('div');
+        toast.className = 'fixed top-4 right-4 bg-white rounded-xl shadow-2xl p-4 border-l-4 border-primary z-50 animate-slide-in max-w-sm';
+        toast.innerHTML = `
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-gradient-primary rounded-full flex items-center justify-center">
+                    <span class="text-white font-bold">👋</span>
+                </div>
+                <p class="font-poppins text-gray-800">${message}</p>
+            </div>
+        `;
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(100px)';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    };
+    
+    showToast('Welcome, {{ username }}! Ready to learn?');
+
+    // Question form submission
+    $('#question-form').on('submit', function(event) {
+        event.preventDefault();
+        const question = $('#question').val();
+        const loadingDiv = $('#loading-message');
+        const responseContainer = $('#response-container');
+        
+        // Show loading
+        loadingDiv.removeClass('hidden').addClass('flex');
+        responseContainer.addClass('hidden');
+        
+        // Get CSRF token from cookie or form
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        const csrftoken = getCookie('csrftoken') || document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        $.ajax({
+            type: 'POST',
+            url: '',
+            headers: {
+                'X-CSRFToken': csrftoken
+            },
+            data: {
+                'question': question
+            },
+            success: function(data) {
+                loadingDiv.addClass('hidden');
+                $('#response').html('<div class="prose prose-lg max-w-none">' + data.response.replace(/\n/g, '<br>') + '</div>');
+                responseContainer.removeClass('hidden').addClass('animate-slide-in');
+                $('#question').val('');
+                
+                // Scroll to response
+                $('html, body').animate({
+                    scrollTop: responseContainer.offset().top - 100
+                }, 500);
+            },
+            error: function(xhr, errmsg, err) {
+                loadingDiv.addClass('hidden');
+                $('#response').html('<div class="text-red-600">Sorry, an error occurred. Please try again.</div>');
+                responseContainer.removeClass('hidden');
+            }
+        });
+    });
+});
+
+function handleVote(qaId, action) {
+    // Get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken') || document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    fetch('/vote/', {
+        method: 'PATCH',
+        headers: {
+            'X-CSRFToken': csrftoken,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ qa_id: qaId, action: action })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            showToast(data.error);
+        } else {
+            document.getElementById(`upvote-count-${qaId}`).textContent = data.upvotes;
+            document.getElementById(`downvote-count-${qaId}`).textContent = data.downvotes;
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+</script>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+{% endblock %}

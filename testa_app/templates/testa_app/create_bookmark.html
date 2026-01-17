@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Create Bookmark - Testa StudyBuddy{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="text-center mb-4" style="color: #667eea; font-weight: 600;">Create Bookmark</h1>
+    
+    {% if question_answer %}
+    <div class="card mb-3" style="border-radius: 15px;">
+        <div class="card-body">
+            <h5>Question:</h5>
+            <p>{{ question_answer.question }}</p>
+            <h5>Answer:</h5>
+            <p>{{ question_answer.answer|truncatewords:50 }}</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card" style="border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <div class="card-body p-4">
+                    <form method="POST">
+                        {% csrf_token %}
+                        {% if question_answer %}
+                        <input type="hidden" name="qa_id" value="{{ question_answer.id }}">
+                        {% endif %}
+                        
+                        <div class="form-group mb-3">
+                            <label for="title" class="font-weight-bold">Title:</label>
+                            <input type="text" class="form-control" id="title" name="title" 
+                                   value="{{ question_answer.question|truncatewords:10|default:'' }}" 
+                                   placeholder="Bookmark title (optional)">
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="notes" class="font-weight-bold">Personal Notes:</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="4" placeholder="Add your personal notes..."></textarea>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="folder" class="font-weight-bold">Folder:</label>
+                            <select class="form-control" id="folder" name="folder">
+                                <option value="">No folder</option>
+                                {% for folder in folders %}
+                                <option value="{{ folder.id }}">{{ folder.icon }} {{ folder.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label for="tags" class="font-weight-bold">Tags (comma-separated):</label>
+                            <input type="text" class="form-control" id="tags" name="tags" placeholder="e.g., important, exam, review">
+                        </div>
+
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary btn-lg" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 25px; padding: 12px 40px;">
+                                💾 Save Bookmark
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

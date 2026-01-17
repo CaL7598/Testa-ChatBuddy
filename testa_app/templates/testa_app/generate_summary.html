@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Generate Summary - Testa StudyBuddy{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="text-center mb-4" style="color: #667eea; font-weight: 600;">Generate Summary from Document</h1>
+    
+    {% if error %}
+    <div class="alert alert-danger" role="alert">{{ error }}</div>
+    {% endif %}
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card" style="border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <div class="card-body p-4">
+                    <form method="POST">
+                        {% csrf_token %}
+                        
+                        <div class="form-group mb-3">
+                            <label for="document" class="font-weight-bold">Select Document:</label>
+                            <select class="form-control" id="document" name="document" required>
+                                <option value="">Choose a document...</option>
+                                {% for doc in documents %}
+                                <option value="{{ doc.id }}">{{ doc.title|default:doc.file.name }} - {{ doc.course|default:"No course" }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label for="summary_type" class="font-weight-bold">Summary Type:</label>
+                            <select class="form-control" id="summary_type" name="summary_type">
+                                <option value="concise">Concise (2-3 paragraphs)</option>
+                                <option value="detailed">Detailed (Comprehensive)</option>
+                                <option value="bullet_points">Bullet Points (Key concepts)</option>
+                            </select>
+                        </div>
+
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary btn-lg" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 25px; padding: 12px 40px;">
+                                <i class="fas fa-file-alt mr-2"></i>Generate Summary
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
