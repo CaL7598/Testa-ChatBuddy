@@ -205,3 +205,66 @@ html {
     outline: 2px solid #667eea;
     outline-offset: 2px;
 }
+
+/* Responsive Utilities */
+@media (max-width: 640px) {
+    /* Mobile-specific adjustments */
+    .stat-card {
+        min-height: 140px !important;
+    }
+    
+    /* Ensure touch targets are at least 44x44px */
+    button, a, input, select, textarea {
+        min-height: 44px;
+        min-width: 44px;
+    }
+    
+    /* Better text wrapping on mobile */
+    h1, h2, h3, h4, h5, h6 {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+}
+
+/* Touch-friendly interactions */
+@media (hover: none) and (pointer: coarse) {
+    /* Mobile/touch devices */
+    .hover\:scale-105:hover {
+        transform: none;
+    }
+    
+    button, a {
+        -webkit-tap-highlight-color: rgba(102, 126, 234, 0.2);
+        tap-highlight-color: rgba(102, 126, 234, 0.2);
+    }
+}
+
+/* Prevent text size adjustment on iOS */
+@media screen and (max-width: 767px) {
+    html {
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+    }
+}
+
+/* Better spacing on small screens */
+@media (max-width: 480px) {
+    .container {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+}
+
+/* Landscape mobile optimization */
+@media (max-height: 500px) and (orientation: landscape) {
+    .min-h-screen {
+        min-height: auto;
+    }
+}
+
+/* Print styles */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+}
