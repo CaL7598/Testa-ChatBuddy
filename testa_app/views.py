@@ -94,14 +94,31 @@ def question_answer(request):
                     from .bytez_client import BytezClient
                     client = BytezClient()
                     answer = client.answer_question(user_question)
+                except ValueError as e2:
+                    # API key missing
+                    print(f"API Key Error: {e2}")
+                    answer = "API configuration error. Please contact support."
                 except Exception as e2:
                     print(f"Error with Bytez API: {e2}")
                     import traceback
                     traceback.print_exc()
-                    # Final fallback: web scrape
-                    answer = web_scrape_search(user_question)
-                    if not answer or "Sorry" in answer:
-                        answer = f"Sorry, I couldn't process your question. The AI service may be temporarily unavailable. Please try again later."
+                    # Try web scrape as fallback
+                    try:
+                        answer = web_scrape_search(user_question)
+                        if not answer or "Sorry" in answer:
+                            # Provide helpful error message
+                            error_msg = str(e2)
+                            if "timeout" in error_msg.lower():
+                                answer = "The AI service is taking too long to respond. This might be due to high traffic. Please try again in a moment."
+                            elif "connection" in error_msg.lower():
+                                answer = "Unable to connect to the AI service. Please check your internet connection and try again."
+                            elif "401" in error_msg or "403" in error_msg:
+                                answer = "Authentication error with the AI service. Please contact support."
+                            else:
+                                answer = f"I'm having trouble connecting to the AI service right now. Error: {error_msg[:100]}. Please try again later or contact support if the issue persists."
+                    except Exception as e3:
+                        print(f"Web scrape also failed: {e3}")
+                        answer = "I'm unable to process your question right now. The AI service and fallback options are unavailable. Please try again later."
             
             if answer == "The answer is not available in the context.":
                 answer = web_scrape_search(user_question)

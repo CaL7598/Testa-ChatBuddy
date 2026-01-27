@@ -138,13 +138,28 @@ document.addEventListener("DOMContentLoaded", function() {
         
         let formatted = response;
         
-        // Pattern 1: Thoughts in square brackets [thought]
+        // Pattern 1: Remove and extract <think> tags (AI's internal thoughts)
+        const reasoningMatches = [];
+        formatted = formatted.replace(/<think>(.*?)<\/redacted_reasoning>/gis, function(match, content) {
+            reasoningMatches.push(content.trim());
+            return ''; // Remove from main content
+        });
+        
+        // Add extracted reasoning as thoughts at the beginning
+        let result = '';
+        if (reasoningMatches.length > 0) {
+            reasoningMatches.forEach(reasoning => {
+                result += '<span class="ai-thought">' + reasoning.replace(/\n/g, ' ') + '</span>';
+            });
+        }
+        
+        // Pattern 2: Thoughts in square brackets [thought]
         formatted = formatted.replace(/\[([^\]]+)\]/g, '<span class="ai-thought">$1</span>');
         
-        // Pattern 2: Thoughts in parentheses with thinking keywords
+        // Pattern 3: Thoughts in parentheses with thinking keywords
         formatted = formatted.replace(/\(([^)]*(?:thinking|considering|analyzing|reasoning|wondering|noting|observing)[^)]*)\)/gi, '<span class="ai-thought">$1</span>');
         
-        // Pattern 3: Thoughts prefixed with keywords
+        // Pattern 4: Thoughts prefixed with keywords
         const thoughtPatterns = [
             /(?:^|\n)(Thinking:|Consider:|Note:|Observing:|Analyzing:|Reasoning:)\s*([^\n]+)/gi,
             /(?:^|\n)(Let me think|Let me consider|I should|I need to|I'm thinking|I'm considering)\s*([^\n\.]+)/gi
@@ -158,7 +173,6 @@ document.addEventListener("DOMContentLoaded", function() {
         
         // Wrap the main answer content
         const parts = formatted.split(/(<span class="ai-thought">.*?<\/span>)/g);
-        let result = '';
         
         parts.forEach((part, index) => {
             if (part.startsWith('<span class="ai-thought">')) {
@@ -169,7 +183,7 @@ document.addEventListener("DOMContentLoaded", function() {
         });
         
         // If no thoughts were found, treat entire response as answer
-        if (!result.includes('ai-thought')) {
+        if (!result.includes('ai-thought') && !result.includes('ai-answer')) {
             result = '<div class="ai-answer">' + formatted.replace(/\n/g, '<br>') + '</div>';
         }
         

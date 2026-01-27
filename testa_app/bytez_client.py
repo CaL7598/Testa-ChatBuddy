@@ -14,9 +14,13 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Default model - can be changed in settings
-# Try simpler model names first - Bytez might use different format
+# Bytez API endpoint format: https://api.bytez.com/models/v2/{owner}/{model}
+# Try different model formats if one doesn't work
 DEFAULT_MODEL = "Qwen/Qwen3-4B"  # Using the example from Bytez docs
-# Alternative models: "Qwen/Qwen2.5-7B-Instruct", "Meta-Llama/Llama-3.1-8B-Instruct"
+# Alternative models to try:
+# "Qwen/Qwen2.5-7B-Instruct"
+# "Meta-Llama/Llama-3.1-8B-Instruct"
+# "mistralai/Mistral-7B-Instruct-v0.2"
 
 BYTEZ_API_BASE = "https://api.bytez.com/models/v2"
 
@@ -60,56 +64,108 @@ class BytezClient:
             }
         }
         
-        try:
-            print(f"Calling Bytez API: {self.base_url}")
-            print(f"Model: {self.model}")
-            response = requests.post(
-                self.base_url,
-                headers=headers,
-                json=data,
-                timeout=60
-            )
-            
-            print(f"Response status: {response.status_code}")
-            print(f"Response text: {response.text[:500]}")
-            
-            response.raise_for_status()
-            
-            result = response.json()
-            print(f"Response JSON: {result}")
-            
-            if result.get("error"):
-                error_msg = result.get("error", "Unknown error")
-                raise Exception(f"Bytez API error: {error_msg}")
-            
-            # Check for output in response
-            if result.get("output"):
-                if isinstance(result["output"], dict):
-                    if result["output"].get("content"):
-                        return result["output"]["content"]
-                    elif result["output"].get("text"):
-                        return result["output"]["text"]
-                elif isinstance(result["output"], str):
-                    return result["output"]
-            
-            # Fallback: check for direct content field
-            if result.get("content"):
-                return result["content"]
-            
-            # If we get here, the response format is unexpected
-            raise Exception(f"Unexpected response format from Bytez API: {result}")
-                
-        except requests.exceptions.HTTPError as e:
-            error_detail = ""
+        # Retry logic with exponential backoff
+        max_retries = 3
+        retry_delay = 2  # seconds
+        
+        for attempt in range(max_retries):
             try:
-                error_detail = response.json().get("error", response.text)
-            except:
-                error_detail = response.text
-            raise Exception(f"Bytez API HTTP error ({response.status_code}): {error_detail}")
-        except requests.exceptions.RequestException as e:
-            raise Exception(f"Bytez API request failed: {str(e)}")
-        except Exception as e:
-            raise Exception(f"Bytez API error: {str(e)}")
+                print(f"Calling Bytez API (attempt {attempt + 1}/{max_retries}): {self.base_url}")
+                print(f"Model: {self.model}")
+                
+                response = requests.post(
+                    self.base_url,
+                    headers=headers,
+                    json=data,
+                    timeout=30  # Reduced timeout for faster failure
+                )
+                
+                print(f"Response status: {response.status_code}")
+                
+                response.raise_for_status()
+                
+                result = response.json()
+                print(f"Response received successfully")
+                
+                if result.get("error"):
+                    error_msg = result.get("error", "Unknown error")
+                    # Don't retry on API errors, only on network/timeout errors
+                    raise Exception(f"Bytez API error: {error_msg}")
+                
+                # Check for output in response
+                if result.get("output"):
+                    if isinstance(result["output"], dict):
+                        if result["output"].get("content"):
+                            return result["output"]["content"]
+                        elif result["output"].get("text"):
+                            return result["output"]["text"]
+                    elif isinstance(result["output"], str):
+                        return result["output"]
+                
+                # Fallback: check for direct content field
+                if result.get("content"):
+                    return result["content"]
+                
+                # If we get here, the response format is unexpected
+                raise Exception(f"Unexpected response format from Bytez API: {result}")
+                    
+            except requests.exceptions.Timeout as e:
+                if attempt < max_retries - 1:
+                    print(f"Timeout on attempt {attempt + 1}, retrying in {retry_delay} seconds...")
+                    import time
+                    time.sleep(retry_delay)
+                    retry_delay *= 2  # Exponential backoff
+                    continue
+                else:
+                    raise Exception(f"Bytez API request timed out after {max_retries} attempts. The service may be slow or unavailable.")
+                    
+            except requests.exceptions.ConnectionError as e:
+                if attempt < max_retries - 1:
+                    print(f"Connection error on attempt {attempt + 1}, retrying in {retry_delay} seconds...")
+                    import time
+                    time.sleep(retry_delay)
+                    retry_delay *= 2
+                    continue
+                else:
+                    raise Exception(f"Could not connect to Bytez API after {max_retries} attempts. Please check your internet connection.")
+                    
+            except requests.exceptions.HTTPError as e:
+                error_detail = ""
+                try:
+                    error_detail = response.json().get("error", response.text[:200])
+                except:
+                    error_detail = response.text[:200] if hasattr(response, 'text') else str(e)
+                
+                # Don't retry on 4xx errors (client errors)
+                if response.status_code < 500:
+                    raise Exception(f"Bytez API error ({response.status_code}): {error_detail}")
+                
+                # Retry on 5xx errors (server errors)
+                if attempt < max_retries - 1:
+                    print(f"Server error {response.status_code} on attempt {attempt + 1}, retrying in {retry_delay} seconds...")
+                    import time
+                    time.sleep(retry_delay)
+                    retry_delay *= 2
+                    continue
+                else:
+                    raise Exception(f"Bytez API server error ({response.status_code}): {error_detail}")
+                    
+            except requests.exceptions.RequestException as e:
+                if attempt < max_retries - 1:
+                    print(f"Request error on attempt {attempt + 1}, retrying in {retry_delay} seconds...")
+                    import time
+                    time.sleep(retry_delay)
+                    retry_delay *= 2
+                    continue
+                else:
+                    raise Exception(f"Bytez API request failed: {str(e)}")
+                    
+            except Exception as e:
+                # Don't retry on other exceptions
+                raise Exception(f"Bytez API error: {str(e)}")
+        
+        # Should never reach here, but just in case
+        raise Exception("Bytez API request failed after all retry attempts")
     
     def generate_text(self, prompt: str, system_prompt: str = None, **kwargs) -> str:
         """

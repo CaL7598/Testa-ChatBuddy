@@ -4,7 +4,7 @@
 {% block title %}Chat - Testa StudyBuddy{% endblock %}
 
 {% block extra_head %}
-<style>
+    <style>
     @keyframes slideInUp {
         from {
             opacity: 0;
@@ -144,7 +144,7 @@
                 <div class="gradient-border-inner">
                     <form id="question-form" class="space-y-6">
                         {% csrf_token %}
-                        <div>
+            <div>
                             <label for="question" class="block font-montserrat font-semibold text-gray-700 mb-3 text-lg">
                                 What would you like to know?
                             </label>
@@ -210,8 +210,8 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                 </svg>
             </a>
-        </div>
-        
+</div>
+
         <div id="qa-list" class="grid grid-cols-1 md:grid-cols-2 gap-6">
             {% for qa in qa_list %}
             <div class="group bg-white rounded-2xl shadow-lg hover:shadow-2xl p-6 border border-gray-100 hover:border-primary/30 transition-all duration-300 transform hover:-translate-y-2 animate-slide-in" data-qa-id="{{ qa.id }}">
@@ -220,7 +220,7 @@
                         <p class="font-montserrat font-semibold text-gray-800 mb-2 line-clamp-2">{{ qa.question|truncatewords:15 }}</p>
                         <div class="font-poppins text-gray-600 text-sm line-clamp-3 qa-answer-preview">{{ qa.answer|truncatewords:20 }}</div>
                     </div>
-                </div>
+</div>
                 
                 <div class="flex items-center justify-between pt-4 border-t border-gray-100">
                     <div class="flex items-center gap-4">
@@ -230,14 +230,14 @@
                         >
                             <span class="text-xl group-hover/vote:scale-125 transition-transform">👍</span>
                             <span id="upvote-count-{{ qa.id }}" class="font-poppins font-medium text-gray-700">{{ qa.upvotes }}</span>
-                        </button>
+                    </button>
                         <button 
                             onclick="handleVote('{{ qa.id }}', 'downvote')" 
                             class="flex items-center gap-2 px-4 py-2 rounded-full hover:bg-red-50 transition-colors group/vote"
                         >
                             <span class="text-xl group-hover/vote:scale-125 transition-transform">👎</span>
                             <span id="downvote-count-{{ qa.id }}" class="font-poppins font-medium text-gray-700">{{ qa.downvotes }}</span>
-                        </button>
+                    </button>
                     </div>
                     <span class="font-poppins text-xs text-gray-500">{{ qa.created_at|date:"M d" }}</span>
                 </div>
@@ -251,8 +251,8 @@
                 </div>
                 <p class="font-poppins text-gray-600 text-lg">No questions yet. Start asking to see your history here!</p>
             </div>
-            {% endfor %}
-        </div>
+        {% endfor %}
+    </div>
     </div>
 </div>
 
@@ -286,14 +286,28 @@ document.addEventListener("DOMContentLoaded", function() {
         
         let formatted = response;
         
-        // Pattern 1: Thoughts in square brackets [thought]
+        // Pattern 1: Remove and extract <think> tags (AI's internal thoughts)
+        const reasoningMatches = [];
+        formatted = formatted.replace(/<think>(.*?)<\/redacted_reasoning>/gis, function(match, content) {
+            reasoningMatches.push(content.trim());
+            return ''; // Remove from main content
+        });
+        
+        // Add extracted reasoning as thoughts at the beginning
+        let result = '';
+        if (reasoningMatches.length > 0) {
+            reasoningMatches.forEach(reasoning => {
+                result += '<span class="ai-thought">' + reasoning.replace(/\n/g, ' ') + '</span>';
+            });
+        }
+        
+        // Pattern 2: Thoughts in square brackets [thought]
         formatted = formatted.replace(/\[([^\]]+)\]/g, '<span class="ai-thought">$1</span>');
         
-        // Pattern 2: Thoughts in parentheses (thought)
-        // Only if it's clearly a thought, not just parenthetical information
+        // Pattern 3: Thoughts in parentheses with thinking keywords
         formatted = formatted.replace(/\(([^)]*(?:thinking|considering|analyzing|reasoning|wondering|noting|observing)[^)]*)\)/gi, '<span class="ai-thought">$1</span>');
         
-        // Pattern 3: Thoughts prefixed with keywords
+        // Pattern 4: Thoughts prefixed with keywords
         const thoughtPatterns = [
             /(?:^|\n)(Thinking:|Consider:|Note:|Observing:|Analyzing:|Reasoning:)\s*([^\n]+)/gi,
             /(?:^|\n)(Let me think|Let me consider|I should|I need to|I'm thinking|I'm considering)\s*([^\n\.]+)/gi
@@ -308,7 +322,6 @@ document.addEventListener("DOMContentLoaded", function() {
         // Wrap the main answer content
         // Split by thought spans to identify answer sections
         const parts = formatted.split(/(<span class="ai-thought">.*?<\/span>)/g);
-        let result = '';
         
         parts.forEach((part, index) => {
             if (part.startsWith('<span class="ai-thought">')) {
@@ -321,7 +334,7 @@ document.addEventListener("DOMContentLoaded", function() {
         });
         
         // If no thoughts were found, treat entire response as answer
-        if (!result.includes('ai-thought')) {
+        if (!result.includes('ai-thought') && !result.includes('ai-answer')) {
             result = '<div class="ai-answer">' + formatted.replace(/\n/g, '<br>') + '</div>';
         }
         
@@ -380,14 +393,34 @@ document.addEventListener("DOMContentLoaded", function() {
             },
             error: function(xhr, errmsg, err) {
                 loadingDiv.addClass('hidden');
-                $('#response').html('<div class="text-red-600 font-poppins">Sorry, an error occurred. Please try again.</div>');
+                let errorMessage = 'Sorry, an error occurred. Please try again.';
+                
+                if (xhr.responseJSON && xhr.responseJSON.error) {
+                    errorMessage = xhr.responseJSON.error;
+                } else if (xhr.status === 0) {
+                    errorMessage = 'Network error. Please check your internet connection.';
+                } else if (xhr.status >= 500) {
+                    errorMessage = 'Server error. Please try again in a moment.';
+                }
+                
+                $('#response').html(`
+                    <div class="bg-red-50 border-l-4 border-red-400 p-4 rounded-lg">
+                        <div class="flex items-center gap-2 mb-2">
+                            <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <h4 class="font-montserrat font-bold text-red-800">Error</h4>
+                        </div>
+                        <p class="font-poppins text-red-700">${errorMessage}</p>
+                    </div>
+                `);
                 responseContainer.removeClass('hidden');
             }
         });
     });
 });
 
-function handleVote(qaId, action) {
+ function handleVote(qaId, action) {
     // Get CSRF token
     function getCookie(name) {
         let cookieValue = null;
