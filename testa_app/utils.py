@@ -1,5 +1,8 @@
 """
 Utility functions for Testa ChatBuddy application
+
+Provides utilities for document processing, AI interactions, and study tools
+for students across all academic disciplines.
 """
 import os
 import json

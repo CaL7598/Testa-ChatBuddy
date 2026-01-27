@@ -1,6 +1,9 @@
 """
 Bytez API Client for Testa ChatBuddy
 Replaces Google Gemini API with free open-source models via Bytez
+
+This client provides AI capabilities for all university students across
+all departments and faculties.
 """
 import os
 import json
@@ -11,8 +14,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Default model - can be changed in settings
-DEFAULT_MODEL = "Qwen/Qwen2.5-7B-Instruct"  # Good balance of quality and speed
-# Alternative models: "Qwen/Qwen3-4B", "Meta-Llama/Llama-3.1-8B-Instruct", "mistralai/Mistral-7B-Instruct-v0.2"
+# Try simpler model names first - Bytez might use different format
+DEFAULT_MODEL = "Qwen/Qwen3-4B"  # Using the example from Bytez docs
+# Alternative models: "Qwen/Qwen2.5-7B-Instruct", "Meta-Llama/Llama-3.1-8B-Instruct"
 
 BYTEZ_API_BASE = "https://api.bytez.com/models/v2"
 
@@ -44,6 +48,7 @@ class BytezClient:
             "Content-Type": "application/json"
         }
         
+        # Bytez API format based on documentation
         data = {
             "messages": messages,
             "stream": stream,
@@ -56,26 +61,55 @@ class BytezClient:
         }
         
         try:
+            print(f"Calling Bytez API: {self.base_url}")
+            print(f"Model: {self.model}")
             response = requests.post(
                 self.base_url,
                 headers=headers,
                 json=data,
                 timeout=60
             )
+            
+            print(f"Response status: {response.status_code}")
+            print(f"Response text: {response.text[:500]}")
+            
             response.raise_for_status()
             
             result = response.json()
+            print(f"Response JSON: {result}")
             
             if result.get("error"):
-                raise Exception(f"Bytez API error: {result['error']}")
+                error_msg = result.get("error", "Unknown error")
+                raise Exception(f"Bytez API error: {error_msg}")
             
-            if result.get("output") and result["output"].get("content"):
-                return result["output"]["content"]
-            else:
-                raise Exception("Unexpected response format from Bytez API")
+            # Check for output in response
+            if result.get("output"):
+                if isinstance(result["output"], dict):
+                    if result["output"].get("content"):
+                        return result["output"]["content"]
+                    elif result["output"].get("text"):
+                        return result["output"]["text"]
+                elif isinstance(result["output"], str):
+                    return result["output"]
+            
+            # Fallback: check for direct content field
+            if result.get("content"):
+                return result["content"]
+            
+            # If we get here, the response format is unexpected
+            raise Exception(f"Unexpected response format from Bytez API: {result}")
                 
+        except requests.exceptions.HTTPError as e:
+            error_detail = ""
+            try:
+                error_detail = response.json().get("error", response.text)
+            except:
+                error_detail = response.text
+            raise Exception(f"Bytez API HTTP error ({response.status_code}): {error_detail}")
         except requests.exceptions.RequestException as e:
             raise Exception(f"Bytez API request failed: {str(e)}")
+        except Exception as e:
+            raise Exception(f"Bytez API error: {str(e)}")
     
     def generate_text(self, prompt: str, system_prompt: str = None, **kwargs) -> str:
         """
@@ -116,9 +150,10 @@ class BytezClient:
         Returns:
             Answer text
         """
-        system_prompt = """You are an educational AI assistant for Computer and Electrical Engineering students.
+        system_prompt = """You are an educational AI assistant for university students across all departments and faculties.
 Answer questions clearly and accurately. If context is provided, base your answer on it.
-If the answer is not in the context, use your knowledge but indicate uncertainty."""
+If the answer is not in the context, use your knowledge but indicate uncertainty.
+Provide helpful explanations suitable for students from any academic discipline."""
         
         if context:
             prompt = f"""Context:

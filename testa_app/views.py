@@ -67,43 +67,75 @@ def question_answer(request):
     start_time = timezone.now()
     
     if request.method == 'POST':
-        user_question = request.POST.get('question')
-        print("Received question:", user_question)
-        qa_list = QuestionAnswer.objects.filter(user=request.user).order_by('-created_at')[:10]
-        
-        # Load vector store and search
-        vector_store = load_vector_store("faiss_index")
-        if vector_store:
-            docs = vector_store.similarity_search(user_question, k=3)
-            # Combine context from similar documents
-            context = "\n\n".join([doc.page_content for doc in docs])
-            chain = get_conversational_chain()
-            answer = chain(context, user_question)
-        else:
-            answer = "Vector database not initialized. Please upload documents first."
-        
-        if answer == "The answer is not available in the context.":
-            answer = web_scrape_search(user_question)
+        try:
+            user_question = request.POST.get('question')
+            if not user_question:
+                return JsonResponse({"error": "Question is required"}, status=400)
+            
+            print("Received question:", user_question)
+            qa_list = QuestionAnswer.objects.filter(user=request.user).order_by('-created_at')[:10]
+            
+            # Load vector store and search
+            answer = None
+            try:
+                vector_store = load_vector_store("faiss_index")
+                if vector_store:
+                    docs = vector_store.similarity_search(user_question, k=3)
+                    # Combine context from similar documents
+                    context = "\n\n".join([doc.page_content for doc in docs])
+                    chain = get_conversational_chain()
+                    answer = chain(context, user_question)
+            except Exception as e:
+                print(f"Error with vector store: {e}")
+            
+            # If no answer from vector store, try direct AI question
             if not answer:
-                answer = "Sorry, I couldn't find an answer to your question."
-        
-        # Calculate response time
-        response_time = (timezone.now() - start_time).total_seconds()
-        print("Response:", answer)
-        
-        # Create Q&A entry
-        qa_entry = QuestionAnswer.objects.create(
-            user=request.user,
-            question=user_question,
-            answer=answer,
-            response_time=response_time
-        )
-        
-        # Update analytics
-        _update_daily_activity(request.user)
-        _update_user_analytics(request.user)
-        
-        return JsonResponse({"response": answer})
+                try:
+                    from .bytez_client import BytezClient
+                    client = BytezClient()
+                    answer = client.answer_question(user_question)
+                except Exception as e2:
+                    print(f"Error with Bytez API: {e2}")
+                    import traceback
+                    traceback.print_exc()
+                    # Final fallback: web scrape
+                    answer = web_scrape_search(user_question)
+                    if not answer or "Sorry" in answer:
+                        answer = f"Sorry, I couldn't process your question. The AI service may be temporarily unavailable. Please try again later."
+            
+            if answer == "The answer is not available in the context.":
+                answer = web_scrape_search(user_question)
+                if not answer:
+                    answer = "Sorry, I couldn't find an answer to your question."
+            
+            # Calculate response time
+            response_time = (timezone.now() - start_time).total_seconds()
+            print("Response:", answer[:100] if answer else "Empty response")
+            
+            # Create Q&A entry
+            qa_entry = QuestionAnswer.objects.create(
+                user=request.user,
+                question=user_question,
+                answer=answer,
+                response_time=response_time
+            )
+            
+            # Update analytics
+            try:
+                _update_daily_activity(request.user)
+                _update_user_analytics(request.user)
+            except Exception as e:
+                print(f"Error updating analytics: {e}")
+            
+            return JsonResponse({"response": answer})
+            
+        except Exception as e:
+            print(f"Unexpected error in question_answer: {e}")
+            import traceback
+            traceback.print_exc()
+            return JsonResponse({
+                "error": f"An error occurred: {str(e)}"
+            }, status=500)
 
     qa_list = QuestionAnswer.objects.filter(user=request.user).order_by('-created_at')[:10]
     return render(request, 'testa_app/question_answer.html', {
