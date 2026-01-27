@@ -149,7 +149,18 @@
                     <h3 class="font-montserrat font-bold text-xl text-gray-800">Questions Over Time</h3>
                 </div>
                 <div class="chart-container">
+                    {% if chart_data.questions_over_time.data %}
                     <canvas id="questionsChart"></canvas>
+                    {% else %}
+                    <div class="flex flex-col items-center justify-center h-full py-12">
+                        <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                            </svg>
+                        </div>
+                        <p class="font-poppins text-gray-500 text-center">No questions data yet. Start asking questions to see your progress!</p>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
 
@@ -164,7 +175,18 @@
                     <h3 class="font-montserrat font-bold text-xl text-gray-800">Study Minutes</h3>
                 </div>
                 <div class="chart-container">
+                    {% if chart_data.study_minutes_over_time.data %}
                     <canvas id="studyTimeChart"></canvas>
+                    {% else %}
+                    <div class="flex flex-col items-center justify-center h-full py-12">
+                        <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <p class="font-poppins text-gray-500 text-center">No study time data yet. Keep studying to track your progress!</p>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -247,9 +269,119 @@
             </div>
         </div>
 
+        <!-- Insights & Recommendations -->
+        {% if insights %}
+        <div class="glass-card mb-8">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-10 h-10 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-xl flex items-center justify-center">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                    </svg>
+                </div>
+                <h3 class="font-montserrat font-bold text-xl text-gray-800">Insights & Recommendations</h3>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {% for insight in insights %}
+                <div class="insight-card insight-{{ insight.type }} p-4 rounded-xl border-l-4 animate-slide-in" style="animation-delay: {{ forloop.counter0|add:'0.1' }}s">
+                    <div class="flex items-start gap-3">
+                        <span class="text-2xl">{{ insight.icon }}</span>
+                        <div class="flex-1">
+                            <h4 class="font-montserrat font-bold text-gray-800 mb-1">{{ insight.title }}</h4>
+                            <p class="font-poppins text-sm text-gray-600">{{ insight.message }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Weekly Comparison -->
+        <div class="glass-card mb-8">
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-xl flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                        </svg>
+                    </div>
+                    <h3 class="font-montserrat font-bold text-xl text-gray-800">Weekly Comparison</h3>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="text-center p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl">
+                    <p class="font-poppins text-sm text-gray-600 mb-2">This Week</p>
+                    <h2 class="text-4xl font-montserrat font-bold text-blue-600 mb-2">{{ weekly_comparison.this_week }}</h2>
+                    <p class="font-poppins text-xs text-gray-500">Questions Asked</p>
+                </div>
+                <div class="text-center p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl">
+                    <p class="font-poppins text-sm text-gray-600 mb-2">Last Week</p>
+                    <h2 class="text-4xl font-montserrat font-bold text-purple-600 mb-2">{{ weekly_comparison.last_week }}</h2>
+                    <div class="flex items-center justify-center gap-2 mt-2">
+                        {% if weekly_comparison.is_increase %}
+                        <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                        </svg>
+                        <span class="font-poppins font-semibold text-green-600">+{{ weekly_comparison.change_percent }}%</span>
+                        {% else %}
+                        <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"></path>
+                        </svg>
+                        <span class="font-poppins font-semibold text-red-600">{{ weekly_comparison.change_percent }}%</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Course Breakdown & Difficulty Distribution -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- Course Breakdown -->
+            {% if course_breakdown %}
+            <div class="glass-card">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-10 h-10 bg-gradient-to-br from-teal-400 to-cyan-500 rounded-xl flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                        </svg>
+                    </div>
+                    <h3 class="font-montserrat font-bold text-xl text-gray-800">Course Breakdown</h3>
+                </div>
+                <div class="space-y-4">
+                    {% for course in course_breakdown %}
+                    <div class="animate-slide-in" style="animation-delay: {{ forloop.counter0|add:'0.1' }}s">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="font-poppins font-semibold text-gray-800">{{ course.course }}</span>
+                            <span class="font-montserrat font-bold text-teal-600">{{ course.count }} ({{ course.percentage }}%)</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-teal-400 to-cyan-500 rounded-full transition-all duration-1000 ease-out" style="width: {{ course.percentage }}%"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Difficulty Distribution -->
+            <div class="glass-card">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="font-montserrat font-bold text-xl text-gray-800">Difficulty Distribution</h3>
+                </div>
+                <div class="chart-container">
+                    <canvas id="difficultyChart"></canvas>
+                </div>
+            </div>
+        </div>
+
         <!-- Trending Topics -->
         {% if trending_topics %}
-        <div class="glass-card">
+        <div class="glass-card mb-8">
             <div class="flex items-center gap-3 mb-6">
                 <div class="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-500 rounded-xl flex items-center justify-center">
                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -326,8 +458,9 @@
     };
 
     // Questions Chart
-    const questionsCtx = document.getElementById('questionsChart').getContext('2d');
-    new Chart(questionsCtx, {
+    const questionsCtx = document.getElementById('questionsChart');
+    if (questionsCtx) {
+        new Chart(questionsCtx.getContext('2d'), {
         type: 'line',
         data: {
             labels: {{ chart_data.questions_over_time.labels|safe }},
@@ -347,11 +480,13 @@
             }]
         },
         options: chartOptions
-    });
+        });
+    }
 
     // Study Time Chart
-    const studyTimeCtx = document.getElementById('studyTimeChart').getContext('2d');
-    new Chart(studyTimeCtx, {
+    const studyTimeCtx = document.getElementById('studyTimeChart');
+    if (studyTimeCtx) {
+        new Chart(studyTimeCtx.getContext('2d'), {
         type: 'line',
         data: {
             labels: {{ chart_data.study_minutes_over_time.labels|safe }},
@@ -371,11 +506,13 @@
             }]
         },
         options: chartOptions
-    });
+        });
+    }
 
     // Quizzes Chart
-    const quizzesCtx = document.getElementById('quizzesChart').getContext('2d');
-    new Chart(quizzesCtx, {
+    const quizzesCtx = document.getElementById('quizzesChart');
+    if (quizzesCtx) {
+        new Chart(quizzesCtx.getContext('2d'), {
         type: 'bar',
         data: {
             labels: {{ chart_data.quizzes_over_time.labels|safe }},
@@ -390,7 +527,66 @@
             }]
         },
         options: chartOptions
-    });
+        });
+    }
+
+    // Difficulty Distribution Chart
+    const difficultyCtx = document.getElementById('difficultyChart');
+    if (difficultyCtx) {
+        new Chart(difficultyCtx.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Beginner', 'Intermediate', 'Advanced'],
+                datasets: [{
+                    data: [
+                        {{ difficulty_dist.beginner|default:0 }},
+                        {{ difficulty_dist.intermediate|default:0 }},
+                        {{ difficulty_dist.advanced|default:0 }}
+                    ],
+                    backgroundColor: [
+                        'rgba(34, 197, 94, 0.8)',
+                        'rgba(251, 191, 36, 0.8)',
+                        'rgba(239, 68, 68, 0.8)'
+                    ],
+                    borderColor: [
+                        '#22c55e',
+                        '#fbbf24',
+                        '#ef4444'
+                    ],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            font: {
+                                family: 'Poppins',
+                                size: 12
+                            },
+                            padding: 15
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        titleFont: {
+                            family: 'Poppins',
+                            size: 14
+                        },
+                        bodyFont: {
+                            family: 'Poppins',
+                            size: 13
+                        },
+                        cornerRadius: 8
+                    }
+                }
+            }
+        });
+    }
 
     // Animate progress bars on scroll
     const observerOptions = {
@@ -478,6 +674,43 @@
     .animate-slide-in {
         animation: slide-in 0.6s ease-out;
         animation-fill-mode: both;
+    }
+
+    .insight-card {
+        @apply bg-white border-l-4 transition-all duration-300;
+    }
+
+    .insight-card:hover {
+        transform: translateX(4px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .insight-success {
+        @apply bg-green-50 border-green-400;
+    }
+
+    .insight-info {
+        @apply bg-blue-50 border-blue-400;
+    }
+
+    .insight-warning {
+        @apply bg-orange-50 border-orange-400;
+    }
+
+    /* Number counter animation */
+    @keyframes countUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .stat-card h2 {
+        animation: countUp 0.8s ease-out;
     }
 </style>
 {% endblock %}

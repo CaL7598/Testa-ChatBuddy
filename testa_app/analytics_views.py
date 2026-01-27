@@ -54,12 +54,28 @@ def analytics_dashboard(request):
     # Study patterns
     study_patterns = _get_study_patterns(user)
     
+    # Additional insights
+    insights = _get_insights(user, days, stats)
+    
+    # Course breakdown
+    course_breakdown = _get_course_breakdown(user, days)
+    
+    # Difficulty distribution
+    difficulty_dist = _get_difficulty_distribution(user, days)
+    
+    # Weekly comparison
+    weekly_comparison = _get_weekly_comparison(user)
+    
     context = {
         'stats': stats,
         'chart_data': chart_data,
         'topic_mastery': topic_mastery,
         'trending_topics': trending_topics,
         'study_patterns': study_patterns,
+        'insights': insights,
+        'course_breakdown': course_breakdown,
+        'difficulty_dist': difficulty_dist,
+        'weekly_comparison': weekly_comparison,
         'date_range': date_range,
     }
     
@@ -109,8 +125,18 @@ def _get_questions_over_time(user, start_date):
         date__gte=start_date.date()
     ).order_by('date')
     
-    labels = [str(act.date) for act in activities]
+    # Format dates nicely
+    labels = []
+    for act in activities:
+        date_obj = act.date
+        labels.append(date_obj.strftime('%b %d'))
+    
     data = [act.questions_asked for act in activities]
+    
+    # If no data, create empty array with placeholder
+    if not labels:
+        labels = []
+        data = []
     
     return {
         'labels': labels,
@@ -125,8 +151,18 @@ def _get_study_minutes_over_time(user, start_date):
         date__gte=start_date.date()
     ).order_by('date')
     
-    labels = [str(act.date) for act in activities]
+    # Format dates nicely
+    labels = []
+    for act in activities:
+        date_obj = act.date
+        labels.append(date_obj.strftime('%b %d'))
+    
     data = [act.study_minutes for act in activities]
+    
+    # If no data, create empty array
+    if not labels:
+        labels = []
+        data = []
     
     return {
         'labels': labels,
@@ -145,8 +181,21 @@ def _get_quizzes_over_time(user, start_date):
         count=Count('id')
     ).order_by('date')
     
-    labels = [str(item['date']) for item in attempts]
+    # Format dates nicely
+    labels = []
+    for item in attempts:
+        if item['date']:
+            date_obj = datetime.strptime(str(item['date']), '%Y-%m-%d').date()
+            labels.append(date_obj.strftime('%b %d'))
+        else:
+            labels.append('')
+    
     data = [item['count'] for item in attempts]
+    
+    # If no data, create empty array
+    if not labels:
+        labels = []
+        data = []
     
     return {
         'labels': labels,
@@ -229,4 +278,147 @@ def _get_study_patterns(user):
     return {
         'most_active_hour': most_active_hour,
         'favorite_course': favorite_course,
+    }
+
+
+def _get_insights(user, days, stats):
+    """Generate insights and recommendations"""
+    insights = []
+    
+    # Streak insight
+    if stats['current_streak'] > 0:
+        if stats['current_streak'] >= 7:
+            insights.append({
+                'type': 'success',
+                'icon': '🔥',
+                'title': 'Amazing Streak!',
+                'message': f'You\'ve been studying for {stats["current_streak"]} days straight! Keep it up!'
+            })
+        else:
+            insights.append({
+                'type': 'info',
+                'icon': '📅',
+                'title': 'Building Momentum',
+                'message': f'You\'re on a {stats["current_streak"]} day streak. Aim for 7 days!'
+            })
+    else:
+        insights.append({
+            'type': 'warning',
+            'icon': '💪',
+            'title': 'Start Your Streak',
+            'message': 'Begin studying today to start your learning streak!'
+        })
+    
+    # Questions insight
+    if stats['total_questions'] == 0:
+        insights.append({
+            'type': 'info',
+            'icon': '❓',
+            'title': 'Get Started',
+            'message': 'Ask your first question to begin tracking your progress!'
+        })
+    elif stats['total_questions'] < 5:
+        insights.append({
+            'type': 'info',
+            'icon': '📚',
+            'title': 'Keep Learning',
+            'message': f'You\'ve asked {stats["total_questions"]} questions. Try to ask more to improve!'
+        })
+    
+    # Quiz insight
+    if stats['total_quizzes'] == 0:
+        insights.append({
+            'type': 'info',
+            'icon': '📝',
+            'title': 'Try Quizzes',
+            'message': 'Take quizzes to test your knowledge and track improvement!'
+        })
+    elif stats['average_quiz_score'] < 70:
+        insights.append({
+            'type': 'warning',
+            'icon': '📖',
+            'title': 'Review Needed',
+            'message': f'Your average score is {stats["average_quiz_score"]}%. Review weak areas!'
+        })
+    
+    return insights[:3]  # Return top 3 insights
+
+
+def _get_course_breakdown(user, days):
+    """Get breakdown of questions by course"""
+    start_date = timezone.now() - timedelta(days=days)
+    
+    courses = QuestionAnswer.objects.filter(
+        user=user,
+        created_at__gte=start_date
+    ).exclude(course='').values('course').annotate(
+        count=Count('id')
+    ).order_by('-count')[:5]
+    
+    total = sum(c['count'] for c in courses)
+    
+    return [
+        {
+            'course': c['course'],
+            'count': c['count'],
+            'percentage': round((c['count'] / total * 100), 1) if total > 0 else 0
+        }
+        for c in courses
+    ]
+
+
+def _get_difficulty_distribution(user, days):
+    """Get distribution of questions by difficulty"""
+    start_date = timezone.now() - timedelta(days=days)
+    
+    difficulties = QuestionAnswer.objects.filter(
+        user=user,
+        created_at__gte=start_date
+    ).exclude(difficulty_detected='').values('difficulty_detected').annotate(
+        count=Count('id')
+    )
+    
+    total = sum(d['count'] for d in difficulties)
+    
+    dist = {
+        'beginner': 0,
+        'intermediate': 0,
+        'advanced': 0
+    }
+    
+    for d in difficulties:
+        if d['difficulty_detected'] in dist:
+            dist[d['difficulty_detected']] = round((d['count'] / total * 100), 1) if total > 0 else 0
+    
+    return dist
+
+
+def _get_weekly_comparison(user):
+    """Compare this week vs last week"""
+    now = timezone.now()
+    this_week_start = now - timedelta(days=now.weekday() + 7)
+    last_week_start = this_week_start - timedelta(days=7)
+    last_week_end = this_week_start
+    
+    this_week_questions = QuestionAnswer.objects.filter(
+        user=user,
+        created_at__gte=this_week_start
+    ).count()
+    
+    last_week_questions = QuestionAnswer.objects.filter(
+        user=user,
+        created_at__gte=last_week_start,
+        created_at__lt=last_week_end
+    ).count()
+    
+    if last_week_questions == 0:
+        change_percent = 100 if this_week_questions > 0 else 0
+    else:
+        change_percent = round(((this_week_questions - last_week_questions) / last_week_questions) * 100, 1)
+    
+    return {
+        'this_week': this_week_questions,
+        'last_week': last_week_questions,
+        'change_percent': change_percent,
+        'is_increase': change_percent > 0
     }
