@@ -47,6 +47,73 @@
         border-radius: 14px;
         padding: 20px;
     }
+    
+    /* AI Response Styling - Differentiate thoughts from answers */
+    .ai-response-content {
+        font-size: 1rem;
+        line-height: 1.75;
+    }
+    
+    /* AI Thoughts - Italicized and smaller */
+    .ai-thought {
+        display: inline-block;
+        font-style: italic;
+        font-size: 0.75rem;
+        color: #6b7280;
+        background-color: #f9fafb;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.375rem;
+        margin: 0.25rem 0.125rem;
+        border-left: 2px solid #d1d5db;
+        font-weight: 400;
+        line-height: 1.5;
+    }
+    
+    /* AI Answers - Normal font, larger size */
+    .ai-answer {
+        font-size: 1.125rem;
+        font-weight: 400;
+        color: #1f2937;
+        line-height: 1.75;
+        margin: 0.75rem 0;
+        padding: 0.5rem 0;
+    }
+    
+    /* First answer gets more prominence */
+    .ai-response-content > .ai-answer:first-child {
+        font-size: 1.25rem;
+        font-weight: 500;
+        color: #111827;
+        margin-top: 0;
+    }
+    
+    /* Q&A History preview styling */
+    .qa-answer-preview .ai-thought {
+        font-size: 0.7rem;
+        padding: 0.125rem 0.375rem;
+        margin: 0.125rem 0;
+    }
+    
+    .qa-answer-preview .ai-answer {
+        font-size: 0.875rem;
+        margin: 0.25rem 0;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 640px) {
+        .ai-thought {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.4rem;
+        }
+        
+        .ai-answer {
+            font-size: 1rem;
+        }
+        
+        .ai-response-content > .ai-answer:first-child {
+            font-size: 1.125rem;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -127,7 +194,7 @@
                         </div>
                         <h3 class="font-montserrat font-bold text-2xl text-gray-800">AI Response</h3>
                     </div>
-                    <div id="response" class="font-poppins text-gray-700 leading-relaxed text-lg prose prose-lg max-w-none"></div>
+                    <div id="response" class="font-poppins text-gray-700 leading-relaxed prose prose-lg max-w-none ai-response-content"></div>
                 </div>
             </div>
         </div>
@@ -151,7 +218,7 @@
                 <div class="flex items-start justify-between mb-4">
                     <div class="flex-1">
                         <p class="font-montserrat font-semibold text-gray-800 mb-2 line-clamp-2">{{ qa.question|truncatewords:15 }}</p>
-                        <p class="font-poppins text-gray-600 text-sm line-clamp-3">{{ qa.answer|truncatewords:20 }}</p>
+                        <div class="font-poppins text-gray-600 text-sm line-clamp-3 qa-answer-preview">{{ qa.answer|truncatewords:20 }}</div>
                     </div>
                 </div>
                 
@@ -212,6 +279,54 @@ document.addEventListener("DOMContentLoaded", function() {
     };
     
     showToast('Welcome, {{ username }}! Ready to learn?');
+    
+    // Function to format AI response, separating thoughts from answers
+    function formatAIResponse(response) {
+        if (!response) return '';
+        
+        let formatted = response;
+        
+        // Pattern 1: Thoughts in square brackets [thought]
+        formatted = formatted.replace(/\[([^\]]+)\]/g, '<span class="ai-thought">$1</span>');
+        
+        // Pattern 2: Thoughts in parentheses (thought)
+        // Only if it's clearly a thought, not just parenthetical information
+        formatted = formatted.replace(/\(([^)]*(?:thinking|considering|analyzing|reasoning|wondering|noting|observing)[^)]*)\)/gi, '<span class="ai-thought">$1</span>');
+        
+        // Pattern 3: Thoughts prefixed with keywords
+        const thoughtPatterns = [
+            /(?:^|\n)(Thinking:|Consider:|Note:|Observing:|Analyzing:|Reasoning:)\s*([^\n]+)/gi,
+            /(?:^|\n)(Let me think|Let me consider|I should|I need to|I'm thinking|I'm considering)\s*([^\n\.]+)/gi
+        ];
+        
+        thoughtPatterns.forEach(pattern => {
+            formatted = formatted.replace(pattern, function(match, prefix, thought) {
+                return '<span class="ai-thought">' + prefix + ' ' + thought + '</span>';
+            });
+        });
+        
+        // Wrap the main answer content
+        // Split by thought spans to identify answer sections
+        const parts = formatted.split(/(<span class="ai-thought">.*?<\/span>)/g);
+        let result = '';
+        
+        parts.forEach((part, index) => {
+            if (part.startsWith('<span class="ai-thought">')) {
+                // This is a thought, keep it as is
+                result += part;
+            } else if (part.trim()) {
+                // This is an answer section
+                result += '<div class="ai-answer">' + part.replace(/\n/g, '<br>') + '</div>';
+            }
+        });
+        
+        // If no thoughts were found, treat entire response as answer
+        if (!result.includes('ai-thought')) {
+            result = '<div class="ai-answer">' + formatted.replace(/\n/g, '<br>') + '</div>';
+        }
+        
+        return result;
+    }
 
     // Question form submission
     $('#question-form').on('submit', function(event) {
@@ -252,7 +367,9 @@ document.addEventListener("DOMContentLoaded", function() {
             },
             success: function(data) {
                 loadingDiv.addClass('hidden');
-                $('#response').html('<div class="prose prose-lg max-w-none">' + data.response.replace(/\n/g, '<br>') + '</div>');
+                // Process response to differentiate thoughts from answers
+                const processedResponse = formatAIResponse(data.response);
+                $('#response').html(processedResponse);
                 responseContainer.removeClass('hidden').addClass('animate-slide-in');
                 $('#question').val('');
                 
@@ -263,7 +380,7 @@ document.addEventListener("DOMContentLoaded", function() {
             },
             error: function(xhr, errmsg, err) {
                 loadingDiv.addClass('hidden');
-                $('#response').html('<div class="text-red-600">Sorry, an error occurred. Please try again.</div>');
+                $('#response').html('<div class="text-red-600 font-poppins">Sorry, an error occurred. Please try again.</div>');
                 responseContainer.removeClass('hidden');
             }
         });
