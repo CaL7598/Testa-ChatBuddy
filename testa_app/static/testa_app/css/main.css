@@ -70,12 +70,9 @@
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
 }
 
-/* Gradient Text */
+/* Gradient Text - Replaced with solid color */
 .gradient-text {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: #667eea;
 }
 
 /* Modern Button Styles */
@@ -123,10 +120,10 @@
     box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.2);
 }
 
-/* Gradient Border */
+/* Gradient Border - Replaced with solid color */
 .gradient-border {
     position: relative;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #667eea;
     padding: 2px;
     border-radius: 16px;
 }
@@ -166,12 +163,12 @@ html {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #667eea;
     border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    background: #764ba2;
 }
 
 /* Line Clamp Utility */

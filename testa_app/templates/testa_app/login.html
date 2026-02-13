@@ -4,13 +4,20 @@
 {% block title %}Login - Testa StudyBuddy{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-primary via-secondary to-accent flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full space-y-8 animate-slide-in">
+<div class="relative min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 overflow-hidden">
+    <!-- Background Video -->
+    <div class="absolute inset-0 z-0">
+        <video id="login-video" autoplay muted loop playsinline class="w-full h-full object-cover">
+            <source src="{% static 'login/8199367-hd_1920_1080_25fps.mp4' %}" type="video/mp4">
+        </video>
+    </div>
+    
+    <div class="relative z-10 max-w-md w-full space-y-8 animate-slide-in">
         <!-- Login Card -->
         <div class="glass-effect rounded-3xl shadow-2xl p-8 sm:p-10">
             <!-- Header -->
             <div class="text-center mb-8">
-                <div class="mx-auto w-20 h-20 bg-gradient-primary rounded-full flex items-center justify-center mb-4 shadow-lg">
+                <div class="mx-auto w-20 h-20 bg-indigo-600 rounded-full flex items-center justify-center mb-4 shadow-lg">
                     <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                     </svg>
@@ -159,4 +166,30 @@ document.addEventListener('DOMContentLoaded', function() {
     border: 1px solid rgba(255, 255, 255, 0.2);
 }
 </style>
+
+<script>
+    // Ensure video always loops
+    document.addEventListener('DOMContentLoaded', function() {
+        const video = document.getElementById('login-video');
+        if (video) {
+            // Force loop attribute
+            video.setAttribute('loop', 'loop');
+            video.loop = true;
+            
+            // Ensure video restarts if it ends (backup for loop attribute)
+            video.addEventListener('ended', function() {
+                this.currentTime = 0;
+                this.play().catch(function(error) {
+                    // Handle autoplay restrictions
+                    console.log('Video autoplay prevented:', error);
+                });
+            });
+            
+            // Ensure video is playing
+            video.play().catch(function(error) {
+                console.log('Video autoplay prevented:', error);
+            });
+        }
+    });
+</script>
 {% endblock %}

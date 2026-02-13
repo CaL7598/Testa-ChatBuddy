@@ -4,91 +4,225 @@
 {% block title %}Recommendations - Testa StudyBuddy{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h1 class="text-center mb-4" style="color: #667eea; font-weight: 600;">Smart Recommendations</h1>
-    
-    <!-- Daily Focus Card -->
-    {% if daily_focus %}
-    <div class="card mb-4" style="border-radius: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-        <div class="card-body p-4">
-            <h3 class="mb-3">⭐ Today's Focus</h3>
-            <h4>{{ daily_focus.title }}</h4>
-            <p>{{ daily_focus.description }}</p>
-            {% if daily_focus.related_course %}
-            <p><strong>Course:</strong> {{ daily_focus.related_course }}</p>
-            {% endif %}
-            <button onclick="completeRecommendation({{ daily_focus.id }})" class="btn btn-light mt-2">Mark as Complete</button>
+<div class="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header Section -->
+        <div class="mb-8 animate-fade-in">
+            <h1 class="font-montserrat font-bold text-3xl sm:text-4xl md:text-5xl text-indigo-600 mb-2 text-center">
+                Smart Recommendations
+            </h1>
+            <p class="font-poppins text-gray-600 text-center text-lg">Personalized study suggestions based on your learning patterns</p>
         </div>
-    </div>
-    {% endif %}
 
-    <!-- Filter by Type -->
-    <div class="mb-3 text-center">
-        <a href="{% url 'recommendations' %}" class="btn btn-sm btn-outline-primary {% if not filter_type %}active{% endif %}">All</a>
-        <a href="?type=weak_area" class="btn btn-sm btn-outline-primary {% if filter_type == 'weak_area' %}active{% endif %}">Weak Areas</a>
-        <a href="?type=quiz" class="btn btn-sm btn-outline-primary {% if filter_type == 'quiz' %}active{% endif %}">Quizzes</a>
-        <a href="?type=flashcard" class="btn btn-sm btn-outline-primary {% if filter_type == 'flashcard' %}active{% endif %}">Flashcards</a>
-        <a href="?type=document" class="btn btn-sm btn-outline-primary {% if filter_type == 'document' %}active{% endif %}">Documents</a>
-        <a href="?type=topic" class="btn btn-sm btn-outline-primary {% if filter_type == 'topic' %}active{% endif %}">Topics</a>
-    </div>
-
-    <!-- All Recommendations -->
-    {% if recommendations %}
-    <div class="row">
-        {% for rec in recommendations %}
-        <div class="col-md-6 mb-3">
-            <div class="card" style="border-radius: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 4px solid {% if rec.priority >= 90 %}#ef4444{% elif rec.priority >= 70 %}#f59e0b{% else %}#10b981{% endif %};">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <h5 class="card-title mb-0">
-                            {% if rec.recommendation_type == 'weak_area' %}⚠️
-                            {% elif rec.recommendation_type == 'quiz' %}📝
-                            {% elif rec.recommendation_type == 'flashcard' %}🎴
-                            {% elif rec.recommendation_type == 'document' %}📄
-                            {% else %}📚
-                            {% endif %}
-                            {{ rec.title }}
-                        </h5>
-                        <span class="badge badge-primary">Priority: {{ rec.priority }}</span>
+        <!-- Daily Focus Card -->
+        {% if daily_focus %}
+        <div class="mb-8 animate-slide-in">
+            <div class="bg-indigo-600 rounded-2xl shadow-xl p-6 sm:p-8 text-white overflow-hidden relative">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+                <div class="relative z-10">
+                    <div class="flex items-center gap-2 mb-4">
+                        <svg class="w-6 h-6 text-yellow-300" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                        </svg>
+                        <h2 class="font-montserrat font-bold text-2xl">Today's Focus</h2>
                     </div>
-                    
-                    <p class="card-text">{{ rec.description }}</p>
-                    
-                    {% if rec.related_course %}
-                    <p class="text-muted"><strong>Course:</strong> {{ rec.related_course }}</p>
+                    <h3 class="font-montserrat font-semibold text-xl mb-3">{{ daily_focus.title }}</h3>
+                    <p class="font-poppins text-indigo-100 mb-4 leading-relaxed">{{ daily_focus.description }}</p>
+                    {% if daily_focus.related_course %}
+                    <div class="flex items-center gap-2 mb-4">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                        </svg>
+                        <span class="font-poppins text-sm">Course: {{ daily_focus.related_course }}</span>
+                    </div>
                     {% endif %}
-                    
-                    {% if rec.related_topic %}
-                    <p class="text-muted"><strong>Topic:</strong> {{ rec.related_topic }}</p>
+                    <button onclick="completeRecommendation({{ daily_focus.id }})" class="font-poppins font-semibold px-6 py-3 bg-white text-indigo-600 rounded-xl hover:bg-gray-100 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+                        Mark as Complete
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Filter Tabs -->
+        <div class="mb-8 animate-slide-in">
+            <div class="flex flex-wrap justify-center gap-2 sm:gap-3 bg-white rounded-xl p-2 shadow-md">
+                <a href="{% url 'recommendations' %}" class="px-4 py-2 rounded-lg font-poppins font-medium text-sm transition-all duration-300 {% if not filter_type %}bg-indigo-600 text-white shadow-md{% else %}text-gray-700 hover:bg-gray-100{% endif %}">
+                    All
+                </a>
+                <a href="?type=weak_area" class="px-4 py-2 rounded-lg font-poppins font-medium text-sm transition-all duration-300 {% if filter_type == 'weak_area' %}bg-indigo-600 text-white shadow-md{% else %}text-gray-700 hover:bg-gray-100{% endif %}">
+                    Weak Areas
+                </a>
+                <a href="?type=quiz" class="px-4 py-2 rounded-lg font-poppins font-medium text-sm transition-all duration-300 {% if filter_type == 'quiz' %}bg-indigo-600 text-white shadow-md{% else %}text-gray-700 hover:bg-gray-100{% endif %}">
+                    Quizzes
+                </a>
+                <a href="?type=flashcard" class="px-4 py-2 rounded-lg font-poppins font-medium text-sm transition-all duration-300 {% if filter_type == 'flashcard' %}bg-indigo-600 text-white shadow-md{% else %}text-gray-700 hover:bg-gray-100{% endif %}">
+                    Flashcards
+                </a>
+                <a href="?type=document" class="px-4 py-2 rounded-lg font-poppins font-medium text-sm transition-all duration-300 {% if filter_type == 'document' %}bg-indigo-600 text-white shadow-md{% else %}text-gray-700 hover:bg-gray-100{% endif %}">
+                    Documents
+                </a>
+                <a href="?type=topic" class="px-4 py-2 rounded-lg font-poppins font-medium text-sm transition-all duration-300 {% if filter_type == 'topic' %}bg-indigo-600 text-white shadow-md{% else %}text-gray-700 hover:bg-gray-100{% endif %}">
+                    Topics
+                </a>
+            </div>
+        </div>
+
+        <!-- Recommendations Grid -->
+        {% if recommendations %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            {% for rec in recommendations %}
+            <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 border-l-4 {% if rec.priority >= 90 %}border-red-500{% elif rec.priority >= 70 %}border-yellow-500{% else %}border-green-500{% endif %} animate-slide-in" style="animation-delay: {{ forloop.counter0|add:'0.1' }}s">
+                <div class="p-6">
+                    <!-- Header -->
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-xl flex items-center justify-center {% if rec.recommendation_type == 'weak_area' %}bg-red-100 text-red-600{% elif rec.recommendation_type == 'quiz' %}bg-blue-100 text-blue-600{% elif rec.recommendation_type == 'flashcard' %}bg-purple-100 text-purple-600{% elif rec.recommendation_type == 'document' %}bg-indigo-100 text-indigo-600{% else %}bg-green-100 text-green-600{% endif %}">
+                                {% if rec.recommendation_type == 'weak_area' %}
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                </svg>
+                                {% elif rec.recommendation_type == 'quiz' %}
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                                </svg>
+                                {% elif rec.recommendation_type == 'flashcard' %}
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                                </svg>
+                                {% elif rec.recommendation_type == 'document' %}
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                                {% else %}
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                                </svg>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <h3 class="font-montserrat font-bold text-lg text-gray-900">{{ rec.title }}</h3>
+                            </div>
+                        </div>
+                        <span class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-poppins font-semibold">
+                            {{ rec.priority }}
+                        </span>
+                    </div>
+
+                    <!-- Description -->
+                    <p class="font-poppins text-gray-600 text-sm mb-4 leading-relaxed">{{ rec.description }}</p>
+
+                    <!-- Course/Topic Info -->
+                    {% if rec.related_course or rec.related_topic %}
+                    <div class="mb-4 space-y-2">
+                        {% if rec.related_course %}
+                        <div class="flex items-center gap-2 text-sm text-gray-500">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                            </svg>
+                            <span class="font-poppins">{{ rec.related_course }}</span>
+                        </div>
+                        {% endif %}
+                        {% if rec.related_topic %}
+                        <div class="flex items-center gap-2 text-sm text-gray-500">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                            </svg>
+                            <span class="font-poppins">{{ rec.related_topic }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
                     {% endif %}
-                    
-                    <div class="mt-3">
+
+                    <!-- Actions -->
+                    <div class="flex flex-wrap gap-2 mt-4">
                         {% if rec.recommendation_type == 'quiz' %}
-                        <a href="{% url 'generate_quiz' %}" class="btn btn-sm btn-primary">Take Quiz</a>
+                        <a href="{% url 'generate_quiz' %}" class="flex-1 font-poppins font-semibold px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all duration-300 text-center text-sm shadow-md hover:shadow-lg">
+                            Take Quiz
+                        </a>
                         {% elif rec.recommendation_type == 'flashcard' %}
-                        <a href="{% url 'study_flashcards' %}" class="btn btn-sm btn-primary">Study Flashcards</a>
+                        <a href="{% url 'study_flashcards' %}" class="flex-1 font-poppins font-semibold px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all duration-300 text-center text-sm shadow-md hover:shadow-lg">
+                            Study Flashcards
+                        </a>
                         {% elif rec.recommendation_type == 'document' %}
-                        <a href="{% url 'pdf_upload' %}" class="btn btn-sm btn-primary">View Documents</a>
+                        <a href="{% url 'pdf_upload' %}" class="flex-1 font-poppins font-semibold px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all duration-300 text-center text-sm shadow-md hover:shadow-lg">
+                            View Documents
+                        </a>
                         {% else %}
-                        <a href="{% url 'question_answer' %}" class="btn btn-sm btn-primary">Study Now</a>
+                        <a href="{% url 'question_answer' %}" class="flex-1 font-poppins font-semibold px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all duration-300 text-center text-sm shadow-md hover:shadow-lg">
+                            Study Now
+                        </a>
                         {% endif %}
                         
-                        <button onclick="completeRecommendation({{ rec.id }})" class="btn btn-sm btn-outline-success ml-2">
-                            ✓ Complete
+                        <button onclick="completeRecommendation({{ rec.id }})" class="flex items-center justify-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-xl hover:bg-green-100 transition-all duration-300 font-poppins font-semibold text-sm border border-green-200">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            Complete
                         </button>
                     </div>
                 </div>
             </div>
+            {% endfor %}
         </div>
-        {% endfor %}
+        {% else %}
+        <!-- Empty State -->
+        <div class="bg-white rounded-2xl shadow-lg p-12 text-center animate-fade-in">
+            <div class="max-w-md mx-auto">
+                <div class="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <svg class="w-10 h-10 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                    </svg>
+                </div>
+                <h3 class="font-montserrat font-bold text-2xl text-gray-900 mb-3">No recommendations yet!</h3>
+                <p class="font-poppins text-gray-600 mb-6 leading-relaxed">
+                    Start asking questions, taking quizzes, and uploading documents to get personalized study recommendations.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                    <a href="{% url 'question_answer' %}" class="font-poppins font-semibold px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all duration-300 shadow-md hover:shadow-lg">
+                        Ask Questions
+                    </a>
+                    <a href="{% url 'pdf_upload' %}" class="font-poppins font-semibold px-6 py-3 bg-white text-indigo-600 border-2 border-indigo-600 rounded-xl hover:bg-indigo-50 transition-all duration-300">
+                        Upload Documents
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
     </div>
-    {% else %}
-    <div class="alert alert-info text-center">
-        <h4>No recommendations yet!</h4>
-        <p>Start asking questions and taking quizzes to get personalized recommendations.</p>
-    </div>
-    {% endif %}
 </div>
+
+<style>
+    @keyframes fade-in {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @keyframes slide-in {
+        from {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    .animate-fade-in {
+        animation: fade-in 0.6s ease-out;
+    }
+    
+    .animate-slide-in {
+        animation: slide-in 0.6s ease-out;
+    }
+</style>
 
 <script>
     function completeRecommendation(recId) {
@@ -102,8 +236,26 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                location.reload();
+                // Show success message
+                const button = event.target.closest('button');
+                button.innerHTML = `
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    Completed
+                `;
+                button.classList.add('bg-green-100', 'text-green-700', 'border-green-300');
+                button.classList.remove('bg-green-50', 'text-green-700', 'border-green-200');
+                
+                // Reload after a short delay
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
             }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to mark recommendation as complete. Please try again.');
         });
     }
 </script>

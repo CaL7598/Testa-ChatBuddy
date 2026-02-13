@@ -4,13 +4,13 @@
 {% block title %}My Bookmarks - Testa StudyBuddy{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 py-6 sm:py-8 px-4 sm:px-6 lg:px-8">
+<div class="min-h-screen bg-gray-50 py-6 sm:py-8 px-4 sm:px-6 lg:px-8">
     <div class="max-w-7xl mx-auto">
         <!-- Header Section -->
         <div class="mb-6 sm:mb-8 animate-fade-in">
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
                 <div>
-                    <h1 class="font-montserrat font-bold text-3xl sm:text-4xl md:text-5xl bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent mb-2">
+                    <h1 class="font-montserrat font-bold text-3xl sm:text-4xl md:text-5xl text-indigo-600 mb-2">
                         My Bookmarks
                     </h1>
                     <p class="font-poppins text-gray-600 text-base sm:text-lg">Organize and access your saved questions and answers</p>
@@ -23,7 +23,7 @@
                         <span class="hidden sm:inline">New Folder</span>
                         <span class="sm:hidden">Folder</span>
                     </a>
-                    <a href="{% url 'export_bookmarks' %}" class="flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-gradient-primary text-white rounded-full font-poppins font-semibold hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">
+                    <a href="{% url 'export_bookmarks' %}" class="flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-indigo-600 text-white rounded-full font-poppins font-semibold hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
                         </svg>
@@ -38,7 +38,7 @@
             <div class="lg:col-span-1">
                 <div class="glass-card sticky top-24">
                     <div class="flex items-center gap-3 mb-4 pb-4 border-b border-gray-200">
-                        <div class="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center">
+                        <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center">
                             <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
                             </svg>
@@ -174,7 +174,7 @@
                         {% if bookmark.tags.all %}
                         <div class="flex flex-wrap gap-2 mb-4">
                             {% for tag in bookmark.tags.all %}
-                            <span class="px-3 py-1 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 rounded-full text-xs font-poppins font-medium">
+                            <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-poppins font-medium">
                                 #{{ tag.name }}
                             </span>
                             {% endfor %}
@@ -202,7 +202,7 @@
                 {% else %}
                 <!-- Empty State -->
                 <div class="glass-card text-center py-16 sm:py-20 animate-fade-in">
-                    <div class="inline-block p-6 bg-gradient-primary/10 rounded-full mb-6">
+                    <div class="inline-block p-6 bg-indigo-100 rounded-full mb-6">
                         <svg class="w-16 h-16 sm:w-20 sm:h-20 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
                         </svg>
@@ -210,7 +210,7 @@
                     <h3 class="font-montserrat font-bold text-2xl sm:text-3xl text-gray-800 mb-3">No Bookmarks Yet</h3>
                     <p class="font-poppins text-gray-600 mb-6 max-w-md mx-auto text-base sm:text-lg">Start bookmarking questions and answers to save them for later. Organize them into folders for easy access!</p>
                     <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                        <a href="{% url 'advanced_search' %}" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-primary text-white rounded-full font-poppins font-semibold hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">
+                        <a href="{% url 'advanced_search' %}" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-full font-poppins font-semibold hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                             </svg>
@@ -397,7 +397,7 @@ function deleteBookmark(bookmarkId) {
     }
     
     .folder-item.active {
-        @apply bg-gradient-primary text-white shadow-lg;
+        @apply bg-indigo-600 text-white shadow-lg;
     }
     
     .folder-item.active span {
@@ -413,7 +413,7 @@ function deleteBookmark(bookmarkId) {
     }
     
     .sort-btn.active {
-        @apply bg-gradient-primary text-white border-transparent shadow-lg;
+        @apply bg-indigo-600 text-white border-transparent shadow-lg;
     }
     
     .view-btn {
@@ -425,7 +425,7 @@ function deleteBookmark(bookmarkId) {
     }
     
     .view-btn.active {
-        @apply bg-gradient-primary text-white border-transparent shadow-lg;
+        @apply bg-indigo-600 text-white border-transparent shadow-lg;
     }
     
     .bookmark-card {

@@ -1,11 +1,12 @@
 import os
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.forms import AuthenticationForm
+from django.contrib import messages
 from django.http import JsonResponse
 from .forms import UserRegisterForm, PDFUploadForm
-from .models import PDFDocument, QuestionAnswer, UserAnalytics, DailyActivity
+from .models import PDFDocument, QuestionAnswer, UserAnalytics, DailyActivity, Bookmark, Quiz, Flashcard, TopicMastery
 from .utils import (
     get_file_text, get_text_chunks, get_vector_store, 
     load_vector_store, get_conversational_chain
@@ -109,16 +110,18 @@ def question_answer(request):
                             # Provide helpful error message
                             error_msg = str(e2)
                             if "timeout" in error_msg.lower():
-                                answer = "The AI service is taking too long to respond. This might be due to high traffic. Please try again in a moment."
-                            elif "connection" in error_msg.lower():
-                                answer = "Unable to connect to the AI service. Please check your internet connection and try again."
+                                answer = "⏱️ The AI service is taking too long to respond. This might be due to high traffic. Please try again in a moment."
+                            elif "connection" in error_msg.lower() or "fetch failed" in error_msg.lower():
+                                answer = "🔌 Unable to connect to the AI service. Please check your internet connection and try again."
                             elif "401" in error_msg or "403" in error_msg:
-                                answer = "Authentication error with the AI service. Please contact support."
+                                answer = "🔐 Authentication error with the AI service. Please contact support."
+                            elif "500" in error_msg or "server error" in error_msg.lower() or "inference failed" in error_msg.lower():
+                                answer = "⚠️ The AI service is temporarily unavailable. The server is experiencing issues. Please try again in a few moments, or try rephrasing your question."
                             else:
-                                answer = f"I'm having trouble connecting to the AI service right now. Error: {error_msg[:100]}. Please try again later or contact support if the issue persists."
+                                answer = "⚠️ I'm having trouble connecting to the AI service right now. This is usually temporary. Please try again in a moment, or try rephrasing your question."
                     except Exception as e3:
                         print(f"Web scrape also failed: {e3}")
-                        answer = "I'm unable to process your question right now. The AI service and fallback options are unavailable. Please try again later."
+                        answer = "⚠️ I'm unable to process your question right now. The AI service and fallback options are temporarily unavailable. Please try again in a few moments."
             
             if answer == "The answer is not available in the context.":
                 answer = web_scrape_search(user_question)
@@ -251,6 +254,7 @@ def pdf_upload(request):
             raw_text = get_file_text(file)
             text_chunks = get_text_chunks(raw_text)
             get_vector_store(text_chunks)
+            messages.success(request, f'Successfully uploaded "{pdf_doc.title}"! You can now ask questions about this document.')
             return redirect('pdf_upload')
     else:
         form = PDFUploadForm()
@@ -439,4 +443,50 @@ def complete_recommendation(request, rec_id):
         recommendation.save()
         return JsonResponse({'success': True})
     return JsonResponse({'success': False}, status=400)
+
+
+@login_required
+def profile(request):
+    """User profile page"""
+    user = request.user
+    
+    # Get or create user analytics
+    analytics, created = UserAnalytics.objects.get_or_create(user=user)
+    
+    # Get user statistics
+    total_questions = QuestionAnswer.objects.filter(user=user).count()
+    total_bookmarks = Bookmark.objects.filter(user=user).count()
+    total_quizzes = Quiz.objects.filter(created_by=user).count()
+    total_flashcards = Flashcard.objects.filter(user=user).count()
+    total_documents = PDFDocument.objects.filter(uploaded_by=user).count()
+    
+    # Get recent activity
+    recent_questions = QuestionAnswer.objects.filter(user=user).order_by('-created_at')[:5]
+    recent_bookmarks = Bookmark.objects.filter(user=user).order_by('-created_at')[:5]
+    
+    # Get topic mastery
+    topic_mastery = TopicMastery.objects.filter(user=user).order_by('-mastery_level')[:5]
+    
+    # Get favorite course
+    favorite_course = analytics.favorite_course or "Not set"
+    
+    # Calculate account age
+    account_age_days = (timezone.now() - user.date_joined).days
+    
+    context = {
+        'user': user,
+        'analytics': analytics,
+        'total_questions': total_questions,
+        'total_bookmarks': total_bookmarks,
+        'total_quizzes': total_quizzes,
+        'total_flashcards': total_flashcards,
+        'total_documents': total_documents,
+        'recent_questions': recent_questions,
+        'recent_bookmarks': recent_bookmarks,
+        'topic_mastery': topic_mastery,
+        'favorite_course': favorite_course,
+        'account_age_days': account_age_days,
+    }
+    
+    return render(request, 'testa_app/profile.html', context)
 

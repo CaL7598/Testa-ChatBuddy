@@ -4,18 +4,18 @@
 {% block title %}Analytics Dashboard - Testa StudyBuddy{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 py-4 sm:py-6 lg:py-8 px-3 sm:px-4 md:px-6 lg:px-8">
+<div class="min-h-screen bg-gray-50 py-4 sm:py-6 lg:py-8 px-3 sm:px-4 md:px-6 lg:px-8">
     <div class="max-w-7xl mx-auto">
         <!-- Header Section -->
         <div class="mb-6 sm:mb-8 animate-fade-in">
-            <h1 class="font-montserrat font-bold text-3xl xs:text-4xl sm:text-5xl bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent mb-2 sm:mb-4">
+            <h1 class="font-montserrat font-bold text-3xl xs:text-4xl sm:text-5xl text-indigo-600 mb-2 sm:mb-4">
                 Analytics Dashboard
             </h1>
             <p class="font-poppins text-gray-600 text-base sm:text-lg">Track your learning progress and study patterns</p>
         </div>
 
         <!-- Date Range Filters -->
-        <div class="mb-6 sm:mb-8 flex flex-wrap gap-2 sm:gap-3 animate-slide-in">
+        <div class="mb-6 sm:mb-8 flex flex-wrap justify-center gap-3 animate-slide-in">
             <button onclick="updateRange(7)" class="date-filter-btn {% if date_range == '7' %}active{% endif %}" data-range="7">
                 <span class="font-poppins font-semibold text-sm sm:text-base">7 Days</span>
             </button>
@@ -30,71 +30,75 @@
         <!-- Overview Statistics Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <!-- Total Questions Card -->
-            <div class="stat-card group" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300 rounded-2xl"></div>
+            <div class="stat-card group relative overflow-hidden" style="background: #667eea;">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+                <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full -ml-12 -mb-12"></div>
                 <div class="relative z-10">
                     <div class="flex items-center justify-between mb-4">
-                        <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="w-14 h-14 bg-white/25 rounded-2xl flex items-center justify-center backdrop-blur-md shadow-lg">
+                            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
                         </div>
-                        <div class="text-white/60 text-sm font-poppins">Total</div>
+                        <div class="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-white/90 text-xs font-poppins font-semibold">Total</div>
                     </div>
-                    <h2 class="text-3xl sm:text-4xl font-montserrat font-bold text-white mb-2">{{ stats.total_questions }}</h2>
-                    <p class="text-white/90 font-poppins font-medium text-sm sm:text-base">Questions Asked</p>
+                    <h2 class="text-4xl sm:text-5xl font-montserrat font-bold text-white mb-2 drop-shadow-lg">{{ stats.total_questions }}</h2>
+                    <p class="text-white/95 font-poppins font-semibold text-base sm:text-lg">Questions Asked</p>
                 </div>
             </div>
 
             <!-- Quizzes Taken Card -->
-            <div class="stat-card group" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300 rounded-2xl"></div>
+            <div class="stat-card group relative overflow-hidden" style="background: #f093fb;">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+                <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full -ml-12 -mb-12"></div>
                 <div class="relative z-10">
                     <div class="flex items-center justify-between mb-4">
-                        <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="w-14 h-14 bg-white/25 rounded-2xl flex items-center justify-center backdrop-blur-md shadow-lg">
+                            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
                             </svg>
                         </div>
-                        <div class="text-white/60 text-sm font-poppins">Average</div>
+                        <div class="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-white/90 text-xs font-poppins font-semibold">Average</div>
                     </div>
-                    <h2 class="text-3xl sm:text-4xl font-montserrat font-bold text-white mb-2">{{ stats.total_quizzes }}</h2>
-                    <p class="text-white/90 font-poppins font-medium mb-1 text-sm sm:text-base">Quizzes Taken</p>
-                    <p class="text-white/80 text-xs sm:text-sm font-poppins">{{ stats.average_quiz_score }}% Score</p>
+                    <h2 class="text-4xl sm:text-5xl font-montserrat font-bold text-white mb-2 drop-shadow-lg">{{ stats.total_quizzes }}</h2>
+                    <p class="text-white/95 font-poppins font-semibold mb-1 text-base sm:text-lg">Quizzes Taken</p>
+                    <p class="text-white/90 text-sm font-poppins font-medium">{{ stats.average_quiz_score }}% Score</p>
                 </div>
             </div>
 
             <!-- Study Minutes Card -->
-            <div class="stat-card group" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-                <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300 rounded-2xl"></div>
+            <div class="stat-card group relative overflow-hidden" style="background: #4facfe;">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+                <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full -ml-12 -mb-12"></div>
                 <div class="relative z-10">
                     <div class="flex items-center justify-between mb-4">
-                        <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="w-14 h-14 bg-white/25 rounded-2xl flex items-center justify-center backdrop-blur-md shadow-lg">
+                            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
                         </div>
-                        <div class="text-white/60 text-sm font-poppins">Minutes</div>
+                        <div class="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-white/90 text-xs font-poppins font-semibold">Minutes</div>
                     </div>
-                    <h2 class="text-3xl sm:text-4xl font-montserrat font-bold text-white mb-2">{{ stats.total_study_time }}</h2>
-                    <p class="text-white/90 font-poppins font-medium text-sm sm:text-base">Study Time</p>
+                    <h2 class="text-4xl sm:text-5xl font-montserrat font-bold text-white mb-2 drop-shadow-lg">{{ stats.total_study_time }}</h2>
+                    <p class="text-white/95 font-poppins font-semibold text-base sm:text-lg">Study Time</p>
                 </div>
             </div>
 
             <!-- Day Streak Card -->
-            <div class="stat-card group" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
-                <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300 rounded-2xl"></div>
+            <div class="stat-card group relative overflow-hidden" style="background: #43e97b;">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+                <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full -ml-12 -mb-12"></div>
                 <div class="relative z-10">
                     <div class="flex items-center justify-between mb-4">
-                        <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="w-14 h-14 bg-white/25 rounded-2xl flex items-center justify-center backdrop-blur-md shadow-lg">
+                            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                             </svg>
                         </div>
-                        <div class="text-white/60 text-sm font-poppins">Best: {{ stats.longest_streak }}</div>
+                        <div class="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-white/90 text-xs font-poppins font-semibold">Best: {{ stats.longest_streak }}</div>
                     </div>
-                    <h2 class="text-3xl sm:text-4xl font-montserrat font-bold text-white mb-2">{{ stats.current_streak }}</h2>
-                    <p class="text-white/90 font-poppins font-medium text-sm sm:text-base">Day Streak</p>
+                    <h2 class="text-4xl sm:text-5xl font-montserrat font-bold text-white mb-2 drop-shadow-lg">{{ stats.current_streak }}</h2>
+                    <p class="text-white/95 font-poppins font-semibold text-base sm:text-lg">Day Streak</p>
                 </div>
             </div>
         </div>
@@ -106,7 +110,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <div class="flex items-center gap-3 mb-3">
-                            <div class="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl flex items-center justify-center">
+                            <div class="w-10 h-10 bg-yellow-400 rounded-xl flex items-center justify-center">
                                 <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
                                 </svg>
@@ -123,7 +127,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <div class="flex items-center gap-3 mb-3">
-                            <div class="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-500 rounded-xl flex items-center justify-center">
+                            <div class="w-10 h-10 bg-green-400 rounded-xl flex items-center justify-center">
                                 <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
@@ -141,7 +145,7 @@
             <!-- Questions Over Time Chart -->
             <div class="glass-card">
                 <div class="flex items-center gap-3 mb-6">
-                    <div class="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center">
+                    <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center">
                         <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                         </svg>
@@ -167,7 +171,7 @@
             <!-- Study Time Chart -->
             <div class="glass-card">
                 <div class="flex items-center gap-3 mb-6">
-                    <div class="w-10 h-10 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-xl flex items-center justify-center">
+                    <div class="w-10 h-10 bg-blue-400 rounded-xl flex items-center justify-center">
                         <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
@@ -194,7 +198,7 @@
         <!-- Quizzes Chart -->
         <div class="glass-card mb-8">
             <div class="flex items-center gap-3 mb-6">
-                <div class="w-10 h-10 bg-gradient-to-br from-pink-400 to-red-500 rounded-xl flex items-center justify-center">
+                <div class="w-10 h-10 bg-pink-400 rounded-xl flex items-center justify-center">
                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
                     </svg>
@@ -211,7 +215,7 @@
             <!-- Top Mastered Topics -->
             <div class="glass-card">
                 <div class="flex items-center gap-3 mb-6">
-                    <div class="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-500 rounded-xl flex items-center justify-center">
+                    <div class="w-10 h-10 bg-green-400 rounded-xl flex items-center justify-center">
                         <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
@@ -229,7 +233,7 @@
                             <span class="font-montserrat font-bold text-base sm:text-lg text-green-600">{{ topic.mastery }}%</span>
                         </div>
                         <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                            <div class="h-full bg-gradient-to-r from-green-400 to-emerald-500 rounded-full transition-all duration-1000 ease-out" style="width: {{ topic.mastery }}%"></div>
+                            <div class="h-full bg-green-400 rounded-full transition-all duration-1000 ease-out" style="width: {{ topic.mastery }}%"></div>
                         </div>
                     </div>
                     {% empty %}
@@ -241,7 +245,7 @@
             <!-- Areas for Improvement -->
             <div class="glass-card">
                 <div class="flex items-center gap-3 mb-6">
-                    <div class="w-10 h-10 bg-gradient-to-br from-orange-400 to-red-500 rounded-xl flex items-center justify-center">
+                    <div class="w-10 h-10 bg-orange-400 rounded-xl flex items-center justify-center">
                         <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
                         </svg>
@@ -259,7 +263,7 @@
                             <span class="font-montserrat font-bold text-base sm:text-lg text-orange-600">{{ topic.mastery }}%</span>
                         </div>
                         <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                            <div class="h-full bg-gradient-to-r from-orange-400 to-red-500 rounded-full transition-all duration-1000 ease-out" style="width: {{ topic.mastery }}%"></div>
+                            <div class="h-full bg-orange-400 rounded-full transition-all duration-1000 ease-out" style="width: {{ topic.mastery }}%"></div>
                         </div>
                     </div>
                     {% empty %}
@@ -273,7 +277,7 @@
         {% if insights %}
         <div class="glass-card mb-8">
             <div class="flex items-center gap-3 mb-6">
-                <div class="w-10 h-10 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-xl flex items-center justify-center">
+                <div class="w-10 h-10 bg-indigo-400 rounded-xl flex items-center justify-center">
                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
                     </svg>
@@ -300,7 +304,7 @@
         <div class="glass-card mb-8">
             <div class="flex items-center justify-between mb-6">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-xl flex items-center justify-center">
+                    <div class="w-10 h-10 bg-blue-400 rounded-xl flex items-center justify-center">
                         <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
                         </svg>
@@ -309,12 +313,12 @@
                 </div>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                <div class="text-center p-4 sm:p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl">
+                <div class="text-center p-4 sm:p-6 bg-blue-50 rounded-xl">
                     <p class="font-poppins text-xs sm:text-sm text-gray-600 mb-2">This Week</p>
                     <h2 class="text-3xl sm:text-4xl font-montserrat font-bold text-blue-600 mb-2">{{ weekly_comparison.this_week }}</h2>
                     <p class="font-poppins text-xs text-gray-500">Questions Asked</p>
                 </div>
-                <div class="text-center p-4 sm:p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl">
+                <div class="text-center p-4 sm:p-6 bg-purple-50 rounded-xl">
                     <p class="font-poppins text-xs sm:text-sm text-gray-600 mb-2">Last Week</p>
                     <h2 class="text-3xl sm:text-4xl font-montserrat font-bold text-purple-600 mb-2">{{ weekly_comparison.last_week }}</h2>
                     <div class="flex items-center justify-center gap-2 mt-2">
@@ -340,7 +344,7 @@
             {% if course_breakdown %}
             <div class="glass-card">
                 <div class="flex items-center gap-3 mb-6">
-                    <div class="w-10 h-10 bg-gradient-to-br from-teal-400 to-cyan-500 rounded-xl flex items-center justify-center">
+                    <div class="w-10 h-10 bg-teal-400 rounded-xl flex items-center justify-center">
                         <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
                         </svg>
@@ -355,7 +359,7 @@
                             <span class="font-montserrat font-bold text-sm sm:text-base text-teal-600">{{ course.count }} ({{ course.percentage }}%)</span>
                         </div>
                         <div class="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
-                            <div class="h-full bg-gradient-to-r from-teal-400 to-cyan-500 rounded-full transition-all duration-1000 ease-out" style="width: {{ course.percentage }}%"></div>
+                            <div class="h-full bg-teal-400 rounded-full transition-all duration-1000 ease-out" style="width: {{ course.percentage }}%"></div>
                         </div>
                     </div>
                     {% endfor %}
@@ -366,7 +370,7 @@
             <!-- Difficulty Distribution -->
             <div class="glass-card">
                 <div class="flex items-center gap-3 mb-6">
-                    <div class="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center">
+                    <div class="w-10 h-10 bg-amber-400 rounded-xl flex items-center justify-center">
                         <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                         </svg>
@@ -383,7 +387,7 @@
         {% if trending_topics %}
         <div class="glass-card mb-8">
             <div class="flex items-center gap-3 mb-6">
-                <div class="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-500 rounded-xl flex items-center justify-center">
+                <div class="w-10 h-10 bg-purple-400 rounded-xl flex items-center justify-center">
                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
                     </svg>
@@ -392,7 +396,7 @@
             </div>
             <div class="flex flex-wrap gap-3">
                 {% for topic in trending_topics %}
-                <span class="px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 rounded-full font-poppins font-medium text-xs sm:text-sm hover:scale-110 transition-transform duration-200 cursor-pointer touch-manipulation">
+                <span class="px-3 sm:px-4 py-1.5 sm:py-2 bg-purple-100 text-purple-700 rounded-full font-poppins font-medium text-xs sm:text-sm hover:scale-110 transition-transform duration-200 cursor-pointer touch-manipulation">
                     {{ topic.topic }} <span class="text-purple-500">({{ topic.count }})</span>
                 </span>
                 {% endfor %}
@@ -613,19 +617,19 @@
 
 <style>
     .stat-card {
-        @apply relative p-4 sm:p-6 rounded-2xl shadow-xl text-white transform transition-all duration-300;
-        min-height: 150px;
+        @apply relative p-5 sm:p-6 rounded-3xl shadow-2xl text-white transform transition-all duration-300;
+        min-height: 160px;
     }
     
     @media (min-width: 640px) {
         .stat-card {
-            min-height: 180px;
+            min-height: 190px;
         }
     }
 
     .stat-card:hover {
-        transform: translateY(-8px) scale(1.02);
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        transform: translateY(-10px) scale(1.03);
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
     }
 
     .glass-card {
@@ -644,7 +648,7 @@
     }
 
     .date-filter-btn.active {
-        @apply bg-gradient-primary text-white border-transparent shadow-lg;
+        @apply bg-indigo-600 text-white border-transparent shadow-lg;
     }
 
     .chart-container {

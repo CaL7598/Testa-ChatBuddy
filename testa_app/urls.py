@@ -64,4 +64,7 @@ urlpatterns = [
     # Recommendations
     path('recommendations/', views.recommendations, name='recommendations'),
     path('recommendations/<int:rec_id>/complete/', views.complete_recommendation, name='complete_recommendation'),
+    
+    # Profile
+    path('profile/', views.profile, name='profile'),
 ]

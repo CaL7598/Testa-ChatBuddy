@@ -1,12 +1,282 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Login{% endblock %}
+{% block title %}About - Testa StudyBuddy{% endblock %}
 
 {% block content %}
-<h1>
-    This is the about
+<!-- Hero Section -->
+<div class="relative text-white py-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
+    <!-- Background Image -->
+    <div class="absolute inset-0 z-0">
+        <img src="{% static 'banner/pexels-kampus-5940845.jpg' %}" alt="Banner" class="w-full h-full object-cover">
+        <div class="absolute inset-0 bg-indigo-600/30"></div>
+    </div>
+    
+    <div class="relative z-10 max-w-7xl mx-auto text-center">
+        <div class="animate-fade-in">
+            <h1 class="font-montserrat font-bold text-4xl sm:text-5xl md:text-6xl lg:text-7xl mb-6 text-shadow-lg">
+                About Testa StudyBuddy
 </h1>
-   <h4>
-    Lorem ipsum dolor sit natus explicabo doloremque at ea delectus rem voluptas veniam aperiam placeat similique ipsa quia. Quia a eveniet laborum, nisi, sed deleniti praesentium veritatis maxime ut consectetur, esse blanditiis nostrum provident! Nam, quas sit aspernatur totam repudiandae illo amet quod hic, iure optio consequuntur corporis neque nobis itaque laboriosam ipsa harum autem! Laborum nisi sint architecto rerum? Commodi consequuntur asperiores dolore impedit rem tempora velit eum. Fuga, similique! Officiis quidem in nihil, alias excepturi vitae consequuntur laborum dolorem odio? Velit enim maxime laborum quas aspernatur consectetur beatae doloribus. Reiciendis nihil at possimus dolor assumenda aliquam odit laudantium facere laboriosam quis! Debitis iusto earum ipsa sit maiores, ullam nulla odio laudantium adipisci beatae tenetur cumque corporis vel ex ipsum asperiores excepturi tempora quod! Veritatis, quibusdam minima?
-   </h1>
+            <p class="font-poppins text-xl sm:text-2xl text-white max-w-3xl mx-auto leading-relaxed text-shadow-md">
+                Your AI-powered learning companion designed to transform how students study, learn, and excel academically.
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="bg-white py-16 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto">
+        
+        <!-- What is Testa StudyBuddy -->
+        <section class="mb-20">
+            <div class="text-center mb-12">
+                <h2 class="font-montserrat font-bold text-3xl sm:text-4xl text-slate-900 mb-4">
+                    What is Testa StudyBuddy?
+                </h2>
+                <div class="w-24 h-1 bg-indigo-600 mx-auto rounded-full"></div>
+            </div>
+            <div class="max-w-4xl mx-auto">
+                <p class="font-poppins text-lg text-gray-700 leading-relaxed mb-6">
+                    Testa StudyBuddy is an innovative AI-powered educational platform developed for students at the University of Energy and Natural Resources (UENR). It combines cutting-edge artificial intelligence with intuitive design to create a comprehensive study assistant that helps students learn more effectively and efficiently.
+                </p>
+                <p class="font-poppins text-lg text-gray-700 leading-relaxed">
+                    Whether you're preparing for exams, researching topics, or seeking to deepen your understanding of complex subjects, Testa StudyBuddy is here to support your academic journey every step of the way.
+                </p>
+            </div>
+        </section>
+
+        <!-- Key Features -->
+        <section class="mb-20">
+            <div class="text-center mb-12">
+                <h2 class="font-montserrat font-bold text-3xl sm:text-4xl text-slate-900 mb-4">
+                    Key Features
+                </h2>
+                <div class="w-24 h-1 bg-indigo-600 mx-auto rounded-full"></div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Feature 1 -->
+                <div class="bg-indigo-50 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
+                    <div class="w-16 h-16 bg-indigo-600 rounded-xl flex items-center justify-center mb-6">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="font-montserrat font-bold text-xl text-slate-900 mb-3">AI-Powered Q&A</h3>
+                    <p class="font-poppins text-gray-700 leading-relaxed">
+                        Get instant, accurate answers to your questions using advanced AI technology. Our intelligent system understands context and provides comprehensive explanations.
+                    </p>
+                </div>
+
+                <!-- Feature 2 -->
+                <div class="bg-purple-50 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
+                    <div class="w-16 h-16 bg-purple-600 rounded-xl flex items-center justify-center mb-6">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                        </svg>
+                    </div>
+                    <h3 class="font-montserrat font-bold text-xl text-slate-900 mb-3">Document Upload</h3>
+                    <p class="font-poppins text-gray-700 leading-relaxed">
+                        Upload PDF documents and let our AI analyze and extract key information. Create a personalized knowledge base from your study materials.
+                    </p>
+                </div>
+
+                <!-- Feature 3 -->
+                <div class="bg-pink-50 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
+                    <div class="w-16 h-16 bg-pink-600 rounded-xl flex items-center justify-center mb-6">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="font-montserrat font-bold text-xl text-slate-900 mb-3">Analytics Dashboard</h3>
+                    <p class="font-poppins text-gray-700 leading-relaxed">
+                        Track your learning progress with detailed analytics. Monitor your study habits, topic mastery, and daily activity to optimize your learning.
+                    </p>
+                </div>
+
+                <!-- Feature 4 -->
+                <div class="bg-indigo-50 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
+                    <div class="w-16 h-16 bg-indigo-600 rounded-xl flex items-center justify-center mb-6">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="font-montserrat font-bold text-xl text-slate-900 mb-3">Smart Recommendations</h3>
+                    <p class="font-poppins text-gray-700 leading-relaxed">
+                        Receive personalized study recommendations based on your learning patterns and areas that need improvement. Focus on what matters most.
+                    </p>
+                </div>
+
+                <!-- Feature 5 -->
+                <div class="bg-purple-50 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
+                    <div class="w-16 h-16 bg-purple-600 rounded-xl flex items-center justify-center mb-6">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="font-montserrat font-bold text-xl text-slate-900 mb-3">Bookmarks & Notes</h3>
+                    <p class="font-poppins text-gray-700 leading-relaxed">
+                        Save important questions, answers, and study materials for quick access later. Build your personal knowledge library.
+                    </p>
+                </div>
+
+                <!-- Feature 6 -->
+                <div class="bg-pink-50 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
+                    <div class="w-16 h-16 bg-pink-600 rounded-xl flex items-center justify-center mb-6">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="font-montserrat font-bold text-xl text-slate-900 mb-3">Advanced Search</h3>
+                    <p class="font-poppins text-gray-700 leading-relaxed">
+                        Search through your uploaded documents and saved content with powerful semantic search capabilities. Find exactly what you need instantly.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- How It Works -->
+        <section class="mb-20">
+            <div class="text-center mb-12">
+                <h2 class="font-montserrat font-bold text-3xl sm:text-4xl text-slate-900 mb-4">
+                    How It Works
+                </h2>
+                <div class="w-24 h-1 bg-indigo-600 mx-auto rounded-full"></div>
+            </div>
+            
+            <div class="max-w-4xl mx-auto">
+                <div class="space-y-8">
+                    <!-- Step 1 -->
+                    <div class="flex flex-col md:flex-row items-start gap-6">
+                        <div class="flex-shrink-0 w-16 h-16 bg-indigo-600 rounded-full flex items-center justify-center text-white font-montserrat font-bold text-2xl shadow-lg">
+                            1
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="font-montserrat font-bold text-xl text-slate-900 mb-2">Sign Up & Get Started</h3>
+                            <p class="font-poppins text-gray-700 leading-relaxed">
+                                Create your free account in seconds. No credit card required. Start your learning journey immediately.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="flex flex-col md:flex-row items-start gap-6">
+                        <div class="flex-shrink-0 w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center text-white font-montserrat font-bold text-2xl shadow-lg">
+                            2
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="font-montserrat font-bold text-xl text-slate-900 mb-2">Upload Your Documents</h3>
+                            <p class="font-poppins text-gray-700 leading-relaxed">
+                                Upload your PDF study materials, lecture notes, or textbooks. Our AI will process and index them for easy access.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="flex flex-col md:flex-row items-start gap-6">
+                        <div class="flex-shrink-0 w-16 h-16 bg-pink-600 rounded-full flex items-center justify-center text-white font-montserrat font-bold text-2xl shadow-lg">
+                            3
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="font-montserrat font-bold text-xl text-slate-900 mb-2">Ask Questions & Learn</h3>
+                            <p class="font-poppins text-gray-700 leading-relaxed">
+                                Ask any question related to your uploaded materials or general topics. Get instant, detailed answers powered by AI.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div class="flex flex-col md:flex-row items-start gap-6">
+                        <div class="flex-shrink-0 w-16 h-16 bg-indigo-600 rounded-full flex items-center justify-center text-white font-montserrat font-bold text-2xl shadow-lg">
+                            4
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="font-montserrat font-bold text-xl text-slate-900 mb-2">Track Your Progress</h3>
+                            <p class="font-poppins text-gray-700 leading-relaxed">
+                                Monitor your learning journey with comprehensive analytics. Identify strengths, weaknesses, and areas for improvement.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Mission Section -->
+        <section class="mb-20">
+            <div class="relative rounded-3xl p-12 text-white shadow-2xl overflow-hidden">
+                <!-- Background Image -->
+                <div class="absolute inset-0 z-0">
+                    <img src="{% static 'banner/pexels-mikhail-nilov-9159076.jpg' %}" alt="Mission Banner" class="w-full h-full object-cover rounded-3xl">
+                    <div class="absolute inset-0 bg-indigo-600/30 rounded-3xl"></div>
+                </div>
+                
+                <div class="relative z-10 max-w-4xl mx-auto text-center">
+                    <h2 class="font-montserrat font-bold text-3xl sm:text-4xl mb-6 text-shadow-lg">Our Mission</h2>
+                    <p class="font-poppins text-xl leading-relaxed text-white text-shadow-md">
+                        To empower students at UENR and beyond with intelligent learning tools that make education more accessible, efficient, and enjoyable. We believe that every student deserves access to personalized, AI-powered learning assistance that adapts to their unique learning style and pace.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Call to Action -->
+        <section class="text-center">
+            <div class="max-w-3xl mx-auto">
+                <h2 class="font-montserrat font-bold text-3xl sm:text-4xl text-slate-900 mb-6">
+                    Ready to Transform Your Learning?
+                </h2>
+                <p class="font-poppins text-lg text-gray-700 mb-8 leading-relaxed">
+                    Join thousands of students who are already using Testa StudyBuddy to excel in their studies.
+                </p>
+                {% if not user.is_authenticated %}
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="{% url 'register' %}" class="font-montserrat font-semibold px-8 py-4 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 text-lg">
+                        Get Started Free →
+                    </a>
+                    <a href="{% url 'login' %}" class="font-montserrat font-semibold px-8 py-4 bg-white text-indigo-600 border-2 border-indigo-600 rounded-full shadow-md hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 text-lg">
+                        Sign In
+                    </a>
+                </div>
+                {% else %}
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="{% url 'question_answer' %}" class="font-montserrat font-semibold px-8 py-4 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 text-lg">
+                        Start Learning →
+                    </a>
+                    <a href="{% url 'analytics_dashboard' %}" class="font-montserrat font-semibold px-8 py-4 bg-white text-indigo-600 border-2 border-indigo-600 rounded-full shadow-md hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 text-lg">
+                        View Analytics
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </section>
+
+    </div>
+</div>
+
+<style>
+    @keyframes fade-in {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .animate-fade-in {
+        animation: fade-in 1s ease-out;
+    }
+    
+    .text-shadow-lg {
+        text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 0, 0, 0.5);
+    }
+    
+    .text-shadow-md {
+        text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.8), 0 0 10px rgba(0, 0, 0, 0.4);
+    }
+</style>
+
 {% endblock %}
