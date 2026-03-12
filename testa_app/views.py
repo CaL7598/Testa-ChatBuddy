@@ -1,10 +1,14 @@
 import os
+import sys
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, authenticate
+from django.views.decorators.http import require_http_methods
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib import messages
 from django.http import JsonResponse
+
+
 from .forms import UserRegisterForm, PDFUploadForm
 from .models import PDFDocument, QuestionAnswer, UserAnalytics, DailyActivity, Bookmark, Quiz, Flashcard, TopicMastery
 from .utils import (
@@ -19,6 +23,16 @@ from .bytez_client import BytezClient
 
 load_dotenv()
 
+
+def _safe_log(msg, *args):
+    """Log to console without raising UnicodeEncodeError on Windows (charmap)."""
+    try:
+        safe = (str(msg).encode('ascii', errors='replace').decode('ascii'),) + tuple(
+            str(a).encode('ascii', errors='replace').decode('ascii') for a in args
+        )
+        print(*safe)
+    except Exception:
+        print("[log omitted]")
 
 
 
@@ -73,36 +87,47 @@ def question_answer(request):
             if not user_question:
                 return JsonResponse({"error": "Question is required"}, status=400)
             
-            print("Received question:", user_question)
+            _safe_log("Received question: " + (user_question[:200] if user_question else ""))
             qa_list = QuestionAnswer.objects.filter(user=request.user).order_by('-created_at')[:10]
             
-            # Load vector store and search
+            # Load vector store and search (uses absolute path; includes all uploaded docs)
             answer = None
+            context = ""
             try:
-                vector_store = load_vector_store("faiss_index")
+                vector_store = load_vector_store()
                 if vector_store:
                     docs = vector_store.similarity_search(user_question, k=3)
-                    # Combine context from similar documents
-                    context = "\n\n".join([doc.page_content for doc in docs])
-                    chain = get_conversational_chain()
-                    answer = chain(context, user_question)
+                    context = "\n\n".join([doc.page_content for doc in docs]).strip()
+                    if context:
+                        chain = get_conversational_chain()
+                        answer = chain(context, user_question)
             except Exception as e:
-                print(f"Error with vector store: {e}")
+                _safe_log(f"Error with vector store: {e}")
             
-            # If no answer from vector store, try direct AI question
+            # If no answer from document context, use Bytez with clear instructions when no context
             if not answer:
                 try:
                     from .bytez_client import BytezClient
                     client = BytezClient()
-                    answer = client.answer_question(user_question)
+                    if not context:
+                        # No uploaded docs or no relevant passages — avoid "I don't have access to files"
+                        answer = client.answer_question(
+                            user_question,
+                            context="No document context was found. Reply helpfully: if they asked about an uploaded document, say you couldn't find relevant content in their uploaded documents and suggest they upload the file first or rephrase; otherwise answer from your general knowledge. Do not say you cannot access files or external documents."
+                        )
+                    else:
+                        answer = client.answer_question(user_question, context=context)
                 except ValueError as e2:
                     # API key missing
-                    print(f"API Key Error: {e2}")
+                    _safe_log(f"API Key Error: {e2}")
                     answer = "API configuration error. Please contact support."
                 except Exception as e2:
-                    print(f"Error with Bytez API: {e2}")
+                    _safe_log(f"Error with Bytez API: {e2}")
                     import traceback
-                    traceback.print_exc()
+                    try:
+                        traceback.print_exc()
+                    except UnicodeEncodeError:
+                        pass
                     # Try web scrape as fallback
                     try:
                         answer = web_scrape_search(user_question)
@@ -120,7 +145,7 @@ def question_answer(request):
                             else:
                                 answer = "⚠️ I'm having trouble connecting to the AI service right now. This is usually temporary. Please try again in a moment, or try rephrasing your question."
                     except Exception as e3:
-                        print(f"Web scrape also failed: {e3}")
+                        _safe_log(f"Web scrape also failed: {e3}")
                         answer = "⚠️ I'm unable to process your question right now. The AI service and fallback options are temporarily unavailable. Please try again in a few moments."
             
             if answer == "The answer is not available in the context.":
@@ -128,39 +153,64 @@ def question_answer(request):
                 if not answer:
                     answer = "Sorry, I couldn't find an answer to your question."
             
+            if not answer or not str(answer).strip():
+                answer = "Sorry, I couldn't generate a response. Please try again or rephrase your question."
+            
             # Calculate response time
             response_time = (timezone.now() - start_time).total_seconds()
-            print("Response:", answer[:100] if answer else "Empty response")
+            _safe_log("Response: " + (str(answer)[:100] if answer else "Empty response"))
             
-            # Create Q&A entry
-            qa_entry = QuestionAnswer.objects.create(
-                user=request.user,
-                question=user_question,
-                answer=answer,
-                response_time=response_time
-            )
+            # Create or update Q&A entry (avoid UNIQUE constraint errors on (user, question))
+            from django.db import IntegrityError
+            try:
+                qa_entry, created = QuestionAnswer.objects.update_or_create(
+                    user=request.user,
+                    question=user_question,
+                    defaults={
+                        'answer': str(answer),
+                        'response_time': response_time,
+                    },
+                )
+            except IntegrityError:
+                # As a fallback, fetch existing and update in-place
+                qa_entry = QuestionAnswer.objects.get(user=request.user, question=user_question)
+                qa_entry.answer = str(answer)
+                qa_entry.response_time = response_time
+                qa_entry.save()
             
             # Update analytics
             try:
                 _update_daily_activity(request.user)
                 _update_user_analytics(request.user)
             except Exception as e:
-                print(f"Error updating analytics: {e}")
+                _safe_log(f"Error updating analytics: {e}")
             
             return JsonResponse({"response": answer})
             
         except Exception as e:
-            print(f"Unexpected error in question_answer: {e}")
+            _safe_log(f"Unexpected error in question_answer: {e}")
             import traceback
-            traceback.print_exc()
+            try:
+                traceback.print_exc()
+            except UnicodeEncodeError:
+                pass
+            err_msg = str(e)
+            if "charmap" in err_msg or "codec" in err_msg or isinstance(e, (UnicodeEncodeError, UnicodeDecodeError)):
+                err_msg = "A character encoding issue occurred. Try rephrasing your question or uploading a document without special characters."
             return JsonResponse({
-                "error": f"An error occurred: {str(e)}"
+                "error": f"An error occurred: {err_msg}"
             }, status=500)
 
     qa_list = QuestionAnswer.objects.filter(user=request.user).order_by('-created_at')[:10]
+    from django.urls import reverse
+    try:
+        upload_ajax_url = reverse('upload_document_ajax')
+    except Exception:
+        upload_ajax_url = '/question_answer/upload/'
     return render(request, 'testa_app/question_answer.html', {
         'qa_list': qa_list,
-        'username': request.user.username 
+        'username': request.user.username,
+        'upload_ajax_url': upload_ajax_url,
     })
 
 
@@ -192,6 +242,31 @@ def all_questions(request):
     return render(request, 'testa_app/all_questions.html', {
         'all_qa_list': all_qa_list,
     })
+
+
+@require_http_methods(["POST", "DELETE"])
+@login_required
+def delete_question_answer(request, qa_id):
+    """Delete a single Q&A entry. User must own it. Returns JSON."""
+    try:
+        qa = QuestionAnswer.objects.get(id=qa_id, user=request.user)
+        qa.delete()
+        return JsonResponse({'success': True, 'deleted_id': qa_id})
+    except QuestionAnswer.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@require_http_methods(["POST", "DELETE"])
+@login_required
+def delete_all_question_answers(request):
+    """Delete all Q&A history for the current user. Returns JSON."""
+    try:
+        deleted_count, _ = QuestionAnswer.objects.filter(user=request.user).delete()
+        return JsonResponse({'success': True, 'deleted_count': deleted_count})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
 from docx import Document
@@ -235,7 +310,7 @@ def extract_text_from_pptx(file):
     return text
 
 def extract_text_from_txt(file):
-    return file.read().decode('utf-8')
+    return file.read().decode('utf-8', errors='replace')
 
 
 
@@ -258,7 +333,39 @@ def pdf_upload(request):
             return redirect('pdf_upload')
     else:
         form = PDFUploadForm()
-    return render(request, 'testa_app/pdf_upload.html', {'form': form})
+    documents = PDFDocument.objects.filter(uploaded_by=request.user).order_by('-uploaded_at')
+    return render(request, 'testa_app/pdf_upload.html', {'form': form, 'documents': documents})
+
+
+@login_required
+def upload_document_ajax(request):
+    """Upload a document from the question/chat page (AJAX). Returns JSON."""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Method not allowed'}, status=405)
+    file = request.FILES.get('file')
+    if not file:
+        return JsonResponse({'success': False, 'error': 'No file provided'}, status=400)
+    allowed_extensions = ['pdf', 'docx', 'pptx', 'txt']
+    ext = file.name.split('.')[-1].lower()
+    if ext not in allowed_extensions:
+        return JsonResponse({'success': False, 'error': 'Unsupported file type. Use PDF, DOCX, PPTX, or TXT.'}, status=400)
+    try:
+        raw_text = get_file_text(file)
+        text_chunks = get_text_chunks(raw_text)
+        pdf_doc = PDFDocument(
+            file=file,
+            title=file.name,
+            uploaded_by=request.user
+        )
+        pdf_doc.save()
+        get_vector_store(text_chunks)
+        return JsonResponse({
+            'success': True,
+            'title': pdf_doc.title or file.name,
+            'message': f'"{pdf_doc.title or file.name}" is ready. Ask anything about it below.'
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
 
@@ -301,7 +408,6 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from .models import QuestionAnswer, Vote
 import json
-from django.views.decorators.http import require_http_methods
 
 @require_http_methods(["PATCH"])
 @login_required

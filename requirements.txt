@@ -1,7 +1,8 @@
 Django==5.0.3
 PyPDF2==3.0.1
 langchain>=0.3.0
-langchain-text-splitters>=1.0.0
+# Use a langchain-text-splitters version compatible with langchain 0.3.x
+langchain-text-splitters>=0.3.0,<0.4.0
 langchain-community>=0.0.1
 faiss-cpu==1.13.2
 python-dotenv==1.0.1

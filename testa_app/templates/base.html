@@ -106,6 +106,14 @@
                     <span class="font-poppins font-medium">Upload</span>
                 </a>
 
+                <!-- Flashcards -->
+                <a href="{% url 'study_flashcards' %}" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-indigo-700 transition-all duration-300 group {% if request.resolver_match.url_name in 'generate_flashcards study_flashcards' %}bg-indigo-700 shadow-lg{% endif %}">
+                    <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5h9M5 9h9m-9 4h5m3 4h6M4 5a1 1 0 011-1h9a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm0 8a1 1 0 011-1h5a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zm9 3a1 1 0 011-1h6a1 1 0 011 1v3a1 1 0 01-1 1h-6a1 1 0 01-1-1v-3z"></path>
+                    </svg>
+                    <span class="font-poppins font-medium">Flashcards</span>
+                </a>
+
                 <!-- Profile -->
                 <a href="{% url 'profile' %}" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-indigo-700 transition-all duration-300 group {% if request.resolver_match.url_name == 'profile' %}bg-indigo-700 shadow-lg{% endif %}">
                     <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -34,7 +34,8 @@ def analytics_dashboard(request):
         'total_study_time': analytics.total_study_time,
         'current_streak': analytics.current_streak,
         'longest_streak': analytics.longest_streak,
-        'total_flashcards': analytics.total_flashcards,
+        # Compute actual count of flashcards for the user so the tile stays accurate
+        'total_flashcards': Flashcard.objects.filter(user=user).count(),
         'satisfaction_score': _calculate_satisfaction_score(user),
     }
     

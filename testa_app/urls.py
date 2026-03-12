@@ -20,8 +20,11 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('about/', views.about, name='about'),
     path('pdf_upload/', views.pdf_upload, name='pdf_upload'),
+    path('question_answer/upload/', views.upload_document_ajax, name='upload_document_ajax'),
     path('question_answer/', views.question_answer, name='question_answer'),
     path('vote/', views.vote, name='vote'),
+    path('question_answer/delete/<int:qa_id>/', views.delete_question_answer, name='delete_question_answer'),
+    path('question_answer/delete-all/', views.delete_all_question_answers, name='delete_all_question_answers'),
     path('all-questions/', views.all_questions, name='all_questions'),
     
     # Analytics

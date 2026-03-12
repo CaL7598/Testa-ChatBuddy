@@ -4,96 +4,206 @@
 {% block title %}Study Flashcards - Testa StudyBuddy{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h1 class="text-center mb-4" style="color: #667eea; font-weight: 600;">Study Flashcards</h1>
-    
-    <!-- Filters -->
-    <div class="card mb-4" style="border-radius: 15px;">
-        <div class="card-body">
-            <form method="GET" class="row">
-                <div class="col-md-4">
-                    <input type="text" class="form-control" name="course" placeholder="Filter by course" value="{{ current_course }}">
+<div class="min-h-screen bg-slate-50 py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-5xl mx-auto space-y-8 animate-fade-in">
+        <!-- Header -->
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <h1 class="font-montserrat font-extrabold text-3xl sm:text-4xl lg:text-5xl text-slate-900 mb-1">
+                    Study Flashcards
+                </h1>
+                <p class="font-poppins text-slate-600 text-sm sm:text-base max-w-xl">
+                    Practice active recall by flipping through your cards and rating how well you know each concept.
+                </p>
+            </div>
+            <a href="{% url 'generate_flashcards' %}" class="inline-flex items-center justify-center gap-2 px-5 py-3 bg-purple-600 text-white rounded-full font-montserrat font-semibold shadow-lg hover:bg-purple-700 hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5h9M5 9h9m-9 4h5m3 4h6M4 5a1 1 0 011-1h9a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm0 8a1 1 0 011-1h5a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zm9 3a1 1 0 011-1h6a1 1 0 011 1v3a1 1 0 01-1 1h-6a1 1 0 01-1-1v-3z" />
+                </svg>
+                Generate Flashcards
+            </a>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-white rounded-2xl shadow-md border border-slate-200 p-5 sm:p-6">
+            <form method="GET" class="grid grid-cols-1 sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1.2fr)_auto] gap-4 items-end">
+                <div class="space-y-1">
+                    <label for="course" class="font-poppins text-xs sm:text-sm font-semibold text-slate-700">Filter by course</label>
+                    <input
+                        type="text"
+                        id="course"
+                        name="course"
+                        value="{{ current_course }}"
+                        class="w-full px-3.5 py-2.5 border-2 border-slate-200 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-300 font-poppins text-sm bg-white text-slate-900"
+                        placeholder="e.g., Computer Networks"
+                    />
                 </div>
-                <div class="col-md-4">
-                    <input type="text" class="form-control" name="topic" placeholder="Filter by topic" value="{{ current_topic }}">
+                <div class="space-y-1">
+                    <label for="topic" class="font-poppins text-xs sm:text-sm font-semibold text-slate-700">Filter by topic</label>
+                    <input
+                        type="text"
+                        id="topic"
+                        name="topic"
+                        value="{{ current_topic }}"
+                        class="w-full px-3.5 py-2.5 border-2 border-slate-200 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-300 font-poppins text-sm bg-white text-slate-900"
+                        placeholder="e.g., Security documents"
+                    />
                 </div>
-                <div class="col-md-4">
-                    <button type="submit" class="btn btn-primary w-100">Filter</button>
+                <div class="space-y-1">
+                    <span class="hidden sm:block font-poppins text-xs sm:text-sm font-semibold text-transparent">Filter</span>
+                    <button
+                        type="submit"
+                        class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-xl font-montserrat font-semibold shadow-md hover:bg-indigo-700 hover:shadow-lg transition-all duration-300"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        Filter
+                    </button>
                 </div>
             </form>
         </div>
-    </div>
 
-    {% if flashcards %}
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card mb-4" style="border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); min-height: 300px;">
-                <div class="card-body d-flex flex-column align-items-center justify-content-center" style="min-height: 300px; position: relative;">
-                    <!-- Flashcard Content -->
-                    <div id="flashcard" class="text-center" style="width: 100%; cursor: pointer; perspective: 1000px;">
-                        <div id="card-inner" style="position: relative; width: 100%; height: 250px; transition: transform 0.6s; transform-style: preserve-3d;">
-                            <div id="card-front" class="d-flex align-items-center justify-content-center" style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: #667eea; color: white; border-radius: 15px; padding: 30px;">
-                                <h3 id="front-text" class="mb-0">{{ flashcards.0.front }}</h3>
-                            </div>
-                            <div id="card-back" class="d-flex align-items-center justify-content-center" style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: #764ba2; color: white; border-radius: 15px; padding: 30px; transform: rotateY(180deg);">
-                                <h4 id="back-text" class="mb-0">{{ flashcards.0.back }}</h4>
-                            </div>
+        {% if flashcards %}
+        <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,1.3fr)] gap-6 items-start">
+            <!-- Card viewer -->
+            <div class="bg-white rounded-2xl shadow-xl border border-slate-200 p-5 sm:p-7 flex flex-col items-stretch">
+                <div class="flex items-center justify-between mb-4">
+                    <p class="font-poppins text-sm text-slate-500">
+                        Card <span id="currentIndex">1</span> of <span id="totalCards">{{ flashcards|length }}</span>
+                    </p>
+                    <p class="font-poppins text-xs text-slate-400">
+                        Click the card to see the answer
+                    </p>
+                </div>
+
+                <div id="flashcard" class="relative w-full cursor-pointer">
+                    <div
+                        id="card-inner"
+                        class="relative w-full h-64 sm:h-72 lg:h-80"
+                    >
+                        <div
+                            id="card-front"
+                            class="absolute inset-0 flex items-center justify-center bg-indigo-500 text-white rounded-2xl px-6 sm:px-10 text-center"
+                        >
+                            <h3 id="front-text" class="font-montserrat font-semibold text-base sm:text-lg leading-relaxed">
+                                {{ flashcards.0.front }}
+                            </h3>
+                        </div>
+                        <div
+                            id="card-back"
+                            class="absolute inset-0 flex items-center justify-center bg-secondary text-white rounded-2xl px-6 sm:px-10 text-center hidden"
+                        >
+                            <h4 id="back-text" class="font-montserrat font-semibold text-base sm:text-lg leading-relaxed">
+                                {{ flashcards.0.back }}
+                            </h4>
                         </div>
                     </div>
-                    
-                    <p class="mt-3 text-muted">Click card to flip</p>
                 </div>
             </div>
 
-            <!-- Confidence Level Buttons -->
-            <div class="card" style="border-radius: 15px;">
-                <div class="card-body text-center">
-                    <p class="mb-3"><strong>How confident are you with this card?</strong></p>
-                    <div class="btn-group" role="group">
-                        <button type="button" class="btn btn-outline-secondary" onclick="updateConfidence(0)">0️⃣ Not Learned</button>
-                        <button type="button" class="btn btn-outline-warning" onclick="updateConfidence(1)">1️⃣ Learning</button>
-                        <button type="button" class="btn btn-outline-info" onclick="updateConfidence(2)">2️⃣ Comfortable</button>
-                        <button type="button" class="btn btn-outline-success" onclick="updateConfidence(3)">3️⃣ Mastered</button>
-                    </div>
-                    
-                    <div class="mt-4">
-                        <button type="button" class="btn btn-primary" onclick="nextCard()">Next Card →</button>
-                    </div>
-                    
-                    <p class="mt-3 text-muted">
-                        Card <span id="currentIndex">1</span> of <span id="totalCards">{{ flashcards|length }}</span>
+            <!-- Controls -->
+            <div class="bg-white rounded-2xl shadow-xl border border-slate-200 p-5 sm:p-7 flex flex-col gap-4">
+                <div>
+                    <p class="font-montserrat font-semibold text-slate-900 text-base sm:text-lg mb-2">
+                        How confident are you with this card?
                     </p>
+                    <p class="font-poppins text-slate-500 text-sm mb-4">
+                        Use these buttons to track your progress. We’ll prioritize cards you find difficult.
+                    </p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <button type="button" onclick="updateConfidence(0)" class="inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-slate-300 text-slate-700 bg-slate-50 hover:bg-slate-100 hover:border-slate-400 font-poppins text-sm transition-all duration-200">
+                            <span>0️⃣</span>
+                            <span>Not Learned</span>
+                        </button>
+                        <button type="button" onclick="updateConfidence(1)" class="inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-amber-300 text-amber-800 bg-amber-50 hover:bg-amber-100 hover:border-amber-400 font-poppins text-sm transition-all duration-200">
+                            <span>1️⃣</span>
+                            <span>Learning</span>
+                        </button>
+                        <button type="button" onclick="updateConfidence(2)" class="inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-sky-300 text-sky-800 bg-sky-50 hover:bg-sky-100 hover:border-sky-400 font-poppins text-sm transition-all duration-200">
+                            <span>2️⃣</span>
+                            <span>Comfortable</span>
+                        </button>
+                        <button type="button" onclick="updateConfidence(3)" class="inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-emerald-300 text-emerald-800 bg-emerald-50 hover:bg-emerald-100 hover:border-emerald-400 font-poppins text-sm transition-all duration-200">
+                            <span>3️⃣</span>
+                            <span>Mastered</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between pt-2">
+                    <p class="font-poppins text-xs sm:text-sm text-slate-500">
+                        Tip: If you mark a card as “Not Learned” or “Learning”, it will appear more often.
+                    </p>
+                    <button
+                        type="button"
+                        onclick="nextCard()"
+                        class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-full font-montserrat font-semibold shadow-md hover:bg-indigo-700 hover:shadow-lg transition-all duration-300"
+                    >
+                        Next card
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
                 </div>
             </div>
         </div>
+        {% else %}
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-200 p-8 sm:p-10 text-center space-y-4">
+            <div class="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-indigo-100 text-indigo-600 mb-2">
+                <svg class="w-8 h-8 sm:w-10 sm:h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <h2 class="font-montserrat font-bold text-xl sm:text-2xl text-slate-900">No flashcards found</h2>
+            <p class="font-poppins text-slate-600 text-sm sm:text-base max-w-md mx-auto">
+                Generate flashcards from your documents to start practicing. You can then come back here to study them.
+            </p>
+            <a href="{% url 'generate_flashcards' %}" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-full font-montserrat font-semibold shadow-md hover:bg-indigo-700 hover:shadow-lg transition-all duration-300">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Generate Flashcards
+            </a>
+        </div>
+        {% endif %}
     </div>
-    {% else %}
-    <div class="alert alert-info text-center">
-        <h4>No flashcards found!</h4>
-        <p>Generate flashcards from documents to start studying.</p>
-        <a href="{% url 'generate_flashcards' %}" class="btn btn-primary">Generate Flashcards</a>
-    </div>
-    {% endif %}
 </div>
 
 <script>
     let currentCardIndex = 0;
     let isFlipped = false;
-    const flashcards = {{ flashcards|safe|default:"[]" }};
+    const flashcards = {{ flashcards_json|default:"[]"|safe }};
     const totalCards = flashcards.length;
 
-    document.getElementById('flashcard').addEventListener('click', function() {
-        const cardInner = document.getElementById('card-inner');
-        isFlipped = !isFlipped;
-        cardInner.style.transform = isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)';
-    });
+    const flashcardEl = document.getElementById('flashcard');
+    const frontEl = document.getElementById('card-front');
+    const backEl = document.getElementById('card-back');
+
+    if (flashcardEl && frontEl && backEl) {
+        flashcardEl.addEventListener('click', function() {
+            if (!flashcards.length) return;
+            isFlipped = !isFlipped;
+            if (isFlipped) {
+                frontEl.classList.add('hidden');
+                backEl.classList.remove('hidden');
+            } else {
+                frontEl.classList.remove('hidden');
+                backEl.classList.add('hidden');
+            }
+        });
+    }
 
     function nextCard() {
         if (currentCardIndex < totalCards - 1) {
             currentCardIndex++;
             updateCardDisplay();
+            // Always reset to front when moving to next card
             isFlipped = false;
-            document.getElementById('card-inner').style.transform = 'rotateY(0deg)';
+            if (frontEl && backEl) {
+                frontEl.classList.remove('hidden');
+                backEl.classList.add('hidden');
+            }
         }
     }
 
@@ -105,13 +215,24 @@
         }
     }
 
+    function getCsrfToken() {
+        var name = 'csrftoken';
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var c = cookies[i].trim();
+            if (c.indexOf(name + '=') === 0) return decodeURIComponent(c.substring(name.length + 1));
+        }
+        var input = document.querySelector('[name=csrfmiddlewaretoken]');
+        return input ? input.value : '';
+    }
+
     function updateConfidence(level) {
         if (currentCardIndex < totalCards) {
             const cardId = flashcards[currentCardIndex].id;
             fetch(`/flashcards/${cardId}/update-confidence/`, {
                 method: 'POST',
                 headers: {
-                    'X-CSRFToken': '{{ csrf_token }}',
+                    'X-CSRFToken': getCsrfToken(),
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
                 body: `confidence=${level}`
@@ -125,6 +246,7 @@
         }
     }
 
-    document.getElementById('totalCards').textContent = totalCards;
+    const totalEl = document.getElementById('totalCards');
+    if (totalEl) totalEl.textContent = totalCards;
 </script>
 {% endblock %}

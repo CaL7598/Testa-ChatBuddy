@@ -6,6 +6,7 @@ for students across all academic disciplines.
 """
 import os
 import json
+from pathlib import Path
 from datetime import datetime, timedelta
 from PyPDF2 import PdfReader
 from docx import Document
@@ -60,7 +61,7 @@ def extract_text_from_pptx(file):
 
 def extract_text_from_txt(file):
     """Extract text from TXT file"""
-    return file.read().decode('utf-8')
+    return file.read().decode('utf-8', errors='replace')
 
 
 def get_text_chunks(text, chunk_size=50000, chunk_overlap=1000):
@@ -73,8 +74,18 @@ def get_text_chunks(text, chunk_size=50000, chunk_overlap=1000):
     return chunks
 
 
-def get_vector_store(text_chunks, index_path="faiss_index"):
-    """Create or update FAISS vector store using local embeddings"""
+def _get_faiss_index_path():
+    """Return absolute path for FAISS index so save/load always use same location."""
+    from django.conf import settings
+    path = Path(settings.BASE_DIR) / "faiss_index"
+    path.mkdir(parents=True, exist_ok=True)
+    return str(path)
+
+
+def get_vector_store(text_chunks, index_path=None):
+    """Create or update FAISS vector store; merges new chunks into existing index."""
+    if index_path is None:
+        index_path = _get_faiss_index_path()
     embedding_client = EmbeddingClient()
     
     # Create LangChain-compatible embeddings wrapper
@@ -91,13 +102,23 @@ def get_vector_store(text_chunks, index_path="faiss_index"):
             return self.embedding_client.embed_text(text)
     
     embeddings = LocalEmbeddings(embedding_client)
-    vector_store = FAISS.from_texts(text_chunks, embedding=embeddings)
-    vector_store.save_local(index_path)
-    return vector_store
+    existing = load_vector_store(index_path)
+    if existing is not None and text_chunks:
+        # Merge new document chunks into existing index
+        existing.add_texts(text_chunks)
+        existing.save_local(index_path)
+        return existing
+    if text_chunks:
+        vector_store = FAISS.from_texts(text_chunks, embedding=embeddings)
+        vector_store.save_local(index_path)
+        return vector_store
+    return existing
 
 
-def load_vector_store(index_path="faiss_index"):
-    """Load existing FAISS vector store"""
+def load_vector_store(index_path=None):
+    """Load existing FAISS vector store."""
+    if index_path is None:
+        index_path = _get_faiss_index_path()
     embedding_client = EmbeddingClient()
     
     from langchain.embeddings.base import Embeddings
@@ -140,7 +161,8 @@ Question:
 Provide a clear, educational answer with examples where appropriate.
 Include the course and topic if determinable."""
         
-        return client.answer_question(question, context=context, temperature=0.3)
+        # Use BytezClient's default temperature handling to avoid double-passing kwargs
+        return client.answer_question(question, context=context)
     
     return answer_with_context
 

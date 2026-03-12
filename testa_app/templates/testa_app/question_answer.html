@@ -4,6 +4,7 @@
 {% block title %}Chat - Testa StudyBuddy{% endblock %}
 
 {% block extra_head %}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
     @keyframes slideInUp {
         from {
@@ -142,34 +143,99 @@
         <div class="lg:col-span-2">
             <div class="gradient-border shadow-2xl animate-slide-in">
                 <div class="gradient-border-inner">
+                    <!-- Upload progress (shown during upload) -->
+                    <div id="upload-progress-bar" class="hidden mb-4 p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                        <div class="flex items-center justify-between mb-2">
+                            <span id="upload-progress-filename" class="font-poppins font-medium text-gray-700 truncate max-w-[200px]" title=""></span>
+                            <span id="upload-progress-percent" class="font-montserrat font-semibold text-indigo-600">0%</span>
+                        </div>
+                        <div class="w-full h-2.5 bg-gray-200 rounded-full overflow-hidden">
+                            <div id="upload-progress-fill" class="h-full bg-indigo-600 rounded-full transition-all duration-200 ease-out" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <!-- Attached document indicator (shown after upload) -->
+                    <div id="attached-doc-bar" class="hidden mb-3 p-3 bg-indigo-50 border border-indigo-200 rounded-xl flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="text-indigo-600">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                            </span>
+                            <span id="attached-doc-name" class="font-poppins font-medium text-indigo-800"></span>
+                            <span class="font-poppins text-sm text-indigo-600">— ready, ask anything about it below</span>
+                        </div>
+                        <button type="button" id="clear-attached" class="p-1.5 rounded-lg hover:bg-indigo-200 text-indigo-600 transition-colors" title="Clear">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <!-- Suggested actions after upload -->
+                    <div id="upload-actions" class="hidden mb-4 p-3 bg-white border border-dashed border-indigo-200 rounded-xl flex flex-wrap items-center gap-3">
+                        <span class="font-poppins text-sm text-gray-700">What would you like the AI to do with this document?</span>
+                        <div class="flex flex-wrap gap-2">
+                            <button type="button" data-upload-action="summary" class="px-3 py-1.5 rounded-full text-xs sm:text-sm font-montserrat font-semibold bg-indigo-100 text-indigo-700 hover:bg-indigo-200 transition-colors">
+                                Get a summary
+                            </button>
+                            <button type="button" data-upload-action="quiz" class="px-3 py-1.5 rounded-full text-xs sm:text-sm font-montserrat font-semibold bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition-colors">
+                                Generate quiz questions
+                            </button>
+                            <button type="button" data-upload-action="practice" class="px-3 py-1.5 rounded-full text-xs sm:text-sm font-montserrat font-semibold bg-amber-100 text-amber-700 hover:bg-amber-200 transition-colors">
+                                Practice/trial questions
+                            </button>
+                            <a href="{% url 'generate_flashcards' %}" class="px-3 py-1.5 rounded-full text-xs sm:text-sm font-montserrat font-semibold bg-purple-100 text-purple-700 hover:bg-purple-200 transition-colors no-underline">
+                                Generate flashcards
+                            </a>
+                        </div>
+                    </div>
                     <form id="question-form" class="space-y-6">
                         {% csrf_token %}
-            <div>
+                        <div>
                             <label for="question" class="block font-montserrat font-semibold text-gray-700 mb-3 text-lg">
                                 What would you like to know?
                             </label>
-                            <textarea 
-                                id="question" 
-                                name="question" 
-                                rows="6"
-                                class="w-full px-6 py-4 border-2 border-gray-200 rounded-2xl focus:border-primary focus:ring-4 focus:ring-primary/20 transition-all duration-300 resize-none font-poppins text-gray-800 placeholder-gray-400"
-                                placeholder="Type your question here... (e.g., Explain digital circuits)"
-                                required
-                            ></textarea>
-                        </div>
-                        <div class="flex justify-end">
-                            <button 
-                                type="submit" 
-                                class="group relative px-8 py-4 bg-indigo-600 text-white font-montserrat font-semibold rounded-full shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 overflow-hidden"
-                            >
-                                <span class="relative z-10 flex items-center gap-2">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            <div class="relative">
+                                <textarea 
+                                    id="question" 
+                                    name="question" 
+                                    rows="6"
+                                    class="w-full px-6 py-4 pr-14 border-2 border-gray-200 rounded-2xl focus:border-primary focus:ring-4 focus:ring-primary/20 transition-all duration-300 resize-none font-poppins text-gray-800 placeholder-gray-400"
+                                    placeholder="Type your question here... (e.g., Explain digital circuits). Upload a file above to ask about it."
+                                    required
+                                ></textarea>
+                                <input type="file" id="file-upload-input" class="hidden" accept=".pdf,.docx,.pptx,.txt" />
+                                <button type="button" id="upload-doc-btn" class="absolute bottom-4 right-4 p-2.5 bg-indigo-100 hover:bg-indigo-200 text-indigo-600 rounded-xl transition-all duration-300 shadow-sm" title="Upload document to ask about">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                                     </svg>
-                                    Ask Question
-                                </span>
-                                <span class="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></span>
-                            </button>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap items-center justify-end gap-3">
+                            <div class="flex items-center gap-3">
+                                <button 
+                                    type="button" 
+                                    id="upload-doc-btn-2"
+                                    class="inline-flex items-center gap-2 px-5 py-3 bg-white border-2 border-indigo-600 text-indigo-600 font-montserrat font-semibold rounded-full hover:bg-indigo-50 transition-all duration-300"
+                                >
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                    </svg>
+                                    Upload
+                                </button>
+                                <button 
+                                    type="submit" 
+                                    class="group relative px-8 py-4 bg-indigo-600 text-white font-montserrat font-semibold rounded-full shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 overflow-hidden"
+                                >
+                                    <span class="relative z-10 flex items-center gap-2">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                        </svg>
+                                        Ask Question
+                                    </span>
+                                    <span class="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></span>
+                                </button>
+                            </div>
                         </div>
                     </form>
                     
@@ -221,24 +287,38 @@
     <div class="max-w-7xl mx-auto mt-12">
         <div class="flex items-center justify-between mb-6">
             <h2 class="font-montserrat font-bold text-3xl text-gray-800">Recent Conversations</h2>
-            <a href="{% url 'all_questions' %}" class="font-poppins text-primary hover:text-secondary font-medium flex items-center gap-2 transition-colors">
-                View All
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                </svg>
-            </a>
-</div>
+            <div class="flex items-center gap-3">
+                {% if qa_list %}
+                <button type="button" id="clear-all-history" class="flex items-center gap-2 px-3 py-2 rounded-xl text-red-600 hover:bg-red-50 font-poppins font-medium text-sm transition-colors" title="Clear all history">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                    Clear all
+                </button>
+                {% endif %}
+                <a href="{% url 'all_questions' %}" class="font-poppins text-primary hover:text-secondary font-medium flex items-center gap-2 transition-colors">
+                    View All
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </a>
+            </div>
+        </div>
 
         <div id="qa-list" class="grid grid-cols-1 md:grid-cols-2 gap-6">
             {% for qa in qa_list %}
             <div class="group bg-white rounded-2xl shadow-lg hover:shadow-2xl p-6 border border-gray-100 hover:border-primary/30 transition-all duration-300 transform hover:-translate-y-2 animate-slide-in" data-qa-id="{{ qa.id }}">
                 <div class="flex items-start justify-between mb-4">
-                    <div class="flex-1">
+                    <div class="flex-1 min-w-0">
                         <p class="font-montserrat font-semibold text-gray-800 mb-2 line-clamp-2">{{ qa.question|truncatewords:15 }}</p>
                         <div class="font-poppins text-gray-600 text-sm line-clamp-3 qa-answer-preview">{{ qa.answer|truncatewords:20 }}</div>
                     </div>
-</div>
-                
+                    <button type="button" class="qa-delete-one flex-shrink-0 p-2 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors ml-2" data-qa-id="{{ qa.id }}" title="Delete this conversation">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                    </button>
+                </div>
                 <div class="flex items-center justify-between pt-4 border-t border-gray-100">
                     <div class="flex items-center gap-4">
                         <button 
@@ -247,14 +327,14 @@
                         >
                             <span class="text-xl group-hover/vote:scale-125 transition-transform">👍</span>
                             <span id="upvote-count-{{ qa.id }}" class="font-poppins font-medium text-gray-700">{{ qa.upvotes }}</span>
-                    </button>
+                        </button>
                         <button 
                             onclick="handleVote('{{ qa.id }}', 'downvote')" 
                             class="flex items-center gap-2 px-4 py-2 rounded-full hover:bg-red-50 transition-colors group/vote"
                         >
                             <span class="text-xl group-hover/vote:scale-125 transition-transform">👎</span>
                             <span id="downvote-count-{{ qa.id }}" class="font-poppins font-medium text-gray-700">{{ qa.downvotes }}</span>
-                    </button>
+                        </button>
                     </div>
                     <span class="font-poppins text-xs text-gray-500">{{ qa.created_at|date:"M d" }}</span>
                 </div>
@@ -273,50 +353,317 @@
     </div>
 </div>
 
+<!-- Modern confirmation modal (replaces browser confirm) -->
+<div id="confirm-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/50 backdrop-blur-sm" aria-hidden="true">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 sm:p-8 border border-gray-100 animate-slide-in" role="dialog" aria-modal="true" aria-labelledby="confirm-modal-title">
+        <div class="flex items-center gap-3 mb-4">
+            <div id="confirm-modal-icon" class="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center bg-red-100 text-red-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+            </div>
+            <h2 id="confirm-modal-title" class="font-montserrat font-bold text-xl text-gray-900">Confirm</h2>
+        </div>
+        <p id="confirm-modal-message" class="font-poppins text-gray-600 mb-6"></p>
+        <div class="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end">
+            <button type="button" id="confirm-modal-cancel" class="px-5 py-2.5 rounded-xl font-poppins font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors">
+                Cancel
+            </button>
+            <button type="button" id="confirm-modal-ok" class="px-5 py-2.5 rounded-xl font-poppins font-semibold text-white transition-colors">
+                Delete
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-    // Show welcome toast instead of alert
-    const showToast = (message) => {
+    // Upload document (ChatGPT-style: upload then ask)
+    const fileInput = document.getElementById('file-upload-input');
+    const attachedBar = document.getElementById('attached-doc-bar');
+    const attachedName = document.getElementById('attached-doc-name');
+    const clearAttached = document.getElementById('clear-attached');
+    const uploadBtn = document.getElementById('upload-doc-btn');
+    const uploadBtn2 = document.getElementById('upload-doc-btn-2');
+    const uploadActions = document.getElementById('upload-actions');
+
+    function showToast(message, isError) {
+        const borderCl = isError ? 'border-red-500' : 'border-primary';
+        const icon = isError ? '⚠️' : '👋';
         const toast = document.createElement('div');
-        toast.className = 'fixed top-4 right-4 bg-white rounded-xl shadow-2xl p-4 border-l-4 border-primary z-50 animate-slide-in max-w-sm';
-        toast.innerHTML = `
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center">
-                    <span class="text-white font-bold">👋</span>
-                </div>
-                <p class="font-poppins text-gray-800">${message}</p>
-            </div>
-        `;
+        toast.className = 'fixed top-4 right-4 bg-white rounded-xl shadow-2xl p-4 border-l-4 ' + borderCl + ' z-50 animate-slide-in max-w-sm';
+        toast.innerHTML = '<div class="flex items-center gap-3"><div class="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center"><span class="text-white font-bold">' + icon + '</span></div><p class="font-poppins text-gray-800">' + message + '</p></div>';
         document.body.appendChild(toast);
-        setTimeout(() => {
+        setTimeout(function() {
             toast.style.opacity = '0';
             toast.style.transform = 'translateX(100px)';
-            setTimeout(() => toast.remove(), 300);
+            setTimeout(function() { toast.remove(); }, 300);
         }, 3000);
-    };
-    
+    }
+    window.showToast = showToast;
+
     showToast('Welcome, {{ username }}! Ready to learn?');
-    
+
+    // Open file picker when Upload is clicked
+    if (uploadBtn) uploadBtn.addEventListener('click', function() { fileInput.click(); });
+    if (uploadBtn2) uploadBtn2.addEventListener('click', function() { fileInput.click(); });
+
+    // Upload file via AJAX with progress indicator
+    var progressBar = document.getElementById('upload-progress-bar');
+    var progressFill = document.getElementById('upload-progress-fill');
+    var progressPercent = document.getElementById('upload-progress-percent');
+    var progressFilename = document.getElementById('upload-progress-filename');
+    function hideUploadProgress() {
+        if (progressBar) progressBar.classList.add('hidden');
+        if (progressFill) progressFill.style.width = '0%';
+        if (progressPercent) progressPercent.textContent = '0%';
+    }
+    if (fileInput) {
+        fileInput.addEventListener('change', function() {
+            var file = this.files[0];
+            if (!file) return;
+            var fd = new FormData();
+            fd.append('file', file);
+            fd.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '{{ upload_ajax_url|default:"/question_answer/upload/" }}');
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            if (progressBar && progressFill && progressPercent && progressFilename) {
+                progressFilename.textContent = file.name;
+                progressFilename.title = file.name;
+                progressBar.classList.remove('hidden');
+                progressFill.style.width = '0%';
+                progressPercent.textContent = '0%';
+            }
+            xhr.upload.onprogress = function(ev) {
+                if (!ev.lengthComputable) return;
+                var pct = Math.round((ev.loaded / ev.total) * 100);
+                if (progressFill) progressFill.style.width = pct + '%';
+                if (progressPercent) progressPercent.textContent = pct + '%';
+            };
+            xhr.onload = function() {
+                hideUploadProgress();
+                var data = {};
+                try { data = JSON.parse(xhr.responseText); } catch (e) {}
+                if (data.success) {
+                    attachedName.textContent = data.title || file.name;
+                    attachedBar.classList.remove('hidden');
+                    showToast(data.message || 'Document ready. Ask anything about it below.');
+                    if (uploadActions) {
+                        uploadActions.classList.remove('hidden');
+                    }
+                } else {
+                    showToast(data.error || 'Upload failed.', true);
+                }
+                fileInput.value = '';
+            };
+            xhr.onerror = function() {
+                hideUploadProgress();
+                showToast('Upload failed. Try again.', true);
+                fileInput.value = '';
+            };
+            xhr.send(fd);
+        });
+    }
+    // Handle suggested action buttons (summary / quiz / practice)
+    if (uploadActions) {
+        uploadActions.addEventListener('click', function(e) {
+            var target = e.target.closest('button[data-upload-action]');
+            if (!target) return;
+            var action = target.getAttribute('data-upload-action');
+            var docName = attachedName && attachedName.textContent ? attachedName.textContent : 'this document';
+            var textarea = document.getElementById('question');
+            if (!textarea) return;
+            var prompt = '';
+            if (action === 'summary') {
+                prompt = 'Give me a clear, concise summary of ' + docName + '. Highlight the key ideas and main points I should remember as a student.';
+            } else if (action === 'quiz') {
+                prompt = 'Generate a quiz based on ' + docName + ' with a mix of multiple-choice and short-answer questions that test understanding, not just memorization.';
+            } else if (action === 'practice') {
+                prompt = 'Create practice/trial exam-style questions from ' + docName + ', with answers and brief explanations suitable for revision.';
+            }
+            if (prompt) {
+                textarea.value = prompt;
+                textarea.focus();
+                window.scrollTo({ top: textarea.getBoundingClientRect().top + window.scrollY - 120, behavior: 'smooth' });
+            }
+        });
+    }
+    if (clearAttached) {
+        clearAttached.addEventListener('click', function() {
+            attachedBar.classList.add('hidden');
+            attachedName.textContent = '';
+            fileInput.value = '';
+            if (uploadActions) {
+                uploadActions.classList.add('hidden');
+            }
+        });
+    }
+
+    // Delete one Q&A from history
+    function getCsrfToken() {
+        var name = 'csrftoken';
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var c = cookies[i].trim();
+            if (c.indexOf(name + '=') === 0) return decodeURIComponent(c.substring(name.length + 1));
+        }
+        var input = document.querySelector('[name=csrfmiddlewaretoken]');
+        return input ? input.value : '';
+    }
+
+    // Modern confirm modal (replaces browser confirm)
+    var confirmModal = document.getElementById('confirm-modal');
+    var confirmModalOk = document.getElementById('confirm-modal-ok');
+    var confirmModalCancel = document.getElementById('confirm-modal-cancel');
+    var confirmModalMessage = document.getElementById('confirm-modal-message');
+    var confirmModalTitle = document.getElementById('confirm-modal-title');
+    var confirmModalIcon = document.getElementById('confirm-modal-icon');
+    var pendingConfirmCallback = null;
+    function showConfirmModal(options, onConfirm) {
+        var title = options.title || 'Confirm';
+        var message = options.message || '';
+        var okLabel = options.okLabel || 'Delete';
+        var okClass = options.okClass || 'bg-red-600 hover:bg-red-700';
+        var iconBg = options.iconBg || 'bg-red-100 text-red-600';
+        confirmModalTitle.textContent = title;
+        confirmModalMessage.textContent = message;
+        confirmModalOk.textContent = okLabel;
+        confirmModalOk.className = 'px-5 py-2.5 rounded-xl font-poppins font-semibold text-white transition-colors ' + okClass;
+        confirmModalIcon.className = 'flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center ' + iconBg;
+        pendingConfirmCallback = onConfirm;
+        confirmModal.classList.remove('hidden');
+        confirmModal.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+    }
+    function hideConfirmModal() {
+        confirmModal.classList.add('hidden');
+        confirmModal.classList.remove('flex');
+        document.body.style.overflow = '';
+        pendingConfirmCallback = null;
+    }
+    if (confirmModalOk) confirmModalOk.addEventListener('click', function() {
+        if (typeof pendingConfirmCallback === 'function') pendingConfirmCallback();
+        hideConfirmModal();
+    });
+    if (confirmModalCancel) confirmModalCancel.addEventListener('click', hideConfirmModal);
+    if (confirmModal) confirmModal.addEventListener('click', function(e) {
+        if (e.target === confirmModal) hideConfirmModal();
+    });
+
+    document.querySelectorAll('.qa-delete-one').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var qaId = this.getAttribute('data-qa-id');
+            if (!qaId) return;
+            var card = document.querySelector('[data-qa-id="' + qaId + '"]');
+            if (!card) return;
+            showConfirmModal({
+                title: 'Delete conversation',
+                message: 'Remove this conversation from your history?',
+                okLabel: 'Delete'
+            }, function() {
+            fetch('/question_answer/delete/' + qaId + '/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCsrfToken(),
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({})
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    card.remove();
+                    if (!document.querySelector('#qa-list [data-qa-id]')) {
+                        var clearBtn = document.getElementById('clear-all-history');
+                        if (clearBtn) clearBtn.remove();
+                        var list = document.getElementById('qa-list');
+                        if (list) {
+                            list.innerHTML = '<div class="col-span-full text-center py-12"><div class="inline-block p-6 bg-gray-100 rounded-full mb-4"><svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg></div><p class="font-poppins text-gray-600 text-lg">No questions yet. Start asking to see your history here!</p></div>';
+                        }
+                    }
+                    if (window.showToast) showToast('Conversation removed from history.');
+                } else if (window.showToast) showToast(data.error || 'Could not delete.', true);
+            })
+            .catch(function() { if (window.showToast) showToast('Could not delete. Try again.', true); });
+            });
+        });
+    });
+    // Clear all Q&A history
+    var clearAllBtn = document.getElementById('clear-all-history');
+    if (clearAllBtn) {
+        clearAllBtn.addEventListener('click', function() {
+            showConfirmModal({
+                title: 'Clear all history',
+                message: 'Remove all conversations from your history? This cannot be undone.',
+                okLabel: 'Clear all'
+            }, function() {
+            fetch('/question_answer/delete-all/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCsrfToken(),
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({})
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    var list = document.getElementById('qa-list');
+                    if (list) {
+                        list.innerHTML = '<div class="col-span-full text-center py-12"><div class="inline-block p-6 bg-gray-100 rounded-full mb-4"><svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg></div><p class="font-poppins text-gray-600 text-lg">No questions yet. Start asking to see your history here!</p></div>';
+                    }
+                    clearAllBtn.remove();
+                    if (window.showToast) showToast('All history cleared.');
+                } else if (window.showToast) showToast(data.error || 'Could not clear history.', true);
+            })
+            .catch(function() { if (window.showToast) showToast('Could not clear history. Try again.', true); });
+            });
+        });
+    }
+
+    // Convert Markdown in answer text to HTML (headings, bold, italic, horizontal rule)
+    function renderMarkdownInAnswer(text) {
+        if (!text || !text.trim()) return '';
+        var s = text;
+        // Escape HTML to prevent XSS
+        s = s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        // Headings (at start of line): ### -> h3, ## -> h2, # -> h1
+        s = s.replace(/^###\s+(.+)$/gm, '<h3 class="font-montserrat font-bold text-lg text-gray-900 mt-4 mb-2">$1</h3>');
+        s = s.replace(/^##\s+(.+)$/gm, '<h2 class="font-montserrat font-bold text-xl text-gray-900 mt-4 mb-2">$1</h2>');
+        s = s.replace(/^#\s+(.+)$/gm, '<h1 class="font-montserrat font-bold text-2xl text-gray-900 mt-4 mb-2">$1</h1>');
+        // Bold: **text** or __text__
+        s = s.replace(/\*\*(.+?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>');
+        s = s.replace(/__(.+?)__/g, '<strong class="font-semibold text-gray-900">$1</strong>');
+        // Italic: *text* or _text_ (after bold is done, single * or _)
+        s = s.replace(/\*([^*\n]+)\*/g, '<em>$1</em>');
+        s = s.replace(/_([^_\n]+)_/g, '<em>$1</em>');
+        // Horizontal rule: --- or ***
+        s = s.replace(/^---+$/gm, '<hr class="border-gray-200 my-3">');
+        s = s.replace(/^\*\*\*+$/gm, '<hr class="border-gray-200 my-3">');
+        // Newlines
+        s = s.replace(/\n/g, '<br>');
+        return s;
+    }
+
     // Function to format AI response, separating thoughts from answers
     function formatAIResponse(response) {
         if (!response) return '';
         
         let formatted = response;
         
-        // Pattern 1: Remove and extract <think> tags (AI's internal thoughts)
-        const reasoningMatches = [];
-        formatted = formatted.replace(/<think>(.*?)<\/redacted_reasoning>/gis, function(match, content) {
-            reasoningMatches.push(content.trim());
-            return ''; // Remove from main content
-        });
+        // Strip <think>...</think> (or </think>) blocks completely — do not show AI internal reasoning
+        formatted = formatted.replace(/<think>[\s\S]*?<\/think\s*>/gi, '');
+        formatted = formatted.replace(/<think>[\s\S]*?\]\s*>/gi, '');
+        // Strip any remaining unclosed <think>... to end of response
+        formatted = formatted.replace(/<think>[\s\S]*/gi, '');
         
-        // Add extracted reasoning as thoughts at the beginning
+        // Legacy: Remove redacted_reasoning tags
+        formatted = formatted.replace(/<think>(.*?)<\/redacted_reasoning>/gis, '');
+        
         let result = '';
-        if (reasoningMatches.length > 0) {
-            reasoningMatches.forEach(reasoning => {
-                result += '<span class="ai-thought">' + reasoning.replace(/\n/g, ' ') + '</span>';
-            });
-        }
         
         // Pattern 2: Thoughts in square brackets [thought]
         formatted = formatted.replace(/\[([^\]]+)\]/g, '<span class="ai-thought">$1</span>');
@@ -345,18 +692,26 @@ document.addEventListener("DOMContentLoaded", function() {
                 // This is a thought, keep it as is
                 result += part;
             } else if (part.trim()) {
-                // This is an answer section
-                result += '<div class="ai-answer">' + part.replace(/\n/g, '<br>') + '</div>';
+                // This is an answer section — render Markdown (###, **, etc.)
+                result += '<div class="ai-answer">' + renderMarkdownInAnswer(part) + '</div>';
             }
         });
         
         // If no thoughts were found, treat entire response as answer
         if (!result.includes('ai-thought') && !result.includes('ai-answer')) {
-            result = '<div class="ai-answer">' + formatted.replace(/\n/g, '<br>') + '</div>';
+            result = '<div class="ai-answer">' + renderMarkdownInAnswer(formatted) + '</div>';
         }
         
         return result;
     }
+
+    // Enter to send, Shift+Enter for new line
+    $('#question').on('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            $('#question-form').submit();
+        }
+    });
 
     // Question form submission
     $('#question-form').on('submit', function(event) {
@@ -539,6 +894,4 @@ $(document).ready(function() {
     });
 });
 </script>
-
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 {% endblock %}

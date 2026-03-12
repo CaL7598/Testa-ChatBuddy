@@ -121,8 +121,8 @@ def take_quiz(request, quiz_id):
         # Update topic mastery
         _update_topic_mastery_from_quiz(request.user, quiz, score, total_points)
         
-        # Update analytics
-        _update_quiz_analytics(request.user, score, total_points)
+        # Update analytics (includes study time + streak)
+        _update_quiz_analytics(request.user, score, total_points, attempt.time_taken)
         
         return redirect('quiz_results', attempt_id=attempt.id)
     
@@ -152,6 +152,35 @@ def quiz_results(request, attempt_id):
         'user_answers': user_answers,
         'percentage': attempt.percentage_score
     })
+
+
+def _update_study_time_and_streak(user, seconds):
+    """Update total study time (minutes), daily activity, and streak from a duration in seconds."""
+    if seconds is None:
+        seconds = 0
+    # Convert to at least 1 minute of study
+    minutes = max(1, int(round(seconds / 60))) if seconds > 0 else 1
+
+    analytics, _ = UserAnalytics.objects.get_or_create(user=user)
+    analytics.total_study_time += minutes
+
+    today = timezone.now().date()
+    activity, _ = DailyActivity.objects.get_or_create(user=user, date=today)
+    activity.study_minutes += minutes
+    activity.save()
+
+    # Recalculate streak: count consecutive days with any study_minutes starting from today
+    streak = 0
+    current_day = today
+    while DailyActivity.objects.filter(user=user, date=current_day, study_minutes__gt=0).exists():
+        streak += 1
+        current_day -= timedelta(days=1)
+
+    analytics.current_streak = streak
+    if streak > analytics.longest_streak:
+        analytics.longest_streak = streak
+
+    analytics.save()
 
 
 # Flashcard Views
@@ -205,6 +234,7 @@ def generate_flashcards(request):
 @login_required
 def study_flashcards(request):
     """Study flashcards interface"""
+    import json
     course = request.GET.get('course', '')
     topic = request.GET.get('topic', '')
     confidence_filter = request.GET.get('confidence', '')
@@ -220,9 +250,12 @@ def study_flashcards(request):
     
     # Prioritize cards with low confidence or not reviewed recently
     flashcards = flashcards.order_by('confidence_level', 'last_reviewed')
+
+    flashcards_data = list(flashcards.values('id', 'front', 'back'))
     
     return render(request, 'testa_app/study_flashcards.html', {
         'flashcards': flashcards,
+        'flashcards_json': json.dumps(flashcards_data),
         'current_course': course,
         'current_topic': topic,
     })
@@ -248,7 +281,10 @@ def update_flashcard_confidence(request, flashcard_id):
         )
         activity.flashcards_reviewed += 1
         activity.save()
-        
+
+        # Approximate 1 minute of focused study per reviewed card
+        _update_study_time_and_streak(request.user, 60)
+
         return JsonResponse({'success': True})
     
     return JsonResponse({'success': False}, status=400)
@@ -332,7 +368,7 @@ def _update_topic_mastery_from_quiz(user, quiz, score, total_points):
     mastery.save()
 
 
-def _update_quiz_analytics(user, score, total_points):
+def _update_quiz_analytics(user, score, total_points, time_taken_seconds=None):
     """Update user analytics for quiz"""
     analytics, _ = UserAnalytics.objects.get_or_create(user=user)
     analytics.total_quizzes += 1
@@ -347,7 +383,7 @@ def _update_quiz_analytics(user, score, total_points):
     
     analytics.save()
     
-    # Update daily activity
+    # Update daily activity (quizzes completed)
     today = timezone.now().date()
     activity, _ = DailyActivity.objects.get_or_create(
         user=user,
@@ -355,3 +391,6 @@ def _update_quiz_analytics(user, score, total_points):
     )
     activity.quizzes_completed += 1
     activity.save()
+
+    # Also record study time & streak based on quiz duration
+    _update_study_time_and_streak(user, time_taken_seconds)
