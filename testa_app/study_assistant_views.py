@@ -373,13 +373,14 @@ def _update_quiz_analytics(user, score, total_points, time_taken_seconds=None):
     analytics, _ = UserAnalytics.objects.get_or_create(user=user)
     analytics.total_quizzes += 1
     
-    # Update average score
+    # Update average score — compute percentage per attempt, then average those
     all_attempts = QuizAttempt.objects.filter(user=user)
     if all_attempts.exists():
-        avg_score = all_attempts.aggregate(avg=Avg('score'))['avg']
-        total_pts = all_attempts.aggregate(total=Sum('total_points'))['total']
-        if total_pts:
-            analytics.average_quiz_score = (avg_score / total_pts) * 100
+        percentages = [
+            (a.score / a.total_points * 100) if a.total_points else 0
+            for a in all_attempts
+        ]
+        analytics.average_quiz_score = round(sum(percentages) / len(percentages), 1)
     
     analytics.save()
     

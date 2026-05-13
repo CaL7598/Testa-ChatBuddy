@@ -159,7 +159,7 @@
     <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden hidden" onclick="closeSidebar()"></div>
     {% else %}
     <!-- Navigation Bar (for landing page and unauthenticated users) -->
-    <nav class="bg-indigo-600 text-white shadow-xl sticky top-0 z-50">
+    <nav id="main-nav" class="bg-indigo-600 text-white shadow-xl sticky top-0 z-50 transition-all duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16 sm:h-20">
                 <div class="flex items-center">
@@ -167,7 +167,7 @@
                         <div class="w-10 h-10 bg-white text-indigo-600 rounded-xl flex items-center justify-center font-montserrat font-bold text-lg shadow-lg group-hover:scale-110 transition-transform">
                             T
                         </div>
-                        <span class="font-montserrat font-bold text-lg sm:text-xl md:text-2xl">Testa ChatBuddy</span>
+                        <span class="font-montserrat font-bold text-lg sm:text-xl md:text-2xl">Testa studyBuddy</span>
                     </a>
                 </div>
                 <div class="flex items-center gap-3 sm:gap-4">
@@ -236,150 +236,131 @@
             {% endblock %}
         </main>
 
-        <!-- Footer -->
-        <footer class="bg-slate-900 text-white border-t border-slate-800">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
-                    <!-- Brand Section -->
-                    <div class="lg:col-span-1">
-                        <div class="flex items-center gap-3 mb-4">
-                            <div class="w-10 h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center font-montserrat font-bold text-lg shadow-lg">
-                                T
-                            </div>
-                            <span class="font-montserrat font-bold text-xl">Testa StudyBuddy</span>
+        <!-- Footer: only on public/landing pages, hidden inside the authenticated app -->
+        {% if not user.is_authenticated or request.resolver_match.url_name == 'index' %}
+        <footer class="relative bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white overflow-hidden">
+
+            <!-- Decorative glow blobs -->
+            <div class="absolute top-0 left-1/4 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute bottom-0 right-1/4 w-80 h-80 bg-violet-600/8 rounded-full blur-3xl pointer-events-none"></div>
+
+            <!-- Top accent line -->
+            <div class="h-px bg-gradient-to-r from-transparent via-indigo-500 to-transparent"></div>
+
+            <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-10">
+
+                <!-- Main grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 mb-14">
+
+                    <!-- Brand col (wider) -->
+                    <div class="lg:col-span-4">
+                        <a href="{% url 'index' %}" class="inline-flex items-center gap-3 mb-5 group">
+                            <div class="w-11 h-11 bg-indigo-600 group-hover:bg-indigo-500 rounded-xl flex items-center
+                                        justify-center font-montserrat font-black text-xl shadow-lg shadow-indigo-900/50
+                                        transition-colors duration-300">T</div>
+                            <span class="font-montserrat font-bold text-xl tracking-tight">Testa studyBuddy</span>
+                        </a>
+                        <p class="font-poppins text-slate-400 text-sm leading-relaxed mb-5 max-w-xs">
+                            Your AI-powered learning companion — transforming how students study, retain knowledge, and excel academically.
+                        </p>
+                        <!-- Social icons -->
+                        <div class="flex gap-3">
+                            <a href="#" aria-label="Facebook"
+                               class="w-9 h-9 bg-white/5 hover:bg-indigo-600 border border-white/10 hover:border-indigo-500
+                                      rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                                </svg>
+                            </a>
+                            <a href="#" aria-label="Twitter / X"
+                               class="w-9 h-9 bg-white/5 hover:bg-indigo-600 border border-white/10 hover:border-indigo-500
+                                      rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                                </svg>
+                            </a>
+                            <a href="#" aria-label="LinkedIn"
+                               class="w-9 h-9 bg-white/5 hover:bg-indigo-600 border border-white/10 hover:border-indigo-500
+                                      rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                                </svg>
+                            </a>
                         </div>
-                        <p class="font-poppins text-slate-300 text-sm leading-relaxed mb-4">
-                            Your AI-powered learning companion designed to transform how students study, learn, and excel academically.
-                        </p>
-                        <p class="font-poppins text-slate-400 text-xs">
-                            Developed for University of Energy and Natural Resources (UENR)
-                        </p>
                     </div>
 
-                    <!-- Quick Links -->
-                    <div>
-                        <h3 class="font-montserrat font-bold text-lg mb-4">Quick Links</h3>
-                        <ul class="space-y-2">
-                            <li>
-                                <a href="{% url 'index' %}" class="font-poppins text-slate-300 hover:text-white text-sm transition-colors">
-                                    Home
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{% url 'about' %}" class="font-poppins text-slate-300 hover:text-white text-sm transition-colors">
-                                    About Us
-                                </a>
-                            </li>
+                    <!-- Spacer on large -->
+                    <div class="hidden lg:block lg:col-span-1"></div>
+
+                    <!-- Navigate -->
+                    <div class="lg:col-span-2">
+                        <h4 class="font-montserrat font-bold text-sm uppercase tracking-widest text-indigo-400 mb-5">Navigate</h4>
+                        <ul class="space-y-3">
+                            <li><a href="{% url 'index' %}" class="footer-link font-poppins text-slate-400 hover:text-white text-sm transition-colors duration-200 flex items-center gap-2 group">
+                                <span class="w-1 h-1 bg-indigo-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>Home</a></li>
+                            <li><a href="{% url 'about' %}" class="footer-link font-poppins text-slate-400 hover:text-white text-sm transition-colors duration-200 flex items-center gap-2 group">
+                                <span class="w-1 h-1 bg-indigo-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>About</a></li>
                             {% if user.is_authenticated %}
-                            <li>
-                                <a href="{% url 'question_answer' %}" class="font-poppins text-slate-300 hover:text-white text-sm transition-colors">
-                                    Ask Questions
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{% url 'analytics_dashboard' %}" class="font-poppins text-slate-300 hover:text-white text-sm transition-colors">
-                                    Analytics
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{% url 'bookmarks' %}" class="font-poppins text-slate-300 hover:text-white text-sm transition-colors">
-                                    Bookmarks
-                                </a>
-                            </li>
+                            <li><a href="{% url 'question_answer' %}" class="footer-link font-poppins text-slate-400 hover:text-white text-sm transition-colors duration-200 flex items-center gap-2 group">
+                                <span class="w-1 h-1 bg-indigo-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>Ask AI</a></li>
+                            <li><a href="{% url 'analytics_dashboard' %}" class="footer-link font-poppins text-slate-400 hover:text-white text-sm transition-colors duration-200 flex items-center gap-2 group">
+                                <span class="w-1 h-1 bg-indigo-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>Analytics</a></li>
                             {% else %}
-                            <li>
-                                <a href="{% url 'login' %}" class="font-poppins text-slate-300 hover:text-white text-sm transition-colors">
-                                    Sign In
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{% url 'register' %}" class="font-poppins text-slate-300 hover:text-white text-sm transition-colors">
-                                    Register
-                                </a>
-                            </li>
+                            <li><a href="{% url 'login' %}" class="footer-link font-poppins text-slate-400 hover:text-white text-sm transition-colors duration-200 flex items-center gap-2 group">
+                                <span class="w-1 h-1 bg-indigo-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>Sign In</a></li>
+                            <li><a href="{% url 'register' %}" class="footer-link font-poppins text-slate-400 hover:text-white text-sm transition-colors duration-200 flex items-center gap-2 group">
+                                <span class="w-1 h-1 bg-indigo-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>Register</a></li>
                             {% endif %}
                         </ul>
                     </div>
 
                     <!-- Features -->
-                    <div>
-                        <h3 class="font-montserrat font-bold text-lg mb-4">Features</h3>
-                        <ul class="space-y-2">
-                            <li>
-                                <span class="font-poppins text-slate-300 text-sm">AI-Powered Q&A</span>
-                            </li>
-                            <li>
-                                <span class="font-poppins text-slate-300 text-sm">Document Analysis</span>
-                            </li>
-                            <li>
-                                <span class="font-poppins text-slate-300 text-sm">Learning Analytics</span>
-                            </li>
-                            <li>
-                                <span class="font-poppins text-slate-300 text-sm">Smart Recommendations</span>
-                            </li>
-                            <li>
-                                <span class="font-poppins text-slate-300 text-sm">Study Progress Tracking</span>
-                            </li>
+                    <div class="lg:col-span-2">
+                        <h4 class="font-montserrat font-bold text-sm uppercase tracking-widest text-indigo-400 mb-5">Features</h4>
+                        <ul class="space-y-3">
+                            <li><span class="font-poppins text-slate-400 text-sm flex items-center gap-2"><span class="w-1 h-1 bg-slate-600 rounded-full"></span>AI-Powered Q&amp;A</span></li>
+                            <li><span class="font-poppins text-slate-400 text-sm flex items-center gap-2"><span class="w-1 h-1 bg-slate-600 rounded-full"></span>Document Analysis</span></li>
+                            <li><span class="font-poppins text-slate-400 text-sm flex items-center gap-2"><span class="w-1 h-1 bg-slate-600 rounded-full"></span>Smart Flashcards</span></li>
+                            <li><span class="font-poppins text-slate-400 text-sm flex items-center gap-2"><span class="w-1 h-1 bg-slate-600 rounded-full"></span>Auto Quizzes</span></li>
+                            <li><span class="font-poppins text-slate-400 text-sm flex items-center gap-2"><span class="w-1 h-1 bg-slate-600 rounded-full"></span>Learning Analytics</span></li>
                         </ul>
                     </div>
 
-                    <!-- Contact & Support -->
-                    <div>
-                        <h3 class="font-montserrat font-bold text-lg mb-4">Support</h3>
-                        <ul class="space-y-2 mb-4">
-                            <li>
-                                <span class="font-poppins text-slate-300 text-sm">Help Center</span>
-                            </li>
-                            <li>
-                                <span class="font-poppins text-slate-300 text-sm">Documentation</span>
-                            </li>
-                            <li>
-                                <span class="font-poppins text-slate-300 text-sm">Privacy Policy</span>
-                            </li>
-                            <li>
-                                <span class="font-poppins text-slate-300 text-sm">Terms of Service</span>
-                            </li>
+                    <!-- Legal -->
+                    <div class="lg:col-span-3">
+                        <h4 class="font-montserrat font-bold text-sm uppercase tracking-widest text-indigo-400 mb-5">Legal &amp; Support</h4>
+                        <ul class="space-y-3">
+                            <li><span class="font-poppins text-slate-400 text-sm flex items-center gap-2"><span class="w-1 h-1 bg-slate-600 rounded-full"></span>Privacy Policy</span></li>
+                            <li><span class="font-poppins text-slate-400 text-sm flex items-center gap-2"><span class="w-1 h-1 bg-slate-600 rounded-full"></span>Terms of Service</span></li>
+                            <li><span class="font-poppins text-slate-400 text-sm flex items-center gap-2"><span class="w-1 h-1 bg-slate-600 rounded-full"></span>Help Center</span></li>
                         </ul>
-                        <div class="mt-6">
-                            <p class="font-poppins text-slate-400 text-xs mb-2">Connect with us:</p>
-                            <div class="flex gap-3">
-                                <a href="#" class="w-8 h-8 bg-slate-800 hover:bg-indigo-600 rounded-lg flex items-center justify-center transition-colors" aria-label="Facebook">
-                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                                    </svg>
-                                </a>
-                                <a href="#" class="w-8 h-8 bg-slate-800 hover:bg-indigo-600 rounded-lg flex items-center justify-center transition-colors" aria-label="Twitter">
-                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
-                                    </svg>
-                                </a>
-                                <a href="#" class="w-8 h-8 bg-slate-800 hover:bg-indigo-600 rounded-lg flex items-center justify-center transition-colors" aria-label="LinkedIn">
-                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                                    </svg>
-                                </a>
-                            </div>
+                        <!-- UENR badge -->
+                        <div class="mt-6 inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10">
+                            <svg class="w-4 h-4 text-indigo-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/>
+                            </svg>
+                            <span class="font-poppins text-slate-400 text-xs">Built for UENR Students</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Bottom Bar -->
-                <div class="border-t border-slate-800 pt-8 mt-8">
-                    <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-                        <p class="font-poppins text-slate-400 text-sm text-center md:text-left">
-                            &copy; <span id="current-year"></span> Testa StudyBuddy. All rights reserved.
-                        </p>
-                        <div class="flex items-center gap-2">
-                            <span class="font-poppins text-slate-400 text-sm">Made with</span>
-                            <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
-                            </svg>
-                            <span class="font-poppins text-slate-400 text-sm">for UENR Students</span>
-                        </div>
+                <!-- Bottom bar -->
+                <div class="border-t border-white/8 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <p class="font-poppins text-slate-500 text-sm">
+                        &copy; <span id="current-year"></span> Testa studyBuddy. All rights reserved.
+                    </p>
+                    <div class="flex items-center gap-1.5 font-poppins text-slate-500 text-sm">
+                        Made with
+                        <svg class="w-4 h-4 text-rose-500 mx-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/>
+                        </svg>
+                        for students everywhere
                     </div>
                 </div>
             </div>
         </footer>
+        {% endif %}
     </div>
 
     <script>

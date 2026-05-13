@@ -41,8 +41,8 @@ Whether you're studying Engineering, Business, Arts, Sciences, or any other fiel
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/CaL7598/Testa-ChatBuddy.git
-   cd Testa-ChatBuddy
+   git clone https://github.com/CaL7598/Testa-studyBuddy.git
+   cd Testa-studyBuddy
    ```
 
 2. **Install dependencies**

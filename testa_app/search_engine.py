@@ -1,5 +1,5 @@
 """
-Advanced Search Engine for Testa ChatBuddy
+Advanced Search Engine for Testa studyBuddy
 """
 from django.db.models import Q, Count
 from django.core.cache import cache

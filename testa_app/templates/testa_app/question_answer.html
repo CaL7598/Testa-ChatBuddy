@@ -87,6 +87,50 @@
         color: #111827;
         margin-top: 0;
     }
+
+    /* Pipe-markdown tables → real HTML tables */
+    .answer-table-wrap {
+        margin: 1.25rem 0;
+        max-width: 100%;
+        border-radius: 0.75rem;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        background: #fff;
+    }
+    .answer-table {
+        width: 100%;
+        min-width: 12rem;
+        border-collapse: collapse;
+        font-size: 0.9375rem;
+        font-family: 'Poppins', ui-sans-serif, system-ui, sans-serif;
+    }
+    .answer-table thead th {
+        background: linear-gradient(180deg, #4f46e5 0%, #4338ca 100%);
+        color: #fff;
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 600;
+        text-align: left;
+        padding: 0.65rem 1rem;
+        border-bottom: 2px solid #312e81;
+        white-space: nowrap;
+    }
+    .answer-table tbody td {
+        padding: 0.55rem 1rem;
+        border-bottom: 1px solid #e2e8f0;
+        color: #334155;
+        vertical-align: top;
+    }
+    .answer-table tbody tr:nth-child(even) {
+        background: #f8fafc;
+    }
+    .answer-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+    .answer-table tbody tr:hover {
+        background: #eef2ff;
+    }
     
     /* Q&A History preview styling */
     .qa-answer-preview .ai-thought {
@@ -132,15 +176,17 @@
 
     <!-- Main Content Grid -->
     <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Left Sidebar - UENR Logo -->
+        <!-- Left Sidebar - UENR Logo (commented out) -->
+        {% comment %}
         <div class="lg:col-span-1 hidden lg:flex items-center justify-center">
             <div class="glass-effect rounded-3xl p-8 shadow-2xl transform hover:scale-105 transition-transform duration-300">
                 <img src="https://auth.uenr.edu.gh/images/uenr-logo-768x998.png" alt="UENR Logo" class="w-full max-w-xs opacity-90">
             </div>
         </div>
+        {% endcomment %}
 
         <!-- Center - Question Form -->
-        <div class="lg:col-span-2">
+        <div class="lg:col-span-3">
             <div class="gradient-border shadow-2xl animate-slide-in">
                 <div class="gradient-border-inner">
                     <!-- Upload progress (shown during upload) -->
@@ -311,7 +357,8 @@
                 <div class="flex items-start justify-between mb-4">
                     <div class="flex-1 min-w-0">
                         <p class="font-montserrat font-semibold text-gray-800 mb-2 line-clamp-2">{{ qa.question|truncatewords:15 }}</p>
-                        <div class="font-poppins text-gray-600 text-sm line-clamp-3 qa-answer-preview">{{ qa.answer|truncatewords:20 }}</div>
+                        <div class="font-poppins text-gray-600 text-sm line-clamp-3 qa-answer-preview"
+                             data-raw="{{ qa.answer }}"></div>
                     </div>
                     <button type="button" class="qa-delete-one flex-shrink-0 p-2 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors ml-2" data-qa-id="{{ qa.id }}" title="Delete this conversation">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -378,6 +425,32 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
+    // ── Clean & render answer previews in Recent Conversations ──
+    document.querySelectorAll('.qa-answer-preview[data-raw]').forEach(function(el) {
+        let text = el.dataset.raw || '';
+        // Strip <think>...</think> and <think>...</redacted_reasoning> blocks
+        text = text.replace(/<think>[\s\S]*?<\/think>/gi, '');
+        text = text.replace(/<think>[\s\S]*?<\/redacted_reasoning>/gi, '');
+        text = text.replace(/<\/?think>/gi, '').replace(/<\/?redacted_reasoning>/gi, '');
+        // Strip markdown: headings (### ## #)
+        text = text.replace(/^#{1,6}\s+/gm, '');
+        // Strip bold/italic (* ** _)
+        text = text.replace(/\*{1,3}([^*]+)\*{1,3}/g, '$1');
+        text = text.replace(/_{1,2}([^_]+)_{1,2}/g, '$1');
+        // Strip horizontal rules
+        text = text.replace(/^[-*_]{3,}\s*$/gm, '');
+        // Strip inline code
+        text = text.replace(/`([^`]+)`/g, '$1');
+        // Strip list markers (- item, * item, 1. item)
+        text = text.replace(/^[\s]*[-*+]\s+/gm, '');
+        text = text.replace(/^[\s]*\d+\.\s+/gm, '');
+        // Collapse whitespace
+        text = text.replace(/\s+/g, ' ').trim();
+        // Truncate to ~120 characters
+        if (text.length > 120) text = text.slice(0, 120).trimEnd() + ' …';
+        el.textContent = text;
+    });
+
     // Upload document (ChatGPT-style: upload then ask)
     const fileInput = document.getElementById('file-upload-input');
     const attachedBar = document.getElementById('attached-doc-bar');
@@ -624,25 +697,145 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
-    // Convert Markdown in answer text to HTML (headings, bold, italic, horizontal rule)
+    // Parse GitHub-style pipe tables → safe HTML (cells escaped); replaces block with placeholder
+    function parsePipeTableRow(line) {
+        line = (line || '').trim();
+        if (line.indexOf('|') === -1) return null;
+        var parts = line.split('|');
+        if (parts.length > 0 && parts[0].trim() === '') parts.shift();
+        if (parts.length > 0 && parts[parts.length - 1].trim() === '') parts.pop();
+        var cells = parts.map(function (p) { return p.trim(); });
+        if (cells.length < 2) return null;
+        return cells;
+    }
+    function isPipeTableSeparatorRow(line) {
+        var cells = parsePipeTableRow(line);
+        if (!cells || cells.length < 2) return false;
+        return cells.every(function (c) {
+            return /^:?-{3,}:?$/.test(c.replace(/\s+/g, ''));
+        });
+    }
+    function escapeHtmlCell(str) {
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+    function cellToSafeHtml(raw) {
+        var c = escapeHtmlCell(raw);
+        c = c.replace(/\*\*(.+?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>');
+        c = c.replace(/`([^`]+)`/g, '<code class="bg-gray-100 text-gray-800 px-1 rounded text-sm font-mono">$1</code>');
+        return c;
+    }
+    function extractMarkdownTables(raw) {
+        var lines = raw.split('\n');
+        var out = [];
+        var tables = [];
+        var i = 0;
+        while (i < lines.length) {
+            var headerCells = parsePipeTableRow(lines[i]);
+            if (headerCells && i + 1 < lines.length && isPipeTableSeparatorRow(lines[i + 1])) {
+                var colCount = headerCells.length;
+                i += 2;
+                var bodyRows = [];
+                while (i < lines.length) {
+                    var r = parsePipeTableRow(lines[i]);
+                    if (!r) break;
+                    while (r.length < colCount) r.push('');
+                    if (r.length > colCount) r = r.slice(0, colCount);
+                    bodyRows.push(r);
+                    i++;
+                }
+                var tid = tables.length;
+                var html = '<div class="answer-table-wrap"><table class="answer-table"><thead><tr>';
+                for (var h = 0; h < colCount; h++) {
+                    html += '<th>' + cellToSafeHtml(headerCells[h] !== undefined ? headerCells[h] : '') + '</th>';
+                }
+                html += '</tr></thead><tbody>';
+                for (var br = 0; br < bodyRows.length; br++) {
+                    html += '<tr>';
+                    for (var c = 0; c < colCount; c++) {
+                        html += '<td>' + cellToSafeHtml(bodyRows[br][c] !== undefined ? bodyRows[br][c] : '') + '</td>';
+                    }
+                    html += '</tr>';
+                }
+                html += '</tbody></table></div>';
+                tables.push(html);
+                out.push('@@MDTBL' + tid + '@@');
+                continue;
+            }
+            out.push(lines[i]);
+            i++;
+        }
+        return { merged: out.join('\n'), tables: tables };
+    }
+
+    // Convert Markdown in answer text to HTML
     function renderMarkdownInAnswer(text) {
         if (!text || !text.trim()) return '';
-        var s = text;
+        var extracted = extractMarkdownTables(text);
+        var s = extracted.merged;
         // Escape HTML to prevent XSS
         s = s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-        // Headings (at start of line): ### -> h3, ## -> h2, # -> h1
-        s = s.replace(/^###\s+(.+)$/gm, '<h3 class="font-montserrat font-bold text-lg text-gray-900 mt-4 mb-2">$1</h3>');
-        s = s.replace(/^##\s+(.+)$/gm, '<h2 class="font-montserrat font-bold text-xl text-gray-900 mt-4 mb-2">$1</h2>');
-        s = s.replace(/^#\s+(.+)$/gm, '<h1 class="font-montserrat font-bold text-2xl text-gray-900 mt-4 mb-2">$1</h1>');
-        // Bold: **text** or __text__
+
+        // Process line-by-line for block elements (headings, lists, HR)
+        var lines = s.split('\n');
+        var output = [];
+        var inUl = false;
+        var inOl = false;
+        for (var i = 0; i < lines.length; i++) {
+            var line = lines[i];
+            var m;
+            if ((m = line.match(/^###\s+(.+)$/))) {
+                if (inUl) { output.push('</ul>'); inUl = false; }
+                if (inOl) { output.push('</ol>'); inOl = false; }
+                output.push('<h3 class="font-montserrat font-bold text-lg text-gray-900 mt-4 mb-2">' + m[1] + '</h3>');
+            } else if ((m = line.match(/^##\s+(.+)$/))) {
+                if (inUl) { output.push('</ul>'); inUl = false; }
+                if (inOl) { output.push('</ol>'); inOl = false; }
+                output.push('<h2 class="font-montserrat font-bold text-xl text-gray-900 mt-4 mb-2">' + m[1] + '</h2>');
+            } else if ((m = line.match(/^#\s+(.+)$/))) {
+                if (inUl) { output.push('</ul>'); inUl = false; }
+                if (inOl) { output.push('</ol>'); inOl = false; }
+                output.push('<h1 class="font-montserrat font-bold text-2xl text-gray-900 mt-4 mb-2">' + m[1] + '</h1>');
+            } else if ((m = line.match(/^[ \t]*[-*+]\s+(.+)$/))) {
+                // Unordered list item (-, *, or + followed by space)
+                if (inOl) { output.push('</ol>'); inOl = false; }
+                if (!inUl) { output.push('<ul class="my-2 pl-5 space-y-1 list-disc text-gray-700">'); inUl = true; }
+                output.push('<li>' + m[1] + '</li>');
+            } else if ((m = line.match(/^[ \t]*\d+\.\s+(.+)$/))) {
+                // Ordered list item (1. 2. etc.)
+                if (inUl) { output.push('</ul>'); inUl = false; }
+                if (!inOl) { output.push('<ol class="my-2 pl-5 space-y-1 list-decimal text-gray-700">'); inOl = true; }
+                output.push('<li>' + m[1] + '</li>');
+            } else if (/^[-*_]{3,}\s*$/.test(line)) {
+                // Horizontal rule
+                if (inUl) { output.push('</ul>'); inUl = false; }
+                if (inOl) { output.push('</ol>'); inOl = false; }
+                output.push('<hr class="border-gray-200 my-3">');
+            } else {
+                if (inUl && line.trim() === '') { output.push('</ul>'); inUl = false; }
+                if (inOl && line.trim() === '') { output.push('</ol>'); inOl = false; }
+                output.push(line);
+            }
+        }
+        if (inUl) output.push('</ul>');
+        if (inOl) output.push('</ol>');
+        s = output.join('\n');
+
+        // Restore pipe-markdown tables as HTML (placeholders were escaped-safe)
+        s = s.replace(/@@MDTBL(\d+)@@/g, function (_, id) {
+            var n = parseInt(id, 10);
+            return extracted.tables[n] || '';
+        });
+
+        // Inline elements (bold, italic, code)
         s = s.replace(/\*\*(.+?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>');
         s = s.replace(/__(.+?)__/g, '<strong class="font-semibold text-gray-900">$1</strong>');
-        // Italic: *text* or _text_ (after bold is done, single * or _)
         s = s.replace(/\*([^*\n]+)\*/g, '<em>$1</em>');
         s = s.replace(/_([^_\n]+)_/g, '<em>$1</em>');
-        // Horizontal rule: --- or ***
-        s = s.replace(/^---+$/gm, '<hr class="border-gray-200 my-3">');
-        s = s.replace(/^\*\*\*+$/gm, '<hr class="border-gray-200 my-3">');
+        s = s.replace(/`([^`]+)`/g, '<code class="bg-gray-100 text-gray-800 px-1 rounded text-sm font-mono">$1</code>');
         // Newlines
         s = s.replace(/\n/g, '<br>');
         return s;

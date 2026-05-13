@@ -238,9 +238,8 @@
                         <h3 class="font-montserrat font-bold text-xl text-slate-900 mb-3 line-clamp-2">
                             {{ result.question|truncatewords:20 }}
                         </h3>
-                        <p class="font-poppins text-slate-600 text-base mb-4 line-clamp-3">
-                            {{ result.answer|truncatewords:30 }}
-                        </p>
+                        <p class="font-poppins text-slate-600 text-base mb-4 line-clamp-3 search-answer-preview"
+                           data-raw="{{ result.answer }}"></p>
                         <div class="flex flex-wrap items-center gap-3">
                             {% if result.course %}
                             <span class="px-3 py-1.5 bg-indigo-100 text-indigo-700 rounded-full text-xs font-poppins font-semibold">
@@ -342,21 +341,44 @@
         }
     }
 
-    // Initialize filters state (collapsed by default)
+    // Initialize filters state (collapsed by default) + clean answer previews
     document.addEventListener('DOMContentLoaded', function() {
+        // Collapse filters when none are active
         const filtersContent = document.getElementById('filtersContent');
         if (filtersContent) {
-            // Check if any filters are active by checking form inputs
             const form = document.getElementById('filtersForm');
             if (form) {
                 const hasSelectedOptions = Array.from(form.querySelectorAll('select option:checked')).length > 0;
                 const hasCheckedBoxes = Array.from(form.querySelectorAll('input[type="checkbox"]:checked')).length > 0;
-                
                 if (!hasSelectedOptions && !hasCheckedBoxes) {
                     filtersContent.classList.add('hidden');
                 }
             }
         }
+
+        // Strip markdown/think tags from answer previews
+        document.querySelectorAll('.search-answer-preview[data-raw]').forEach(function(el) {
+            let text = el.dataset.raw || '';
+            // Remove <think> and <redacted_reasoning> blocks
+            text = text.replace(/<think>[\s\S]*?<\/think>/gi, '');
+            text = text.replace(/<redacted_reasoning>[\s\S]*?<\/redacted_reasoning>/gi, '');
+            // Strip markdown headings
+            text = text.replace(/^#{1,6}\s+/gm, '');
+            // Strip bold/italic markers
+            text = text.replace(/\*{1,3}([^*\n]+)\*{1,3}/g, '$1');
+            text = text.replace(/_{1,3}([^_\n]+)_{1,3}/g, '$1');
+            // Strip inline code
+            text = text.replace(/`([^`]+)`/g, '$1');
+            // Strip blockquotes
+            text = text.replace(/^>\s+/gm, '');
+            // Strip horizontal rules
+            text = text.replace(/^[-*_]{3,}\s*$/gm, '');
+            // Collapse excess whitespace
+            text = text.replace(/\n{3,}/g, '\n\n').trim();
+            // Truncate
+            if (text.length > 160) text = text.slice(0, 160).trimEnd() + ' …';
+            el.textContent = text || 'No preview available.';
+        });
     });
 
     // Autocomplete suggestions

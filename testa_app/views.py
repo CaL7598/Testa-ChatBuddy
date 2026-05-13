@@ -1,5 +1,6 @@
 import os
 import sys
+from django.db.models import Count
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, authenticate
@@ -19,7 +20,7 @@ from langchain_community.vectorstores import FAISS
 from dotenv import load_dotenv
 from datetime import datetime, date
 from django.utils import timezone
-from .bytez_client import BytezClient
+from .bytez_client import get_bytez_client
 
 load_dotenv()
 
@@ -88,8 +89,7 @@ def question_answer(request):
                 return JsonResponse({"error": "Question is required"}, status=400)
             
             _safe_log("Received question: " + (user_question[:200] if user_question else ""))
-            qa_list = QuestionAnswer.objects.filter(user=request.user).order_by('-created_at')[:10]
-            
+
             # Load vector store and search (uses absolute path; includes all uploaded docs)
             answer = None
             context = ""
@@ -107,8 +107,7 @@ def question_answer(request):
             # If no answer from document context, use Bytez with clear instructions when no context
             if not answer:
                 try:
-                    from .bytez_client import BytezClient
-                    client = BytezClient()
+                    client = get_bytez_client()
                     if not context:
                         # No uploaded docs or no relevant passages — avoid "I don't have access to files"
                         answer = client.answer_question(
@@ -181,7 +180,7 @@ def question_answer(request):
             # Update analytics
             try:
                 _update_daily_activity(request.user)
-                _update_user_analytics(request.user)
+                _update_user_analytics(request.user, created)
             except Exception as e:
                 _safe_log(f"Error updating analytics: {e}")
             
@@ -215,23 +214,51 @@ def question_answer(request):
 
 
 def _update_daily_activity(user):
-    """Update daily activity for user"""
+    """Update daily activity for user — also records study time so streaks work."""
     today = date.today()
-    activity, created = DailyActivity.objects.get_or_create(
+    activity, _ = DailyActivity.objects.get_or_create(
         user=user,
         date=today,
         defaults={'questions_asked': 0}
     )
     activity.questions_asked += 1
+    # Each question counts as ~1 min of study so streaks are tracked
+    activity.study_minutes += 1
     activity.save()
 
 
-def _update_user_analytics(user):
-    """Update user analytics"""
-    analytics, created = UserAnalytics.objects.get_or_create(user=user)
-    analytics.total_questions += 1
+def _update_user_analytics(user, qa_was_created=True):
+    """Update user analytics after a Q&A interaction."""
+    from testa_app.study_assistant_views import _update_study_time_and_streak
+
+    analytics, _ = UserAnalytics.objects.get_or_create(user=user)
+
+    # Only increment total_questions for genuinely new Q&A records
+    if qa_was_created:
+        analytics.total_questions = QuestionAnswer.objects.filter(user=user).count()
+
     analytics.last_active = timezone.now()
+
+    # Keep favorite_course in sync with most-asked course
+    top_course = (
+        QuestionAnswer.objects
+        .filter(user=user)
+        .exclude(course='')
+        .values('course')
+        .annotate(n=Count('id'))
+        .order_by('-n')
+        .first()
+    )
+    if top_course:
+        analytics.favorite_course = top_course['course']
+
     analytics.save()
+
+    # Update streak (each question = 1 min of study)
+    try:
+        _update_study_time_and_streak(user, 60)
+    except Exception:
+        pass
 
 
 

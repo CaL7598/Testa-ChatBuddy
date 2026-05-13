@@ -1,5 +1,5 @@
 """
-Smart Recommendation Engine for Testa ChatBuddy
+Smart Recommendation Engine for Testa studyBuddy
 """
 from datetime import datetime, timedelta
 from django.db.models import Avg, Count, Q

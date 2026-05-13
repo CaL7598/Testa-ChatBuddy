@@ -2,7 +2,7 @@
 
 ## Summary
 
-Successfully migrated Testa ChatBuddy from Google Gemini Pro API to **Bytez API** (free open-source models).
+Successfully migrated Testa studyBuddy from Google Gemini Pro API to **Bytez API** (free open-source models).
 
 ## What Changed
 

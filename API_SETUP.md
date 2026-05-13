@@ -1,4 +1,4 @@
-# API Setup Guide for Testa ChatBuddy
+# API Setup Guide for Testa studyBuddy
 
 ## Required APIs
 

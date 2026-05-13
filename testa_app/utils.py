@@ -1,5 +1,5 @@
 """
-Utility functions for Testa ChatBuddy application
+Utility functions for Testa studyBuddy application
 
 Provides utilities for document processing, AI interactions, and study tools
 for students across all academic disciplines.
@@ -14,7 +14,7 @@ from pptx import Presentation
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
 from langchain_core.prompts import PromptTemplate
-from .bytez_client import BytezClient, EmbeddingClient
+from .bytez_client import BytezClient, EmbeddingClient, get_bytez_client
 
 
 def get_file_text(file):
@@ -74,6 +74,19 @@ def get_text_chunks(text, chunk_size=50000, chunk_overlap=1000):
     return chunks
 
 
+# Cap RAG context sent to the LLM (fewer tokens → faster responses, lower cost)
+_RAG_CONTEXT_CHAR_LIMIT = int(os.environ.get("RAG_CONTEXT_CHAR_LIMIT", "14000"))
+
+
+def _truncate_rag_context(text: str, limit: int = None) -> str:
+    if not text:
+        return text
+    lim = limit if limit is not None else _RAG_CONTEXT_CHAR_LIMIT
+    if len(text) <= lim:
+        return text
+    return text[:lim] + "\n\n[Retrieved context truncated for response speed.]"
+
+
 def _get_faiss_index_path():
     """Return absolute path for FAISS index so save/load always use same location."""
     from django.conf import settings
@@ -82,86 +95,104 @@ def _get_faiss_index_path():
     return str(path)
 
 
-def get_vector_store(text_chunks, index_path=None):
-    """Create or update FAISS vector store; merges new chunks into existing index."""
-    if index_path is None:
-        index_path = _get_faiss_index_path()
-    embedding_client = EmbeddingClient()
-    
-    # Create LangChain-compatible embeddings wrapper
-    from langchain.embeddings.base import Embeddings
-    
+# --- Module-level cache: embedding model and vector store ---
+_embedding_client_cache = None
+_local_embeddings_cache = None
+_vector_store_cache = None
+_vector_store_mtime = None
+
+
+def _get_local_embeddings():
+    """Return a cached LocalEmbeddings instance, loading the model only once."""
+    global _embedding_client_cache, _local_embeddings_cache
+    if _local_embeddings_cache is not None:
+        return _local_embeddings_cache
+
+    from langchain_core.embeddings import Embeddings
+
+    if _embedding_client_cache is None:
+        _embedding_client_cache = EmbeddingClient()
+
+    _client = _embedding_client_cache
+
     class LocalEmbeddings(Embeddings):
-        def __init__(self, embedding_client):
-            self.embedding_client = embedding_client
-        
         def embed_documents(self, texts):
-            return self.embedding_client.embed_documents(texts)
-        
+            return _client.embed_documents(texts)
         def embed_query(self, text):
-            return self.embedding_client.embed_text(text)
-    
-    embeddings = LocalEmbeddings(embedding_client)
-    existing = load_vector_store(index_path)
-    if existing is not None and text_chunks:
-        # Merge new document chunks into existing index
-        existing.add_texts(text_chunks)
-        existing.save_local(index_path)
-        return existing
-    if text_chunks:
-        vector_store = FAISS.from_texts(text_chunks, embedding=embeddings)
-        vector_store.save_local(index_path)
-        return vector_store
-    return existing
+            return _client.embed_text(text)
+
+    _local_embeddings_cache = LocalEmbeddings()
+    return _local_embeddings_cache
 
 
 def load_vector_store(index_path=None):
-    """Load existing FAISS vector store."""
+    """Load FAISS vector store; uses an in-process cache to avoid reloading from disk."""
+    global _vector_store_cache, _vector_store_mtime
     if index_path is None:
         index_path = _get_faiss_index_path()
-    embedding_client = EmbeddingClient()
-    
-    from langchain.embeddings.base import Embeddings
-    
-    class LocalEmbeddings(Embeddings):
-        def __init__(self, embedding_client):
-            self.embedding_client = embedding_client
-        
-        def embed_documents(self, texts):
-            return self.embedding_client.embed_documents(texts)
-        
-        def embed_query(self, text):
-            return self.embedding_client.embed_text(text)
-    
-    embeddings = LocalEmbeddings(embedding_client)
+
+    index_file = Path(index_path) / "index.faiss"
+    if not index_file.exists():
+        return None
+
+    try:
+        mtime = index_file.stat().st_mtime
+    except OSError:
+        return None
+
+    # Return cached store when the file hasn't changed
+    if _vector_store_cache is not None and _vector_store_mtime == mtime:
+        return _vector_store_cache
+
+    embeddings = _get_local_embeddings()
     try:
         vector_store = FAISS.load_local(
-            index_path, 
-            embeddings, 
+            index_path,
+            embeddings,
             allow_dangerous_deserialization=True
         )
+        _vector_store_cache = vector_store
+        _vector_store_mtime = mtime
         return vector_store
     except Exception as e:
         print(f"Error loading vector store: {e}")
         return None
 
 
+def get_vector_store(text_chunks, index_path=None):
+    """Create or update FAISS vector store; merges new chunks into existing index."""
+    global _vector_store_cache, _vector_store_mtime
+    if index_path is None:
+        index_path = _get_faiss_index_path()
+
+    embeddings = _get_local_embeddings()
+    existing = load_vector_store(index_path)
+
+    if existing is not None and text_chunks:
+        existing.add_texts(text_chunks)
+        existing.save_local(index_path)
+        # Update the in-memory cache and invalidate mtime so reload picks up changes
+        _vector_store_cache = existing
+        _vector_store_mtime = None
+        return existing
+
+    if text_chunks:
+        vector_store = FAISS.from_texts(text_chunks, embedding=embeddings)
+        vector_store.save_local(index_path)
+        _vector_store_cache = vector_store
+        _vector_store_mtime = None
+        return vector_store
+
+    return existing
+
+
 def get_conversational_chain():
     """Get conversational chain for question answering using Bytez"""
-    client = BytezClient()
-    
+    client = get_bytez_client()
+
     def answer_with_context(context, question):
         """Answer question with context using Bytez"""
-        prompt = f"""Context:
-{context}
-
-Question:
-{question}
-
-Provide a clear, educational answer with examples where appropriate.
-Include the course and topic if determinable."""
-        
-        # Use BytezClient's default temperature handling to avoid double-passing kwargs
+        context = _truncate_rag_context(context)
         return client.answer_question(question, context=context)
     
     return answer_with_context
@@ -171,8 +202,8 @@ class QuizGenerator:
     """Generate quizzes from documents using AI via Bytez"""
     
     def __init__(self, api_key=None):
-        self.client = BytezClient(api_key=api_key)
-    
+        self.client = BytezClient(api_key=api_key) if api_key else get_bytez_client()
+
     def generate_quiz(self, document_text, topic, num_questions=5, difficulty="medium"):
         """Generate quiz questions from document text"""
         prompt = f"""Generate a quiz with {num_questions} questions on the topic of {topic} from this content:
@@ -220,9 +251,9 @@ Ensure questions test understanding, not just memorization.
 
 class FlashcardGenerator:
     """Generate flashcards from documents using AI via Bytez"""
-    
+
     def __init__(self, api_key=None):
-        self.client = BytezClient(api_key=api_key)
+        self.client = BytezClient(api_key=api_key) if api_key else get_bytez_client()
     
     def generate_flashcards(self, document_text, topic, num_cards=10):
         """Generate flashcards from document text"""
@@ -264,9 +295,9 @@ Focus on key concepts, definitions, and important facts.
 
 class SummaryGenerator:
     """Generate summaries from documents using Bytez"""
-    
+
     def __init__(self, api_key=None):
-        self.client = BytezClient(api_key=api_key)
+        self.client = BytezClient(api_key=api_key) if api_key else get_bytez_client()
     
     def generate_summary(self, document_text, summary_type="concise"):
         """Generate summary based on type: concise, detailed, or bullet_points"""

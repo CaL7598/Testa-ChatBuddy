@@ -1,100 +1,381 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block content %}
-<div class="relative min-h-[600px] w-full flex items-center justify-center overflow-hidden">
-    <!-- Background Video with Overlay -->
+
+<!-- ═══════════════════════════════════════
+     HERO SECTION
+══════════════════════════════════════════ -->
+<div class="relative min-h-screen w-full flex flex-col items-center justify-center overflow-hidden">
+
+    <!-- Background Video -->
     <div class="absolute inset-0 z-0">
-        <video id="landing-video" autoplay muted loop playsinline class="w-full h-full object-cover">
-            <source src="{% static 'landing page/19419586-hd_1920_1080_30fps.mp4' %}" type="video/mp4">
+        <video id="landing-video" autoplay muted loop playsinline class="w-full h-full object-cover scale-105">
+            <source src="{% static 'landing page/bckg.mp4' %}" type="video/mp4">
         </video>
-        <div class="absolute inset-0 bg-indigo-50/30"></div>
+        <!-- Deep gradient overlay – ensures text is always readable -->
+        <div class="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-black/85"></div>
+        <!-- Subtle indigo tint for brand alignment -->
+        <div class="absolute inset-0 bg-indigo-950/25"></div>
     </div>
-    
-    <!-- Content -->
-    <div class="relative z-10 text-center px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto py-20">
-        <div class="space-y-6 animate-fade-in">
-            <!-- Welcome Text -->
-            <h1 class="font-montserrat font-bold text-5xl sm:text-6xl md:text-7xl lg:text-8xl text-slate-900 leading-tight">
-                Welcome to<br>
-                <span class="block mt-2 text-indigo-600">UENR Testa StudyBuddy</span>
-            </h1>
-            
-            <!-- Subtitle -->
-            <p class="font-poppins text-lg sm:text-xl md:text-2xl text-gray-700 dark:text-gray-300 font-medium max-w-3xl mx-auto leading-relaxed">
-                Anyone who stops learning is old, whether at twenty or eighty. Anyone who keeps learning stays young.
-            </p>
-            
-            <!-- CTA Buttons -->
-            {% if user.is_authenticated %}
-            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mt-8">
-                <a href="{% url 'question_answer' %}" class="font-montserrat font-semibold px-8 py-4 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 text-lg">
-                    Start Learning →
-                </a>
-                <a href="{% url 'analytics_dashboard' %}" class="font-montserrat font-semibold px-8 py-4 bg-white text-indigo-600 border-2 border-indigo-600 rounded-full shadow-md hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 text-lg">
-                    View Analytics
-                </a>
+
+    <!-- Hero Content -->
+    <div class="relative z-10 text-center px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto pt-24 pb-32">
+
+        <!-- Pill Badge -->
+        <div class="hero-badge inline-flex items-center gap-2 px-5 py-2 rounded-full
+                    bg-white/10 backdrop-blur-md border border-white/20
+                    text-white text-sm font-poppins font-medium mb-10">
+            <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse flex-shrink-0"></span>
+            AI-Powered Learning Platform · UENR
+        </div>
+
+        <!-- Main Heading -->
+        <h1 class="hero-heading font-montserrat font-black text-white leading-[1.05] mb-6"
+            style="font-size: clamp(2.6rem, 7.5vw, 5.75rem);
+                   text-shadow: 0 4px 32px rgba(0,0,0,0.6), 0 1px 0 rgba(0,0,0,0.4);">
+            Welcome to<br>
+            <span class="bg-gradient-to-r from-indigo-300 via-violet-300 to-purple-300 bg-clip-text text-transparent drop-shadow-none">
+                Testa studyBuddy
+            </span>
+        </h1>
+
+        <!-- Subtitle -->
+        <p class="hero-sub font-poppins text-lg sm:text-xl md:text-2xl text-white/80 font-light
+                  max-w-3xl mx-auto leading-relaxed mb-10"
+           style="text-shadow: 0 2px 16px rgba(0,0,0,0.5);">
+            Anyone who stops learning is old, whether at twenty or eighty.<br class="hidden sm:block">
+            Anyone who keeps learning stays young.
+        </p>
+
+        <!-- Feature Pills -->
+        <div class="hero-pills flex flex-wrap justify-center gap-2 sm:gap-3 mb-12">
+            <span class="px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white/90 text-xs sm:text-sm font-poppins font-medium">AI Q&amp;A</span>
+            <span class="px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white/90 text-xs sm:text-sm font-poppins font-medium">Smart Flashcards</span>
+            <span class="px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white/90 text-xs sm:text-sm font-poppins font-medium">Auto Quizzes</span>
+            <span class="px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white/90 text-xs sm:text-sm font-poppins font-medium">PDF Analysis</span>
+            <span class="px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white/90 text-xs sm:text-sm font-poppins font-medium">Progress Tracking</span>
+        </div>
+
+        <!-- CTA Buttons -->
+        {% if user.is_authenticated %}
+        <div class="hero-cta flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <a href="{% url 'question_answer' %}"
+               class="group font-montserrat font-bold px-10 py-4 bg-indigo-500 hover:bg-indigo-400
+                      text-white rounded-2xl shadow-2xl shadow-indigo-900/50
+                      hover:shadow-indigo-500/40 hover:-translate-y-1 transition-all duration-300 text-lg">
+                Start Learning
+                <span class="inline-block ml-1 group-hover:translate-x-1 transition-transform duration-300">→</span>
+            </a>
+            <a href="{% url 'analytics_dashboard' %}"
+               class="font-montserrat font-bold px-10 py-4 bg-white/10 backdrop-blur-md text-white
+                      border-2 border-white/30 hover:border-white/60 hover:bg-white/20
+                      rounded-2xl hover:-translate-y-1 transition-all duration-300 text-lg">
+                View Analytics
+            </a>
+        </div>
+        {% else %}
+        <div class="hero-cta flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <a href="{% url 'register' %}"
+               class="group font-montserrat font-bold px-10 py-4 bg-indigo-500 hover:bg-indigo-400
+                      text-white rounded-2xl shadow-2xl shadow-indigo-900/50
+                      hover:shadow-indigo-500/40 hover:-translate-y-1 transition-all duration-300 text-lg">
+                Get Started
+                <span class="inline-block ml-1 group-hover:translate-x-1 transition-transform duration-300">→</span>
+            </a>
+            <a href="{% url 'login' %}"
+               class="font-montserrat font-bold px-10 py-4 bg-white/10 backdrop-blur-md text-white
+                      border-2 border-white/30 hover:border-white/60 hover:bg-white/20
+                      rounded-2xl hover:-translate-y-1 transition-all duration-300 text-lg">
+                Sign In
+            </a>
+        </div>
+        {% endif %}
+
+        <!-- Scroll Indicator -->
+        <div class="mt-20 flex flex-col items-center gap-2 text-white/40 scroll-cue">
+            <span class="text-xs font-poppins tracking-[0.2em] uppercase">Scroll to explore</span>
+            <div class="w-6 h-10 border-2 border-white/30 rounded-full flex items-start justify-center p-1.5">
+                <div class="w-1.5 h-2.5 bg-white/50 rounded-full scroll-dot"></div>
             </div>
-            {% else %}
-            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mt-8">
-                <a href="{% url 'register' %}" class="font-montserrat font-semibold px-8 py-4 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 text-lg">
-                    Get Started →
-                </a>
-                <a href="{% url 'login' %}" class="font-montserrat font-semibold px-8 py-4 bg-white text-indigo-600 border-2 border-indigo-600 rounded-full shadow-md hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 text-lg">
-                    Sign In
-                </a>
-            </div>
-            {% endif %}
         </div>
     </div>
 </div>
 
+<!-- ═══════════════════════════════════════
+     STATS BAR
+══════════════════════════════════════════ -->
+<div class="bg-white border-b border-slate-100">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            <div class="group cursor-default">
+                <p class="font-montserrat font-black text-3xl sm:text-4xl text-indigo-600 group-hover:scale-110 transition-transform duration-300">AI</p>
+                <p class="font-poppins text-slate-500 text-sm mt-1 font-medium">Powered Answers</p>
+            </div>
+            <div class="group cursor-default">
+                <p class="font-montserrat font-black text-3xl sm:text-4xl text-indigo-600 group-hover:scale-110 transition-transform duration-300">24/7</p>
+                <p class="font-poppins text-slate-500 text-sm mt-1 font-medium">Available Anytime</p>
+            </div>
+            <div class="group cursor-default">
+                <p class="font-montserrat font-black text-3xl sm:text-4xl text-indigo-600 group-hover:scale-110 transition-transform duration-300">100%</p>
+                <p class="font-poppins text-slate-500 text-sm mt-1 font-medium">Free for Students</p>
+            </div>
+            <div class="group cursor-default">
+                <p class="font-montserrat font-black text-3xl sm:text-4xl text-indigo-600 group-hover:scale-110 transition-transform duration-300">∞</p>
+                <p class="font-poppins text-slate-500 text-sm mt-1 font-medium">Questions to Ask</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     FEATURES SECTION
+══════════════════════════════════════════ -->
+<div class="bg-slate-50 py-24 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-6xl mx-auto">
+
+        <!-- Section Header -->
+        <div class="text-center mb-16">
+            <span class="inline-block px-4 py-1.5 rounded-full bg-indigo-100 text-indigo-700 text-sm font-poppins font-semibold mb-5">
+                Everything You Need
+            </span>
+            <h2 class="font-montserrat font-black text-4xl md:text-5xl text-slate-900 mb-5 leading-tight">
+                Study Smarter,<br class="sm:hidden"> Not Harder
+            </h2>
+            <p class="font-poppins text-slate-500 text-lg max-w-2xl mx-auto leading-relaxed">
+                All the AI tools you need to accelerate your learning and ace every exam — built for UENR students.
+            </p>
+        </div>
+
+        <!-- Feature Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
+            <!-- AI Q&A -->
+            <div class="feature-card group bg-white rounded-2xl p-8 shadow-sm hover:shadow-xl
+                        border border-slate-100 hover:border-indigo-100
+                        transition-all duration-300 hover:-translate-y-2">
+                <div class="w-14 h-14 bg-indigo-50 group-hover:bg-indigo-100 rounded-2xl
+                            flex items-center justify-center mb-6 transition-colors duration-300">
+                    <svg class="w-7 h-7 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <h3 class="font-montserrat font-bold text-xl text-slate-900 mb-3">AI-Powered Q&amp;A</h3>
+                <p class="font-poppins text-slate-500 text-sm leading-relaxed">
+                    Ask any question and get instant, accurate answers. Upload your lecture notes for context-aware, document-grounded responses.
+                </p>
+            </div>
+
+            <!-- Flashcards -->
+            <div class="feature-card group bg-white rounded-2xl p-8 shadow-sm hover:shadow-xl
+                        border border-slate-100 hover:border-purple-100
+                        transition-all duration-300 hover:-translate-y-2">
+                <div class="w-14 h-14 bg-purple-50 group-hover:bg-purple-100 rounded-2xl
+                            flex items-center justify-center mb-6 transition-colors duration-300">
+                    <svg class="w-7 h-7 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M5 5h9M5 9h9m-9 4h5m3 4h6M4 5a1 1 0 011-1h9a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1V5z"/>
+                    </svg>
+                </div>
+                <h3 class="font-montserrat font-bold text-xl text-slate-900 mb-3">Smart Flashcards</h3>
+                <p class="font-poppins text-slate-500 text-sm leading-relaxed">
+                    Auto-generate flashcards from your documents. Use spaced repetition to lock in concepts and track your confidence over time.
+                </p>
+            </div>
+
+            <!-- Quizzes -->
+            <div class="feature-card group bg-white rounded-2xl p-8 shadow-sm hover:shadow-xl
+                        border border-slate-100 hover:border-emerald-100
+                        transition-all duration-300 hover:-translate-y-2">
+                <div class="w-14 h-14 bg-emerald-50 group-hover:bg-emerald-100 rounded-2xl
+                            flex items-center justify-center mb-6 transition-colors duration-300">
+                    <svg class="w-7 h-7 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                    </svg>
+                </div>
+                <h3 class="font-montserrat font-bold text-xl text-slate-900 mb-3">Auto Quiz Generation</h3>
+                <p class="font-poppins text-slate-500 text-sm leading-relaxed">
+                    Transform any document into a comprehensive MCQ quiz. Test your knowledge and track performance with detailed scores.
+                </p>
+            </div>
+
+            <!-- Analytics -->
+            <div class="feature-card group bg-white rounded-2xl p-8 shadow-sm hover:shadow-xl
+                        border border-slate-100 hover:border-orange-100
+                        transition-all duration-300 hover:-translate-y-2">
+                <div class="w-14 h-14 bg-orange-50 group-hover:bg-orange-100 rounded-2xl
+                            flex items-center justify-center mb-6 transition-colors duration-300">
+                    <svg class="w-7 h-7 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                </div>
+                <h3 class="font-montserrat font-bold text-xl text-slate-900 mb-3">Learning Analytics</h3>
+                <p class="font-poppins text-slate-500 text-sm leading-relaxed">
+                    Visualize your study progress with rich charts. Spot weak areas instantly and receive personalized study recommendations.
+                </p>
+            </div>
+
+            <!-- Document Upload -->
+            <div class="feature-card group bg-white rounded-2xl p-8 shadow-sm hover:shadow-xl
+                        border border-slate-100 hover:border-blue-100
+                        transition-all duration-300 hover:-translate-y-2">
+                <div class="w-14 h-14 bg-blue-50 group-hover:bg-blue-100 rounded-2xl
+                            flex items-center justify-center mb-6 transition-colors duration-300">
+                    <svg class="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                    </svg>
+                </div>
+                <h3 class="font-montserrat font-bold text-xl text-slate-900 mb-3">Document Analysis</h3>
+                <p class="font-poppins text-slate-500 text-sm leading-relaxed">
+                    Upload PDFs, DOCX, and PPTX files. Our AI reads your study materials and answers questions with pinpoint accuracy.
+                </p>
+            </div>
+
+            <!-- Recommendations -->
+            <div class="feature-card group bg-white rounded-2xl p-8 shadow-sm hover:shadow-xl
+                        border border-slate-100 hover:border-pink-100
+                        transition-all duration-300 hover:-translate-y-2">
+                <div class="w-14 h-14 bg-pink-50 group-hover:bg-pink-100 rounded-2xl
+                            flex items-center justify-center mb-6 transition-colors duration-300">
+                    <svg class="w-7 h-7 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                    </svg>
+                </div>
+                <h3 class="font-montserrat font-bold text-xl text-slate-900 mb-3">Smart Recommendations</h3>
+                <p class="font-poppins text-slate-500 text-sm leading-relaxed">
+                    AI-driven study suggestions tailored to your learning patterns, mastery gaps, and upcoming topics to focus on.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     FINAL CTA SECTION
+══════════════════════════════════════════ -->
+<div class="relative overflow-hidden py-24 px-4 sm:px-6 lg:px-8">
+    <!-- Background Image -->
+    <div class="absolute inset-0 z-0">
+        <img src="{% static 'banner/pexels-kampus-5940845.jpg' %}" alt="" class="w-full h-full object-cover">
+        <!-- Dark + indigo overlay for contrast -->
+        <div class="absolute inset-0 bg-gradient-to-b from-black/70 via-indigo-900/65 to-black/75"></div>
+    </div>
+
+    <div class="relative z-10 max-w-4xl mx-auto text-center">
+        <span class="inline-block px-4 py-1.5 rounded-full bg-white/15 text-white/90 text-sm font-poppins font-medium mb-6">
+            Join UENR Students Today
+        </span>
+        <h2 class="font-montserrat font-black text-4xl md:text-5xl text-white mb-6 leading-tight">
+            Ready to Study Smarter?
+        </h2>
+        <p class="font-poppins text-indigo-100 text-lg mb-12 max-w-2xl mx-auto leading-relaxed">
+            Thousands of hours of studying, simplified. Upload your materials, ask questions, and let AI do the heavy lifting.
+        </p>
+        {% if not user.is_authenticated %}
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="{% url 'register' %}"
+               class="font-montserrat font-bold px-12 py-4 bg-white text-indigo-600
+                      rounded-2xl shadow-2xl hover:shadow-white/20 hover:-translate-y-1
+                      transform transition-all duration-300 text-lg">
+                Create Free Account →
+            </a>
+            <a href="{% url 'login' %}"
+               class="font-montserrat font-bold px-12 py-4 bg-white/10 backdrop-blur-md
+                      text-white border-2 border-white/30 hover:bg-white/20 hover:border-white/60
+                      rounded-2xl hover:-translate-y-1 transition-all duration-300 text-lg">
+                Sign In
+            </a>
+        </div>
+        {% else %}
+        <a href="{% url 'question_answer' %}"
+           class="inline-block font-montserrat font-bold px-14 py-4 bg-white text-indigo-600
+                  rounded-2xl shadow-2xl hover:shadow-white/20 hover:-translate-y-1
+                  transform transition-all duration-300 text-lg">
+            Go to Dashboard →
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     STYLES
+══════════════════════════════════════════ -->
 <style>
-    @keyframes fade-in {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+    /* ── Animations ── */
+    @keyframes fade-down {
+        from { opacity: 0; transform: translateY(-24px); }
+        to   { opacity: 1; transform: translateY(0); }
     }
-    
-    .animate-fade-in {
-        animation: fade-in 1s ease-out;
+    @keyframes fade-up {
+        from { opacity: 0; transform: translateY(32px); }
+        to   { opacity: 1; transform: translateY(0); }
     }
-    
-    /* Text utilities */
+    @keyframes scroll-dot {
+        0%   { transform: translateY(0); opacity: 1; }
+        80%  { transform: translateY(14px); opacity: 0; }
+        100% { transform: translateY(0); opacity: 0; }
+    }
+
+    .hero-badge  { animation: fade-down 0.7s ease-out both; }
+    .hero-heading{ animation: fade-up  0.8s ease-out 0.15s both; }
+    .hero-sub    { animation: fade-up  0.8s ease-out 0.30s both; }
+    .hero-pills  { animation: fade-up  0.8s ease-out 0.45s both; }
+    .hero-cta    { animation: fade-up  0.8s ease-out 0.60s both; }
+    .scroll-cue  { animation: fade-up  0.8s ease-out 1.0s  both; }
+    .scroll-dot  { animation: scroll-dot 1.8s ease-in-out infinite 1.5s; }
+
+    /* ── Gradient text helper ── */
     .bg-clip-text {
         -webkit-background-clip: text;
         background-clip: text;
     }
+
+    /* ── Feature card entrance on scroll ── */
+    .feature-card {
+        opacity: 0;
+        transform: translateY(24px);
+        transition: opacity 0.6s ease, transform 0.6s ease, box-shadow 0.3s, border-color 0.3s, translate 0.3s;
+    }
+    .feature-card.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
 </style>
 
+<!-- ═══════════════════════════════════════
+     SCRIPTS
+══════════════════════════════════════════ -->
 <script>
-    // Ensure video always loops
-    document.addEventListener('DOMContentLoaded', function() {
-        const video = document.getElementById('landing-video');
-        if (video) {
-            // Force loop attribute
-            video.setAttribute('loop', 'loop');
-            video.loop = true;
-            
-            // Ensure video restarts if it ends (backup for loop attribute)
-            video.addEventListener('ended', function() {
-                this.currentTime = 0;
-                this.play().catch(function(error) {
-                    // Handle autoplay restrictions
-                    console.log('Video autoplay prevented:', error);
-                });
-            });
-            
-            // Ensure video is playing
-            video.play().catch(function(error) {
-                console.log('Video autoplay prevented:', error);
-            });
-        }
-    });
+document.addEventListener('DOMContentLoaded', function () {
+
+    /* ── Video loop ── */
+    const video = document.getElementById('landing-video');
+    if (video) {
+        video.loop = true;
+        video.addEventListener('ended', function () {
+            this.currentTime = 0;
+            this.play().catch(() => {});
+        });
+        video.play().catch(() => {});
+    }
+
+    /* ── Intersection Observer: animate feature cards ── */
+    const cards = document.querySelectorAll('.feature-card');
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry, i) => {
+            if (entry.isIntersecting) {
+                setTimeout(() => entry.target.classList.add('visible'), i * 80);
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.12 });
+    cards.forEach(card => observer.observe(card));
+
+});
 </script>
 
 {% endblock %}
