@@ -11,10 +11,16 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
+import os
+from urllib.parse import unquote, urlparse
+
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-import os
+
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 OPENROUTER_API_KEY = os.getenv('OPENROUTER_API_KEY')
 
@@ -23,12 +29,25 @@ OPENROUTER_API_KEY = os.getenv('OPENROUTER_API_KEY')
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-ji(r-mq@$852q5@(bcq25d+x+&e02dp*k(3^kw!o$x$#-t314_'
+SECRET_KEY = os.getenv(
+    'SECRET_KEY',
+    'django-insecure-ji(r-mq@$852q5@(bcq25d+x+&e02dp*k(3^kw!o$x$#-t314_',
+)
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 'yes')
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    h.strip() for h in os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if h.strip()
+]
+_render_host = os.getenv('RENDER_EXTERNAL_HOSTNAME', '').strip()
+if _render_host:
+    ALLOWED_HOSTS.append(_render_host)
+
+CSRF_TRUSTED_ORIGINS = [
+    o.strip() for o in os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') if o.strip()
+]
+if _render_host:
+    CSRF_TRUSTED_ORIGINS.append(f'https://{_render_host}')
 
 
 # Application definition
@@ -74,15 +93,58 @@ TEMPLATES = [
 WSGI_APPLICATION = 'testa_project.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/5.0/ref/settings/#databases
+# Database — see DATABASE_SETUP.md (local PostgreSQL or Supabase)
+# DB_ENGINE: sqlite (default) | postgresql
+# Supabase: set DATABASE_URL from Project Settings → Database → Connection string (URI)
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+_db_engine = os.getenv('DB_ENGINE', 'sqlite').strip().lower()
+_database_url = os.getenv('DATABASE_URL', '').strip()
+
+
+def _postgres_from_url(url: str) -> dict:
+    """Parse postgresql:// or postgres:// URI (Supabase, Neon, etc.)."""
+    parsed = urlparse(url)
+    if parsed.scheme not in ('postgresql', 'postgres'):
+        raise ValueError(f'Unsupported DATABASE_URL scheme: {parsed.scheme}')
+    db = {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': (parsed.path or '/postgres').lstrip('/') or 'postgres',
+        'USER': unquote(parsed.username or ''),
+        'PASSWORD': unquote(parsed.password or ''),
+        'HOST': parsed.hostname or 'localhost',
+        'PORT': str(parsed.port or 5432),
+        'OPTIONS': {},
     }
-}
+    # Supabase and most cloud Postgres require SSL
+    if os.getenv('POSTGRES_SSLMODE', 'require').strip():
+        db['OPTIONS']['sslmode'] = os.getenv('POSTGRES_SSLMODE', 'require').strip()
+    return db
+
+
+if _db_engine in ('postgresql', 'postgres', 'pg'):
+    if _database_url:
+        DATABASES = {'default': _postgres_from_url(_database_url)}
+    else:
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql',
+                'NAME': os.getenv('POSTGRES_DB', 'testa_studybuddy'),
+                'USER': os.getenv('POSTGRES_USER', 'postgres'),
+                'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
+                'HOST': os.getenv('POSTGRES_HOST', 'localhost'),
+                'PORT': os.getenv('POSTGRES_PORT', '5432'),
+                'OPTIONS': {
+                    'sslmode': os.getenv('POSTGRES_SSLMODE', 'prefer'),
+                },
+            }
+        }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
@@ -119,10 +181,24 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "static"),
-    os.path.join(BASE_DIR, "assets"),
-]
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+_static_dirs = []
+if (BASE_DIR / 'static').exists():
+    _static_dirs.append(BASE_DIR / 'static')
+if (BASE_DIR / 'assets').exists():
+    _static_dirs.append(BASE_DIR / 'assets')
+STATICFILES_DIRS = _static_dirs
+STORAGES = {
+    'default': {
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+    },
+    'staticfiles': {
+        'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage',
+    },
+}
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field

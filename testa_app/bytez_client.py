@@ -230,7 +230,7 @@ class BytezClient:
 Answer questions clearly and accurately. If context is provided, base your answer on it.
 If the answer is not in the context, use your knowledge but indicate uncertainty.
 Provide helpful explanations suitable for students from any academic discipline.
-When you include tables, use GitHub-flavored markdown pipe tables only: a header row, a separator row with dashes (e.g. | --- | --- |), then body rows — do not use ASCII box-drawing or dash-only grids without pipes."""
+When you include tables, use GitHub-flavored markdown pipe tables: (1) one header row with pipes, (2) exactly ONE separator row on the next line using only pipes and dashes (e.g. | --- | --- | --- |) with the same number of columns as the header — never split the separator across multiple lines, (3) then body rows. Do not use ASCII box-drawing (+---+) or multi-line dash separators."""
 
         if context:
             prompt = f"""Context:

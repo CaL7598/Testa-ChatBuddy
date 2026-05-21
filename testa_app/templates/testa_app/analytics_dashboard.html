@@ -132,9 +132,17 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
                             </div>
+                            {% if stats.satisfaction_has_votes %}
                             <h3 class="font-montserrat font-bold text-xl sm:text-2xl text-gray-800">{{ stats.satisfaction_score }}%</h3>
+                            {% else %}
+                            <h3 class="font-montserrat font-bold text-xl sm:text-2xl text-gray-400">—</h3>
+                            {% endif %}
                         </div>
-                        <p class="font-poppins text-gray-600">Satisfaction Score</p>
+                        {% if stats.satisfaction_has_votes %}
+                        <p class="font-poppins text-gray-600">Satisfaction Score <span class="text-gray-400 text-sm">({{ stats.satisfaction_upvotes }}/{{ stats.satisfaction_total_votes }} votes)</span></p>
+                        {% else %}
+                        <p class="font-poppins text-gray-600">Satisfaction Score <span class="text-gray-400 text-sm">(use thumbs on answers when available)</span></p>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -406,135 +414,125 @@
     </div>
 </div>
 
+<!-- Chart data (valid JSON for Chart.js) -->
+{{ chart_data|json_script:"analytics-charts-data" }}
+
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-    // Date range update function
     function updateRange(days) {
         window.location.href = `?range=${days}`;
     }
 
-    // Chart configuration
+    const chartsDataEl = document.getElementById('analytics-charts-data');
+    const chartsBundle = chartsDataEl ? JSON.parse(chartsDataEl.textContent) : null;
+
     const chartOptions = {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-            legend: {
-                display: false
-            },
+            legend: { display: false },
             tooltip: {
                 backgroundColor: 'rgba(0, 0, 0, 0.8)',
                 padding: 12,
-                titleFont: {
-                    family: 'Poppins',
-                    size: 14
-                },
-                bodyFont: {
-                    family: 'Poppins',
-                    size: 13
-                },
+                titleFont: { family: 'Poppins', size: 14 },
+                bodyFont: { family: 'Poppins', size: 13 },
                 cornerRadius: 8
             }
         },
         scales: {
             y: {
                 beginAtZero: true,
-                grid: {
-                    color: 'rgba(0, 0, 0, 0.05)'
-                },
-                ticks: {
-                    font: {
-                        family: 'Poppins'
-                    }
-                }
+                grid: { color: 'rgba(0, 0, 0, 0.05)' },
+                ticks: { font: { family: 'Poppins' } }
             },
             x: {
-                grid: {
-                    display: false
-                },
+                grid: { display: false },
                 ticks: {
-                    font: {
-                        family: 'Poppins'
-                    }
+                    font: { family: 'Poppins' },
+                    maxRotation: 45,
+                    autoSkip: true,
+                    maxTicksLimit: 14
                 }
             }
         }
     };
 
-    // Questions Chart
-    const questionsCtx = document.getElementById('questionsChart');
-    if (questionsCtx) {
-        new Chart(questionsCtx.getContext('2d'), {
-        type: 'line',
-        data: {
-            labels: {{ chart_data.questions_over_time.labels|safe }},
-            datasets: [{
-                label: 'Questions Asked',
-                data: {{ chart_data.questions_over_time.data }},
-                borderColor: '#667eea',
-                backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                borderWidth: 3,
-                tension: 0.4,
-                fill: true,
-                pointRadius: 5,
-                pointHoverRadius: 7,
-                pointBackgroundColor: '#667eea',
-                pointBorderColor: '#fff',
-                pointBorderWidth: 2
-            }]
-        },
-        options: chartOptions
-        });
+    if (chartsBundle) {
+        const qot = chartsBundle.questions_over_time || { labels: [], data: [] };
+        const questionsCtx = document.getElementById('questionsChart');
+        if (questionsCtx && qot.labels && qot.labels.length) {
+            new Chart(questionsCtx.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: qot.labels,
+                    datasets: [{
+                        label: 'Questions Asked',
+                        data: qot.data,
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        pointBackgroundColor: '#667eea',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    }]
+                },
+                options: chartOptions
+            });
+        }
+
+        const sm = chartsBundle.study_minutes_over_time || { labels: [], data: [] };
+        const studyTimeCtx = document.getElementById('studyTimeChart');
+        if (studyTimeCtx && sm.labels && sm.labels.length) {
+            new Chart(studyTimeCtx.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: sm.labels,
+                    datasets: [{
+                        label: 'Study Minutes',
+                        data: sm.data,
+                        borderColor: '#4facfe',
+                        backgroundColor: 'rgba(79, 172, 254, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        pointBackgroundColor: '#4facfe',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    }]
+                },
+                options: chartOptions
+            });
+        }
+
+        const qz = chartsBundle.quizzes_over_time || { labels: [], data: [] };
+        const quizzesCtx = document.getElementById('quizzesChart');
+        if (quizzesCtx && qz.labels && qz.labels.length) {
+            new Chart(quizzesCtx.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: qz.labels,
+                    datasets: [{
+                        label: 'Quizzes Completed',
+                        data: qz.data,
+                        backgroundColor: 'rgba(240, 147, 251, 0.8)',
+                        borderColor: '#f093fb',
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        borderSkipped: false
+                    }]
+                },
+                options: chartOptions
+            });
+        }
     }
 
-    // Study Time Chart
-    const studyTimeCtx = document.getElementById('studyTimeChart');
-    if (studyTimeCtx) {
-        new Chart(studyTimeCtx.getContext('2d'), {
-        type: 'line',
-        data: {
-            labels: {{ chart_data.study_minutes_over_time.labels|safe }},
-            datasets: [{
-                label: 'Study Minutes',
-                data: {{ chart_data.study_minutes_over_time.data }},
-                borderColor: '#4facfe',
-                backgroundColor: 'rgba(79, 172, 254, 0.1)',
-                borderWidth: 3,
-                tension: 0.4,
-                fill: true,
-                pointRadius: 5,
-                pointHoverRadius: 7,
-                pointBackgroundColor: '#4facfe',
-                pointBorderColor: '#fff',
-                pointBorderWidth: 2
-            }]
-        },
-        options: chartOptions
-        });
-    }
-
-    // Quizzes Chart
-    const quizzesCtx = document.getElementById('quizzesChart');
-    if (quizzesCtx) {
-        new Chart(quizzesCtx.getContext('2d'), {
-        type: 'bar',
-        data: {
-            labels: {{ chart_data.quizzes_over_time.labels|safe }},
-            datasets: [{
-                label: 'Quizzes Completed',
-                data: {{ chart_data.quizzes_over_time.data }},
-                backgroundColor: 'rgba(240, 147, 251, 0.8)',
-                borderColor: '#f093fb',
-                borderWidth: 2,
-                borderRadius: 8,
-                borderSkipped: false
-            }]
-        },
-        options: chartOptions
-        });
-    }
-
-    // Difficulty Distribution Chart
     const difficultyCtx = document.getElementById('difficultyChart');
     if (difficultyCtx) {
         new Chart(difficultyCtx.getContext('2d'), {
@@ -552,11 +550,7 @@
                         'rgba(251, 191, 36, 0.8)',
                         'rgba(239, 68, 68, 0.8)'
                     ],
-                    borderColor: [
-                        '#22c55e',
-                        '#fbbf24',
-                        '#ef4444'
-                    ],
+                    borderColor: ['#22c55e', '#fbbf24', '#ef4444'],
                     borderWidth: 2
                 }]
             },
@@ -567,24 +561,15 @@
                     legend: {
                         position: 'bottom',
                         labels: {
-                            font: {
-                                family: 'Poppins',
-                                size: 12
-                            },
+                            font: { family: 'Poppins', size: 12 },
                             padding: 15
                         }
                     },
                     tooltip: {
                         backgroundColor: 'rgba(0, 0, 0, 0.8)',
                         padding: 12,
-                        titleFont: {
-                            family: 'Poppins',
-                            size: 14
-                        },
-                        bodyFont: {
-                            family: 'Poppins',
-                            size: 13
-                        },
+                        titleFont: { family: 'Poppins', size: 14 },
+                        bodyFont: { family: 'Poppins', size: 13 },
                         cornerRadius: 8
                     }
                 }
@@ -592,11 +577,7 @@
         });
     }
 
-    // Animate progress bars on scroll
-    const observerOptions = {
-        threshold: 0.5
-    };
-
+    const observerOptions = { threshold: 0.5 };
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
@@ -604,9 +585,7 @@
                 if (progressBar) {
                     const width = progressBar.style.width;
                     progressBar.style.width = '0%';
-                    setTimeout(() => {
-                        progressBar.style.width = width;
-                    }, 100);
+                    setTimeout(() => { progressBar.style.width = width; }, 100);
                 }
             }
         });
@@ -620,7 +599,7 @@
         @apply relative p-5 sm:p-6 rounded-3xl shadow-2xl text-white transform transition-all duration-300;
         min-height: 160px;
     }
-    
+
     @media (min-width: 640px) {
         .stat-card {
             min-height: 190px;

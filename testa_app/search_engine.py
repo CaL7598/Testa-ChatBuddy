@@ -130,18 +130,22 @@ class AdvancedSearchEngine:
         else:  # relevance (default)
             # Prioritize question matches, then recency
             if query:
+                from django.db import connection
+                # PostgreSQL LIKE is case-sensitive; ILIKE matches SQLite-style search better
+                like_op = 'ILIKE' if connection.vendor == 'postgresql' else 'LIKE'
+                pattern = f'%{query}%'
                 return queryset.extra(
                     select={
-                        'relevance': """
-                            CASE 
-                                WHEN question LIKE %s THEN 3
-                                WHEN answer LIKE %s THEN 2
-                                WHEN topic LIKE %s THEN 1
+                        'relevance': f"""
+                            CASE
+                                WHEN question {like_op} %s THEN 3
+                                WHEN answer {like_op} %s THEN 2
+                                WHEN topic {like_op} %s THEN 1
                                 ELSE 0
                             END
                         """
                     },
-                    select_params=[f'%{query}%', f'%{query}%', f'%{query}%']
+                    select_params=[pattern, pattern, pattern],
                 ).order_by('-relevance', '-created_at')
             return queryset.order_by('-created_at')
     

@@ -1,0 +1,49 @@
+{% extends "admin/index.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="testa-admin-home">
+    <div class="testa-admin-hero">
+        <h1>Administration dashboard</h1>
+        <p>Manage users, Q&amp;A, documents, quizzes, flashcards, and analytics for Testa StudyBuddy.</p>
+        <div class="testa-admin-quick">
+            <a href="{% url 'admin:auth_user_changelist' %}">Users</a>
+            <a href="{% url 'admin:testa_app_questionanswer_changelist' %}">Questions</a>
+            <a href="{% url 'admin:testa_app_pdfdocument_changelist' %}">Documents</a>
+            <a href="{% url 'admin:testa_app_useranalytics_changelist' %}">Analytics</a>
+            <a href="{% url 'index' %}">Open app →</a>
+        </div>
+    </div>
+
+    {% if admin_stats %}
+    <div class="testa-admin-stats">
+        <div class="testa-admin-stat">
+            <div class="testa-admin-stat-value">{{ admin_stats.users }}</div>
+            <div class="testa-admin-stat-label">Registered users</div>
+        </div>
+        <div class="testa-admin-stat">
+            <div class="testa-admin-stat-value">{{ admin_stats.questions }}</div>
+            <div class="testa-admin-stat-label">Questions asked</div>
+        </div>
+        <div class="testa-admin-stat">
+            <div class="testa-admin-stat-value">{{ admin_stats.documents }}</div>
+            <div class="testa-admin-stat-label">Documents uploaded</div>
+        </div>
+        <div class="testa-admin-stat">
+            <div class="testa-admin-stat-value">{{ admin_stats.quizzes }}</div>
+            <div class="testa-admin-stat-label">Quizzes</div>
+        </div>
+        <div class="testa-admin-stat">
+            <div class="testa-admin-stat-value">{{ admin_stats.flashcards }}</div>
+            <div class="testa-admin-stat-label">Flashcards</div>
+        </div>
+        <div class="testa-admin-stat">
+            <div class="testa-admin-stat-value">{{ admin_stats.quiz_attempts }}</div>
+            <div class="testa-admin-stat-label">Quiz attempts</div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{{ block.super }}
+{% endblock %}

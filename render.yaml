@@ -1,0 +1,25 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: testa-studybuddy
+    runtime: python
+    plan: free
+    buildCommand: ./build.sh
+    startCommand: gunicorn testa_project.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      - key: DEBUG
+        value: "False"
+      - key: DB_ENGINE
+        value: postgresql
+      - key: POSTGRES_SSLMODE
+        value: require
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: WEB_CONCURRENCY
+        value: "2"

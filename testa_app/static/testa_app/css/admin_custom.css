@@ -1,0 +1,302 @@
+/* Testa StudyBuddy — Django admin theme (matches app indigo palette) */
+
+:root {
+  --testa-primary: #667eea;
+  --testa-primary-dark: #5a67d8;
+  --testa-secondary: #764ba2;
+  --testa-accent: #f093fb;
+  --testa-surface: #f8fafc;
+  --testa-header: #4f46e5;
+}
+
+html[data-theme="light"],
+:root {
+  --primary: #667eea;
+  --secondary: #764ba2;
+  --link-fg: #4f46e5;
+  --link-hover-color: #4338ca;
+  --header-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --header-color: #fff;
+  --breadcrumbs-bg: #eef2ff;
+  --breadcrumbs-link-fg: #4f46e5;
+  --selected-row: #eef2ff;
+  --button-bg: #667eea;
+  --button-hover-bg: #5a67d8;
+  --default-button-bg: #64748b;
+  --default-button-hover-bg: #475569;
+  --object-tools-bg: transparent;
+}
+
+#header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 0 4px 20px rgba(79, 70, 229, 0.25);
+  padding: 14px 24px;
+  min-height: auto;
+}
+
+#header a:link,
+#header a:visited {
+  color: #fff;
+}
+
+#branding {
+  display: flex;
+  align-items: center;
+}
+
+.testa-admin-brand a {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none !important;
+  color: #fff !important;
+}
+
+.testa-admin-logo {
+  width: 40px;
+  height: 40px;
+  background: #fff;
+  color: #4f46e5;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: Montserrat, system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 1.15rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.testa-admin-title {
+  font-family: Montserrat, system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
+}
+
+.testa-admin-badge {
+  font-family: Poppins, system-ui, sans-serif;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+#user-tools {
+  font-family: Poppins, system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+#user-tools a {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+.testa-admin-nav-link {
+  font-family: Poppins, system-ui, sans-serif;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #fff !important;
+  margin-right: 16px;
+  opacity: 0.95;
+}
+
+.testa-admin-nav-link:hover {
+  opacity: 1;
+  text-decoration: underline !important;
+}
+
+body {
+  font-family: Poppins, system-ui, sans-serif;
+  background: var(--testa-surface);
+}
+
+#content {
+  padding: 24px 28px 40px;
+  max-width: 1400px;
+}
+
+#content h1 {
+  font-family: Montserrat, system-ui, sans-serif;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.module h2,
+.module caption,
+.inline-group h2 {
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  color: #fff;
+  font-family: Montserrat, system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 8px 8px 0 0;
+}
+
+.module,
+.inline-group {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+  border: 1px solid #e2e8f0;
+}
+
+.dashboard .module table th {
+  font-family: Poppins, system-ui, sans-serif;
+}
+
+.button,
+input[type="submit"],
+input[type="button"],
+.submit-row input,
+a.button {
+  font-family: Poppins, system-ui, sans-serif;
+  font-weight: 600;
+  border-radius: 8px !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.button.default,
+input[type="submit"].default,
+.submit-row input.default {
+  background: var(--testa-primary) !important;
+}
+
+.button.default:hover,
+input[type="submit"].default:hover {
+  background: var(--testa-primary-dark) !important;
+}
+
+#changelist-filter {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  padding: 12px;
+}
+
+#changelist-filter h2 {
+  background: #eef2ff;
+  color: #4f46e5;
+  border-radius: 8px;
+}
+
+div.breadcrumbs {
+  background: #eef2ff;
+  border-radius: 10px;
+  padding: 10px 16px;
+  margin-bottom: 20px;
+  font-family: Poppins, system-ui, sans-serif;
+  font-size: 0.875rem;
+}
+
+/* Custom admin home dashboard */
+.testa-admin-home {
+  margin-bottom: 28px;
+}
+
+.testa-admin-hero {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  border-radius: 16px;
+  padding: 28px 32px;
+  margin-bottom: 24px;
+  box-shadow: 0 12px 40px rgba(102, 126, 234, 0.3);
+}
+
+.testa-admin-hero h1 {
+  font-family: Montserrat, system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 1.75rem;
+  color: #fff !important;
+  margin: 0 0 8px;
+}
+
+.testa-admin-hero p {
+  margin: 0;
+  opacity: 0.92;
+  font-size: 0.95rem;
+}
+
+.testa-admin-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.testa-admin-stat {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 18px 20px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+.testa-admin-stat-value {
+  font-family: Montserrat, system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 1.75rem;
+  color: #4f46e5;
+  line-height: 1.1;
+}
+
+.testa-admin-stat-label {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-top: 6px;
+  font-weight: 500;
+}
+
+.testa-admin-quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.testa-admin-quick a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff !important;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-decoration: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.testa-admin-quick a:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.login #header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.login #container {
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(79, 70, 229, 0.15);
+  border: 1px solid #e2e8f0;
+}
+
+.login .submit-row input {
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .testa-admin-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  #content {
+    padding: 16px;
+  }
+}

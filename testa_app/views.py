@@ -176,11 +176,12 @@ def question_answer(request):
                 qa_entry.answer = str(answer)
                 qa_entry.response_time = response_time
                 qa_entry.save()
+                created = False
             
-            # Update analytics
+            # Update analytics (only count new Q&A rows toward daily questions / streak)
             try:
-                _update_daily_activity(request.user)
-                _update_user_analytics(request.user, created)
+                _update_daily_activity(request.user, qa_is_new=created)
+                _update_user_analytics(request.user, qa_was_created=created)
             except Exception as e:
                 _safe_log(f"Error updating analytics: {e}")
             
@@ -213,8 +214,14 @@ def question_answer(request):
     })
 
 
-def _update_daily_activity(user):
-    """Update daily activity for user — also records study time so streaks work."""
+def _update_daily_activity(user, qa_is_new=True):
+    """Increment daily question count when a new Q&A row is created.
+
+    Study minutes and streaks are updated in _update_user_analytics via
+    _update_study_time_and_streak to avoid double-counting the same interaction.
+    """
+    if not qa_is_new:
+        return
     today = date.today()
     activity, _ = DailyActivity.objects.get_or_create(
         user=user,
@@ -222,8 +229,6 @@ def _update_daily_activity(user):
         defaults={'questions_asked': 0}
     )
     activity.questions_asked += 1
-    # Each question counts as ~1 min of study so streaks are tracked
-    activity.study_minutes += 1
     activity.save()
 
 
@@ -233,9 +238,8 @@ def _update_user_analytics(user, qa_was_created=True):
 
     analytics, _ = UserAnalytics.objects.get_or_create(user=user)
 
-    # Only increment total_questions for genuinely new Q&A records
-    if qa_was_created:
-        analytics.total_questions = QuestionAnswer.objects.filter(user=user).count()
+    # Keep total in sync with the database (covers creates, updates, deletes elsewhere)
+    analytics.total_questions = QuestionAnswer.objects.filter(user=user).count()
 
     analytics.last_active = timezone.now()
 
@@ -254,11 +258,12 @@ def _update_user_analytics(user, qa_was_created=True):
 
     analytics.save()
 
-    # Update streak (each question = 1 min of study)
-    try:
-        _update_study_time_and_streak(user, 60)
-    except Exception:
-        pass
+    # New Q&A only: one minute toward streak / totals (matches dashboard study charts)
+    if qa_was_created:
+        try:
+            _update_study_time_and_streak(user, 60)
+        except Exception:
+            pass
 
 
 
@@ -278,6 +283,10 @@ def delete_question_answer(request, qa_id):
     try:
         qa = QuestionAnswer.objects.get(id=qa_id, user=request.user)
         qa.delete()
+        try:
+            _update_user_analytics(request.user, qa_was_created=False)
+        except Exception:
+            pass
         return JsonResponse({'success': True, 'deleted_id': qa_id})
     except QuestionAnswer.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Not found'}, status=404)
@@ -291,6 +300,10 @@ def delete_all_question_answers(request):
     """Delete all Q&A history for the current user. Returns JSON."""
     try:
         deleted_count, _ = QuestionAnswer.objects.filter(user=request.user).delete()
+        try:
+            _update_user_analytics(request.user, qa_was_created=False)
+        except Exception:
+            pass
         return JsonResponse({'success': True, 'deleted_count': deleted_count})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)

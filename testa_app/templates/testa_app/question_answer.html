@@ -287,9 +287,12 @@
                     
                     <!-- Loading Indicator -->
                     <div id="loading-message" class="hidden mt-6 text-center">
-                        <div class="inline-flex items-center gap-3 px-6 py-3 bg-primary/10 rounded-full">
+                        <div class="inline-flex flex-wrap items-center justify-center gap-3 px-6 py-3 bg-primary/10 rounded-full">
                             <div class="w-5 h-5 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
                             <span class="font-poppins text-primary font-medium">AI is thinking...</span>
+                            <button type="button" id="stop-ai-response" class="hidden font-montserrat font-semibold px-4 py-2 rounded-full bg-white border-2 border-red-400 text-red-600 hover:bg-red-50 shadow-sm transition-all duration-200">
+                                Stop
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -715,6 +718,64 @@ document.addEventListener("DOMContentLoaded", function() {
             return /^:?-{3,}:?$/.test(c.replace(/\s+/g, ''));
         });
     }
+    /** Lines the model often splits across rows: |---|, ---, junk separators (no long text). */
+    function isDashPipeFragmentLine(line) {
+        var t = (line || '').trim();
+        if (!t) return false;
+        var withoutPipes = t.replace(/\|/g, '');
+        if (/[A-Za-z]{4,}/.test(withoutPipes)) return false;
+        if (!/[-]{2,}/.test(t) && !/[+]{2,}/.test(t)) return false;
+        return /^[|\s\-:._+=]+$/.test(t);
+    }
+    function isLikelyTableDataRow(line, expectedCols) {
+        var cells = parsePipeTableRow(line);
+        if (!cells || cells.length < 2) return false;
+        if (isPipeTableSeparatorRow(line)) return false;
+        if (expectedCols != null) {
+            if (cells.length < expectedCols - 1 || cells.length > expectedCols + 2) return false;
+        }
+        var joined = cells.join(' ');
+        if (/[A-Za-z]/.test(joined)) return true;
+        return cells.length >= 2;
+    }
+    /**
+     * After a header row at lines[start], advance past separator (strict GFM, multi-line fragments, or missing).
+     * Returns { nextLineIndex, consumed } or null if this is not a table.
+     */
+    function consumeTableBlock(lines, start) {
+        var headerCells = parsePipeTableRow(lines[start]);
+        if (!headerCells || headerCells.length < 2) return null;
+        var n = headerCells.length;
+        var j = start + 1;
+        while (j < lines.length && lines[j].trim() === '') j++;
+        if (j >= lines.length) return null;
+        if (isPipeTableSeparatorRow(lines[j])) {
+            j += 1;
+        } else {
+            var fragStart = j;
+            while (j < lines.length && isDashPipeFragmentLine(lines[j])) j++;
+            if (j === fragStart && isLikelyTableDataRow(lines[j], n)) {
+                /* no separator row at all — still render as table */
+            } else if (j > fragStart) {
+                /* consumed broken separator */
+            } else {
+                return null;
+            }
+        }
+        while (j < lines.length && lines[j].trim() === '') j++;
+        if (j >= lines.length || !isLikelyTableDataRow(lines[j], n)) return null;
+        var bodyRows = [];
+        while (j < lines.length) {
+            var r = parsePipeTableRow(lines[j]);
+            if (!r || !isLikelyTableDataRow(lines[j], n)) break;
+            while (r.length < n) r.push('');
+            if (r.length > n) r = r.slice(0, n);
+            bodyRows.push(r);
+            j++;
+        }
+        if (bodyRows.length === 0) return null;
+        return { headerCells: headerCells, colCount: n, bodyRows: bodyRows, endExclusive: j };
+    }
     function escapeHtmlCell(str) {
         return String(str)
             .replace(/&/g, '&amp;')
@@ -734,19 +795,11 @@ document.addEventListener("DOMContentLoaded", function() {
         var tables = [];
         var i = 0;
         while (i < lines.length) {
-            var headerCells = parsePipeTableRow(lines[i]);
-            if (headerCells && i + 1 < lines.length && isPipeTableSeparatorRow(lines[i + 1])) {
-                var colCount = headerCells.length;
-                i += 2;
-                var bodyRows = [];
-                while (i < lines.length) {
-                    var r = parsePipeTableRow(lines[i]);
-                    if (!r) break;
-                    while (r.length < colCount) r.push('');
-                    if (r.length > colCount) r = r.slice(0, colCount);
-                    bodyRows.push(r);
-                    i++;
-                }
+            var block = consumeTableBlock(lines, i);
+            if (block) {
+                var colCount = block.colCount;
+                var headerCells = block.headerCells;
+                var bodyRows = block.bodyRows;
                 var tid = tables.length;
                 var html = '<div class="answer-table-wrap"><table class="answer-table"><thead><tr>';
                 for (var h = 0; h < colCount; h++) {
@@ -763,6 +816,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 html += '</tbody></table></div>';
                 tables.push(html);
                 out.push('@@MDTBL' + tid + '@@');
+                i = block.endExclusive;
                 continue;
             }
             out.push(lines[i]);
@@ -898,6 +952,16 @@ document.addEventListener("DOMContentLoaded", function() {
         return result;
     }
 
+    /** In-flight Q&A request (jqXHR) — aborted when user clicks Stop */
+    var qaAjaxRequest = null;
+
+    $('#stop-ai-response').on('click', function () {
+        if (qaAjaxRequest) {
+            qaAjaxRequest.abort();
+            qaAjaxRequest = null;
+        }
+    });
+
     // Enter to send, Shift+Enter for new line
     $('#question').on('keydown', function(e) {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -912,9 +976,17 @@ document.addEventListener("DOMContentLoaded", function() {
         const question = $('#question').val();
         const loadingDiv = $('#loading-message');
         const responseContainer = $('#response-container');
-        
+        const submitBtn = $('#question-form button[type="submit"]');
+
+        if (qaAjaxRequest) {
+            qaAjaxRequest.abort();
+            qaAjaxRequest = null;
+        }
+
         // Show loading
         loadingDiv.removeClass('hidden').addClass('flex');
+        $('#stop-ai-response').removeClass('hidden');
+        submitBtn.prop('disabled', true);
         responseContainer.addClass('hidden');
         
         // Get CSRF token from cookie or form
@@ -933,8 +1005,8 @@ document.addEventListener("DOMContentLoaded", function() {
             return cookieValue;
         }
         const csrftoken = getCookie('csrftoken') || document.querySelector('[name=csrfmiddlewaretoken]').value;
-        
-        $.ajax({
+
+        qaAjaxRequest = $.ajax({
             type: 'POST',
             url: '',
             headers: {
@@ -943,8 +1015,13 @@ document.addEventListener("DOMContentLoaded", function() {
             data: {
                 'question': question
             },
+            complete: function () {
+                loadingDiv.addClass('hidden').removeClass('flex');
+                $('#stop-ai-response').addClass('hidden');
+                submitBtn.prop('disabled', false);
+                qaAjaxRequest = null;
+            },
             success: function(data) {
-                loadingDiv.addClass('hidden');
                 const response = data.response || '';
                 const questionText = question; // Store question before clearing
                 
@@ -984,10 +1061,19 @@ document.addEventListener("DOMContentLoaded", function() {
                     scrollTop: responseContainer.offset().top - 100
                 }, 500);
             },
-            error: function(xhr, errmsg, err) {
-                loadingDiv.addClass('hidden');
+            error: function(xhr, status, err) {
+                if (status === 'abort') {
+                    responseContainer.removeClass('hidden');
+                    $('#response-card').removeClass('border-yellow-500 border-red-500').addClass('border-indigo-600');
+                    $('#response-icon').removeClass('bg-yellow-500 bg-red-500').addClass('bg-indigo-600');
+                    $('#response-icon svg').html('<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>');
+                    $('#error-actions').addClass('hidden');
+                    $('#response').html('<div class="ai-answer text-gray-600 border border-slate-200 rounded-xl p-4 bg-slate-50">You stopped the response. The server may still finish in the background, but nothing new will appear here. Edit your question above and press <strong>Ask Question</strong> to try again.</div>');
+                    return;
+                }
+
                 let errorMessage = 'Sorry, an error occurred. Please try again.';
-                
+
                 if (xhr.responseJSON && xhr.responseJSON.error) {
                     errorMessage = xhr.responseJSON.error;
                 } else if (xhr.status === 0) {

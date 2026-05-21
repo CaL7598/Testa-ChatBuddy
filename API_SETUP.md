@@ -1,170 +1,115 @@
-# API Setup Guide for Testa studyBuddy
+# API Setup Guide for Testa StudyBuddy
 
-## Required APIs
+## Required: OpenRouter API (DeepSeek model)
 
-### 1. Bytez API (REQUIRED) ⚠️
+The project uses **DeepSeek** for all text generation, accessed through **OpenRouter**:
 
-The project uses **Bytez API** (free open-source models) for:
-- AI-powered question answering
+- AI-powered question answering (with RAG context)
 - Quiz generation
 - Flashcard generation
 - Study guide and summary generation
 
-**Note:** Text embeddings use local sentence-transformers (no API needed)
+**Embeddings** (document search) use **sentence-transformers** locally — no API key required for that step.
 
-#### How to Get Your API Key:
-
-1. **Visit Bytez**
-   - Go to: https://bytez.com
-   - Sign up for a free account
-
-2. **Get your API key**
-   - Navigate to your account settings
-   - Copy your Bytez API key
-
-3. **Set up the API key in your project**
-
-   **Option A: Using `.env` file (Recommended)**
-   
-   Create a `.env` file in the project root:
-   ```env
-   BYTEZ_API_KEY=your_bytez_api_key_here
-   ```
-   
-   The project uses `python-dotenv` to load this automatically.
-
-   **Option B: Environment Variable (Windows)**
-   ```powershell
-   $env:BYTEZ_API_KEY="your_bytez_api_key_here"
-   ```
-
-   **Option B: Environment Variable (Linux/Mac)**
-   ```bash
-   export BYTEZ_API_KEY="your_bytez_api_key_here"
-   ```
-
-#### API Usage & Limits:
-
-- **Free Tier**: Bytez provides free access to open-source models
-- **Rate Limits**: Check current limits at https://bytez.com
-- **Models Used**:
-  - `Qwen/Qwen2.5-7B-Instruct` - Default model for chat and content generation
-  - Alternative models available: `Qwen/Qwen3-4B`, `Meta-Llama/Llama-3.1-8B-Instruct`
-
-#### Cost Information:
-
-- **FREE** - Bytez provides free access to open-source models
-- No credit card required
-- Perfect for educational use cases
+For full technical documentation (architecture, request/response structure, integration points), see **[DEEPSEEK_API_DOCUMENTATION.md](DEEPSEEK_API_DOCUMENTATION.md)**.
 
 ---
 
-## Optional APIs (Not Currently Used)
+### How to get your API key
 
-### Future Enhancements:
+1. Go to [https://openrouter.ai](https://openrouter.ai) and create an account.
+2. Open **Keys** in the dashboard and create an API key.
+3. Add credits if required by OpenRouter for your chosen model.
 
-1. **Email Service API** (for password reset emails)
-   - Could use: SendGrid, Mailgun, or AWS SES
-   - Currently: Password reset functionality exists but may need email backend configuration
+### Configure the project
 
-2. **File Storage API** (for production deployment)
-   - Could use: AWS S3, Google Cloud Storage, or Azure Blob Storage
-   - Currently: Files are stored locally
+Create a `.env` file in the project root:
 
-3. **Analytics API** (for advanced analytics)
-   - Could use: Google Analytics, Mixpanel
-   - Currently: Built-in analytics dashboard
-
----
-
-## Current API Configuration
-
-The API key is loaded in:
-- `testa_app/bytez_client.py` - Bytez API client
-- `testa_app/utils.py` - Main utility functions
-- `testa_app/views.py` - View handlers
-
-All use:
-```python
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-api_key = os.getenv("BYTEZ_API_KEY")
+```env
+OPENROUTER_API_KEY=sk-or-v1-your_key_here
 ```
 
-## Embeddings (No API Required)
+The app loads this automatically via `python-dotenv` when `bytez_client.py` is imported.
 
-Text embeddings use **sentence-transformers** library locally:
-- Model: `all-MiniLM-L6-v2` (free, runs locally)
-- No API calls needed
-- Fast and efficient
+**Windows (PowerShell, session only):**
 
----
+```powershell
+$env:OPENROUTER_API_KEY="sk-or-v1-your_key_here"
+```
 
-## Testing Your API Key
+**Linux / macOS:**
 
-After setting up your API key, test it by:
+```bash
+export OPENROUTER_API_KEY="sk-or-v1-your_key_here"
+```
 
-1. Starting the Django server:
-   ```bash
-   python manage.py runserver
-   ```
+### Model used
 
-2. Navigate to the question/answer page
-3. Try asking a question
-4. If you see an error about API key, check:
-   - `.env` file exists and has correct key
-   - Environment variable is set correctly
-   - API key is valid and not expired
+| Setting | Value |
+|---------|--------|
+| Provider | OpenRouter |
+| Model ID | `deepseek/deepseek-chat` (DeepSeek V3) |
+| Endpoint | `https://openrouter.ai/api/v1/chat/completions` |
+| Configured in | `testa_app/bytez_client.py` → `DEFAULT_MODEL` |
 
 ---
 
-## Security Best Practices
+## Where the API is used in code
 
-⚠️ **IMPORTANT**: Never commit your API key to Git!
+| File | Role |
+|------|------|
+| `testa_app/bytez_client.py` | HTTP client, retries, `answer_question`, `generate_text` |
+| `testa_app/utils.py` | RAG chain, quiz/flashcard/summary generators |
+| `testa_app/views.py` | Q&A view when RAG does not return an answer |
+| `testa_app/study_assistant_views.py` | Quiz, flashcard, summary, study guide pages |
 
-- ✅ `.env` file is already in `.gitignore`
-- ✅ Never share your API key publicly
-- ✅ Rotate keys if accidentally exposed
-- ✅ Use different keys for development and production
+Shared accessor:
+
+```python
+from testa_app.bytez_client import get_bytez_client
+
+client = get_bytez_client()
+answer = client.answer_question("What is photosynthesis?", context=document_chunks)
+```
+
+---
+
+## Testing your API key
+
+1. Ensure `.env` contains `OPENROUTER_API_KEY`.
+2. Run: `python manage.py runserver`
+3. Log in and ask a question on the Q&A page.
+4. If you see configuration errors, verify the key and OpenRouter account status.
+
+---
+
+## Security
+
+- Do **not** commit `.env` to Git (it should stay in `.gitignore`).
+- Do not expose API keys in screenshots or reports.
+- Use separate keys for development and production if you deploy publicly.
 
 ---
 
 ## Troubleshooting
 
-### Error: "API key not found"
-- Ensure `.env` file exists in project root
-- Check that `BYTEZ_API_KEY` is spelled correctly
-- Verify `python-dotenv` is installed: `pip install python-dotenv`
-
-### Error: "Invalid API key"
-- Verify the key is correct (no extra spaces)
-- Check if the key is active in your Bytez account
-- Ensure you have access to Bytez API
-
-### Error: "Quota exceeded" or Rate Limiting
-- Check your API usage in Bytez dashboard
-- Wait for rate limit reset
-- Consider using a different model if available
-
-### Error: "sentence-transformers not installed"
-- Install with: `pip install sentence-transformers`
-- This is required for local embeddings (no API needed)
+| Problem | What to check |
+|---------|----------------|
+| `OPENROUTER_API_KEY not found` | `.env` in project root, correct variable name |
+| 401 / 403 | Invalid or revoked key; billing on OpenRouter |
+| Timeout | Network; try again; large `max_tokens` requests take longer |
+| `sentence-transformers not installed` | `pip install sentence-transformers` (embeddings only) |
 
 ---
 
-## Need Help?
+## Legacy note (Bytez)
 
-- Bytez API Documentation: https://docs.bytez.com
-- Bytez Chat Models: https://docs.bytez.com/http-reference/examples/open-source/chat/chat
-- Sentence Transformers: https://www.sbert.net/
-- Django Environment Variables: https://docs.djangoproject.com/en/stable/topics/settings/
+Earlier versions used the Bytez API (`BYTEZ_API_KEY`). The current codebase uses **OpenRouter + DeepSeek** only. Old Bytez client code is commented out at the bottom of `bytez_client.py` for reference.
 
-## Model Selection
+---
 
-You can change the default model in `testa_app/bytez_client.py`:
-- `Qwen/Qwen2.5-7B-Instruct` - Default (good balance)
-- `Qwen/Qwen3-4B` - Faster, smaller
-- `Meta-Llama/Llama-3.1-8B-Instruct` - Alternative option
-- Check Bytez docs for latest available models
+## Further reading
+
+- [DEEPSEEK_API_DOCUMENTATION.md](DEEPSEEK_API_DOCUMENTATION.md) — structure, flows, and methodology text
+- [METHODOLOGY_NOTES.md](METHODOLOGY_NOTES.md) — RAG pipeline and system design
+- OpenRouter docs: [https://openrouter.ai/docs](https://openrouter.ai/docs)

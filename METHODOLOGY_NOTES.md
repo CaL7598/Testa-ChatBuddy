@@ -7,7 +7,7 @@ Key technical details for writing the methodology section of the project documen
 ## 1. System Architecture
 
 - **Framework**: Django 5.0.3 using the MVT (Model-View-Template) architectural pattern
-- **Database**: SQLite via Django ORM (development); optimised with database indexes on `user`, `created_at`, `course`, `topic`, and `upvotes` fields
+- **Database**: Django ORM — **PostgreSQL** for production/large datasets (`DB_ENGINE=postgresql`, optional **Supabase** via `DATABASE_URL`); **SQLite** by default for local dev; see [DATABASE_SETUP.md](DATABASE_SETUP.md); indexes on `user`, `created_at`, `course`, `topic`, and `upvotes` fields
 - **Server**: WSGI-based application server (`testa_project/wsgi.py`)
 - **Session management**: Django session middleware handles user authentication state
 - **URL routing**: Centralised in `testa_project/urls.py`
@@ -47,20 +47,60 @@ The core question-answering feature is built on a RAG pipeline:
 
 ---
 
-## 4. Large Language Model (LLM) Integration
+## 4. Large Language Model (LLM) Integration — DeepSeek API
 
-- **Provider**: OpenRouter API (OpenAI-compatible endpoint)
-- **Model**: DeepSeek V3 (`deepseek/deepseek-chat`)
-  - Selected for strong structured JSON output (required for quiz/flashcard generation)
-  - Strong instruction-following for educational content
-  - Cost-effective for the project scale
-- **Client**: Custom `BytezClient` class wrapping `requests.post` to the OpenRouter endpoint
-- **Retry logic**: Up to 2 retries with exponential backoff (1s → 2s) on timeout or server errors
-- **Temperature settings**:
-  - Q&A answering: 0.3 (more factual)
-  - Quiz/flashcard generation: 0.7 (more varied)
-  - Summaries/study guides: 0.3 (more structured)
-- **Token limit**: 2,048 tokens (standard); 4,096 tokens for study guides
+> **Full documentation:** See [DEEPSEEK_API_DOCUMENTATION.md](DEEPSEEK_API_DOCUMENTATION.md) for architecture diagrams, request/response structure, sequence flows, and thesis-ready wording.
+
+### 4.1 Provider and model
+
+- **Gateway**: [OpenRouter](https://openrouter.ai) — OpenAI-compatible `POST /v1/chat/completions`
+- **Model**: **DeepSeek Chat** (`deepseek/deepseek-chat`, DeepSeek V3 family)
+- **Why DeepSeek**: Strong educational Q&A, reliable **JSON** for quizzes/flashcards, cost-effective via OpenRouter
+- **API key**: `OPENROUTER_API_KEY` in `.env` (loaded by `python-dotenv`)
+
+Embeddings for RAG are **not** sent to DeepSeek; they use local **sentence-transformers** (see Section 2).
+
+### 4.2 Client structure (`testa_app/bytez_client.py`)
+
+| Piece | Function |
+|-------|----------|
+| `BytezClient` | Single integration class (name retained from earlier Bytez migration) |
+| `get_bytez_client()` | Process-wide singleton + shared HTTP session |
+| `chat(messages)` | Low-level OpenRouter call; parses `choices[0].message.content` |
+| `generate_text(prompt, system_prompt)` | Builds system + user messages |
+| `answer_question(question, context)` | Q&A with RAG context and educational system prompt |
+| `EmbeddingClient` | Separate — local vectors only |
+
+### 4.3 Request payload (conceptual)
+
+```json
+{
+  "model": "deepseek/deepseek-chat",
+  "messages": [
+    { "role": "system", "content": "..." },
+    { "role": "user", "content": "Context: ...\n\nQuestion: ..." }
+  ],
+  "temperature": 0.3,
+  "max_tokens": 768
+}
+```
+
+### 4.4 Where DeepSeek is invoked
+
+| Feature | Caller | Notes |
+|---------|--------|--------|
+| RAG Q&A | `get_conversational_chain()` → `answer_question` | After FAISS retrieves top-3 chunks |
+| Direct Q&A | `views.question_answer` | When retrieval chain returns no answer |
+| Quizzes | `QuizGenerator` | JSON parsed from model output |
+| Flashcards | `FlashcardGenerator` | JSON parsed from model output |
+| Summaries / study guides | `SummaryGenerator` | Longer `max_tokens` for guides |
+
+### 4.5 Operational settings
+
+- **Retry logic**: Up to 2 retries with exponential backoff on timeout, connection errors, or HTTP 5xx
+- **Temperature**: Q&A 0.3; quiz/flashcards 0.7; summaries/guides 0.3
+- **Token limits**: 768 (Q&A), 2048 (quiz/cards/summary), 4096 (study guide)
+- **Fallback**: Web scrape if OpenRouter fails (`views.py`)
 
 ---
 

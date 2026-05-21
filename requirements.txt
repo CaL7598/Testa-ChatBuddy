@@ -12,3 +12,8 @@ python-docx==1.1.2
 python-pptx==0.6.23
 sentence-transformers>=2.2.0
 numpy>=1.24.0
+# PostgreSQL (required when DB_ENGINE=postgresql in .env)
+psycopg2-binary>=2.9.9
+# Production (Render)
+gunicorn>=22.0.0
+whitenoise>=6.6.0

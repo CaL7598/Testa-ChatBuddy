@@ -1,0 +1,26 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | Testa StudyBuddy Admin{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'testa_app/css/admin_custom.css' %}">
+{% endblock %}
+
+{% block branding %}
+<div class="testa-admin-brand">
+    <a href="{% url 'admin:index' %}">
+        <span class="testa-admin-logo">T</span>
+        <span class="testa-admin-title">Testa StudyBuddy</span>
+        <span class="testa-admin-badge">Admin</span>
+    </a>
+</div>
+{% endblock %}
+
+{% block nav-global %}
+<a href="{% url 'index' %}" class="testa-admin-nav-link">← Back to app</a>
+{% endblock %}

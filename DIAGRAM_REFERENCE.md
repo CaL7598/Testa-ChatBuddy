@@ -79,7 +79,7 @@ Optional: omit **Sentence Transformers + FAISS** as actors; show as internal «s
 ### Logical components (boxes)
 
 1. **Django web application** — HTTP, sessions, CSRF, authentication  
-2. **SQLite** (`db.sqlite3`) — persistent entities  
+2. **PostgreSQL** (or SQLite in dev) — persistent entities (users, Q&A, quizzes, analytics)  
 3. **File storage** — uploaded study documents  
 4. **FAISS vector index** (`faiss_index/`) — on-disk index, merged on new uploads  
 5. **Local embeddings** — Sentence Transformers `all-MiniLM-L6-v2` (384 dimensions), in-process  

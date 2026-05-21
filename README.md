@@ -54,16 +54,19 @@ Whether you're studying Engineering, Business, Arts, Sciences, or any other fiel
    
    Create a `.env` file in the project root:
    ```env
-   BYTEZ_API_KEY=your_bytez_api_key_here
+   OPENROUTER_API_KEY=your_openrouter_api_key_here
    ```
    
-   Get your free API key from [Bytez](https://bytez.com)
+   Get an API key from [OpenRouter](https://openrouter.ai) (the app uses **DeepSeek** via model `deepseek/deepseek-chat`).  
+   See [API_SETUP.md](API_SETUP.md) and [DEEPSEEK_API_DOCUMENTATION.md](DEEPSEEK_API_DOCUMENTATION.md).
 
 4. **Run migrations**
    ```bash
    python manage.py makemigrations
    python manage.py migrate
    ```
+   
+   Default database is **SQLite**. For **PostgreSQL** or **Supabase**, see [DATABASE_SETUP.md](DATABASE_SETUP.md) and copy `.env.example` to `.env`.
 
 5. **Create a superuser (optional)**
    ```bash
@@ -97,10 +100,10 @@ Whether you're studying Engineering, Business, Arts, Sciences, or any other fiel
 
 - **Backend**: Django 5.0.3
 - **AI/ML**: 
-  - Bytez API (free open-source models)
-  - LangChain for AI orchestration
-  - Sentence Transformers for embeddings
-  - FAISS for vector search
+  - **DeepSeek** (`deepseek/deepseek-chat`) via **OpenRouter** API for text generation
+  - LangChain for chunking and vector-store integration
+  - Sentence Transformers for local embeddings
+  - FAISS for vector search (RAG)
 - **Frontend**: 
   - HTML5, CSS3, JavaScript
   - Tailwind CSS for styling
@@ -109,8 +112,10 @@ Whether you're studying Engineering, Business, Arts, Sciences, or any other fiel
 
 ## 📖 Documentation
 
-- [API Setup Guide](API_SETUP.md) - Detailed API configuration instructions
-- [Bytez Migration Guide](BYTEZ_MIGRATION.md) - Migration from Gemini to Bytez
+- [DeepSeek API Integration](DEEPSEEK_API_DOCUMENTATION.md) - How DeepSeek works in the project (structure, flows, methodology)
+- [API Setup Guide](API_SETUP.md) - OpenRouter API key configuration
+- [Methodology Notes](METHODOLOGY_NOTES.md) - RAG, analytics, and system design
+- [Bytez Migration Guide](BYTEZ_MIGRATION.md) - Historical migration notes (superseded by OpenRouter/DeepSeek)
 
 ## 🤝 Contributing
 
