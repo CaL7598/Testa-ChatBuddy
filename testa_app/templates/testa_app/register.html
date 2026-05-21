@@ -5,16 +5,17 @@
 
 {% block content %}
 <div class="relative min-h-screen py-12 px-4 sm:px-6 lg:px-8 overflow-hidden">
-    <!-- Background Video -->
-    <div class="absolute inset-0 z-0">
-        <video id="register-video" autoplay muted loop playsinline class="w-full h-full object-cover">
+    <!-- Background: gradient always visible; video optional -->
+    <div class="absolute inset-0 z-0 bg-gradient-to-br from-indigo-950 via-violet-950 to-slate-950">
+        <video id="register-video" autoplay muted loop playsinline class="w-full h-full object-cover opacity-70">
             <source src="{% static 'login/8199367-hd_1920_1080_25fps.mp4' %}" type="video/mp4">
         </video>
+        <div class="absolute inset-0 bg-gradient-to-b from-black/60 via-indigo-900/50 to-black/70"></div>
     </div>
     
     <div class="relative z-10 max-w-2xl mx-auto animate-slide-in">
         <!-- Register Card -->
-        <div class="glass-effect rounded-3xl shadow-2xl p-8 sm:p-10">
+        <div class="bg-white rounded-3xl shadow-2xl p-8 sm:p-10 border border-slate-100">
             <!-- Header -->
             <div class="text-center mb-8">
                 <div class="mx-auto w-20 h-20 bg-indigo-600 rounded-full flex items-center justify-center mb-4 shadow-lg">
@@ -22,20 +23,20 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
                     </svg>
                 </div>
-                <h2 class="font-montserrat font-bold text-3xl text-white mb-2">Create Account</h2>
-                <p class="font-poppins text-white/80">Join Testa StudyBuddy and start learning today</p>
+                <h2 class="font-montserrat font-bold text-3xl text-slate-900 mb-2">Create Account</h2>
+                <p class="font-poppins text-slate-600">Join Testa StudyBuddy and start learning today</p>
             </div>
 
             <!-- Error Messages -->
             {% if form.errors %}
-            <div class="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-xl backdrop-blur-sm animate-slide-in">
+            <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl animate-slide-in">
                 <div class="flex items-start gap-3">
-                    <svg class="w-5 h-5 text-red-300 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <svg class="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
                     </svg>
                     <div class="flex-1">
-                        <h3 class="font-poppins font-semibold text-red-200 mb-2">Please fix the following errors:</h3>
-                        <ul class="list-disc list-inside space-y-1 font-poppins text-red-300 text-sm">
+                        <h3 class="font-poppins font-semibold text-red-800 mb-2">Please fix the following errors:</h3>
+                        <ul class="list-disc list-inside space-y-1 font-poppins text-red-700 text-sm">
                             {% for field, errors in form.errors.items %}
                                 {% for error in errors %}
                                     <li>{{ field|title }}: {{ error }}</li>
@@ -53,12 +54,12 @@
                 
                 <!-- Username Field -->
                 <div>
-                    <label for="id_username" class="block font-poppins font-medium text-white mb-2">
+                    <label for="id_username" class="block font-poppins font-medium text-slate-700 mb-2">
                         Username
                     </label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <svg class="w-5 h-5 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                             </svg>
                         </div>
@@ -68,12 +69,12 @@
 
                 <!-- Email Field -->
                 <div>
-                    <label for="id_email" class="block font-poppins font-medium text-white mb-2">
+                    <label for="id_email" class="block font-poppins font-medium text-slate-700 mb-2">
                         Email Address
                     </label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <svg class="w-5 h-5 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                             </svg>
                         </div>
@@ -83,12 +84,12 @@
 
                 <!-- Password Field -->
                 <div>
-                    <label for="id_password1" class="block font-poppins font-medium text-white mb-2">
+                    <label for="id_password1" class="block font-poppins font-medium text-slate-700 mb-2">
                         Password
                     </label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <svg class="w-5 h-5 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
                             </svg>
                         </div>
@@ -97,13 +98,13 @@
                             name="password1" 
                             id="id_password1" 
                             required
-                            class="block w-full pl-12 pr-12 py-3 bg-white/20 border border-white/30 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-4 focus:ring-white/30 focus:border-white transition-all duration-300 font-poppins"
+                            class="block w-full pl-12 pr-12 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-indigo-200 focus:border-indigo-500 transition-all duration-300 font-poppins"
                             placeholder="Create a strong password"
                         >
                         <button 
                             type="button" 
                             id="toggle-password1" 
-                            class="absolute inset-y-0 right-0 pr-4 flex items-center text-white/60 hover:text-white transition-colors"
+                            class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-indigo-600 transition-colors"
                         >
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -115,12 +116,12 @@
 
                 <!-- Confirm Password Field -->
                 <div>
-                    <label for="id_password2" class="block font-poppins font-medium text-white mb-2">
+                    <label for="id_password2" class="block font-poppins font-medium text-slate-700 mb-2">
                         Confirm Password
                     </label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <svg class="w-5 h-5 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
                         </div>
@@ -129,13 +130,13 @@
                             name="password2" 
                             id="id_password2" 
                             required
-                            class="block w-full pl-12 pr-12 py-3 bg-white/20 border border-white/30 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-4 focus:ring-white/30 focus:border-white transition-all duration-300 font-poppins"
+                            class="block w-full pl-12 pr-12 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-indigo-200 focus:border-indigo-500 transition-all duration-300 font-poppins"
                             placeholder="Confirm your password"
                         >
                         <button 
                             type="button" 
                             id="toggle-password2" 
-                            class="absolute inset-y-0 right-0 pr-4 flex items-center text-white/60 hover:text-white transition-colors"
+                            class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-indigo-600 transition-colors"
                         >
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -146,30 +147,30 @@
                 </div>
 
                 <!-- Password Requirements -->
-                <div class="bg-white/10 rounded-xl p-4 border border-white/20 backdrop-blur-sm">
-                    <p class="font-poppins font-semibold text-white mb-3 text-sm">Password Requirements:</p>
+                <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                    <p class="font-poppins font-semibold text-slate-800 mb-3 text-sm">Password Requirements:</p>
                     <ul class="space-y-2 text-sm font-poppins">
-                        <li id="length" class="flex items-center gap-2 text-white/70">
+                        <li id="length" class="flex items-center gap-2 text-slate-600">
                             <span class="requirement-icon">○</span>
                             <span>At least 8 characters</span>
                         </li>
-                        <li id="uppercase" class="flex items-center gap-2 text-white/70">
+                        <li id="uppercase" class="flex items-center gap-2 text-slate-600">
                             <span class="requirement-icon">○</span>
                             <span>One uppercase letter</span>
                         </li>
-                        <li id="lowercase" class="flex items-center gap-2 text-white/70">
+                        <li id="lowercase" class="flex items-center gap-2 text-slate-600">
                             <span class="requirement-icon">○</span>
                             <span>One lowercase letter</span>
                         </li>
-                        <li id="number" class="flex items-center gap-2 text-white/70">
+                        <li id="number" class="flex items-center gap-2 text-slate-600">
                             <span class="requirement-icon">○</span>
                             <span>One number</span>
                         </li>
-                        <li id="special" class="flex items-center gap-2 text-white/70">
+                        <li id="special" class="flex items-center gap-2 text-slate-600">
                             <span class="requirement-icon">○</span>
                             <span>One special character</span>
                         </li>
-                        <li id="password-match" class="flex items-center gap-2 text-white/70 mt-3 pt-3 border-t border-white/20">
+                        <li id="password-match" class="flex items-center gap-2 text-slate-600 mt-3 pt-3 border-t border-slate-200">
                             <span class="requirement-icon">○</span>
                             <span>Passwords match</span>
                         </li>
@@ -179,7 +180,7 @@
                 <!-- Submit Button -->
                 <button 
                     type="submit" 
-                    class="w-full py-4 px-6 bg-white text-primary font-montserrat font-bold rounded-xl shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 flex items-center justify-center gap-2 group"
+                    class="w-full py-4 px-6 bg-indigo-600 text-white font-montserrat font-bold rounded-xl shadow-lg hover:bg-indigo-700 hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 flex items-center justify-center gap-2 group"
                 >
                     <span>Create Account</span>
                     <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -190,9 +191,9 @@
 
             <!-- Sign In Link -->
             <div class="mt-6 text-center">
-                <p class="font-poppins text-white/80">
+                <p class="font-poppins text-slate-600">
                     Already have an account?
-                    <a href="{% url 'login' %}" class="font-semibold text-white hover:underline ml-1 transition-all">
+                    <a href="{% url 'login' %}" class="font-semibold text-indigo-600 hover:text-indigo-800 hover:underline ml-1 transition-all">
                         Sign in here
                     </a>
                 </p>
@@ -217,15 +218,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const updateRequirement = (element, isValid) => {
         const icon = element.querySelector('.requirement-icon');
         if (isValid) {
-            element.classList.remove('text-white/70');
-            element.classList.add('text-green-300');
+            element.classList.remove('text-slate-600');
+            element.classList.add('text-green-600');
             icon.textContent = '✓';
-            icon.classList.add('text-green-400');
+            icon.classList.add('text-green-600');
         } else {
-            element.classList.remove('text-green-300');
-            element.classList.add('text-white/70');
+            element.classList.remove('text-green-600');
+            element.classList.add('text-slate-600');
             icon.textContent = '○';
-            icon.classList.remove('text-green-400');
+            icon.classList.remove('text-green-600');
         }
     };
 
@@ -282,32 +283,25 @@ document.addEventListener('DOMContentLoaded', function() {
     animation: slideIn 0.6s ease-out;
 }
 
-.glass-effect {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
 #id_username, #id_email {
     width: 100%;
     padding: 0.75rem 1rem 0.75rem 3rem;
-    background: rgba(255, 255, 255, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
     border-radius: 0.75rem;
-    color: white;
+    color: #0f172a;
     font-family: 'Poppins', sans-serif;
     transition: all 0.3s;
 }
 
 #id_username:focus, #id_email:focus {
     outline: none;
-    ring: 4px;
-    ring-color: rgba(255, 255, 255, 0.3);
-    border-color: white;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
 }
 
 #id_username::placeholder, #id_email::placeholder {
-    color: rgba(255, 255, 255, 0.5);
+    color: #94a3b8;
 }
 </style>
 
