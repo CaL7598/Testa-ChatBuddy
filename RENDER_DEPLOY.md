@@ -16,8 +16,8 @@ Ensure `.env` is **not** committed (it is in `.gitignore`).
 2. Connect repository: `CaL7598/Testa-ChatBuddy` (or your fork)
 3. Settings:
    - **Runtime:** Python 3
-   - **Build Command:** `./build.sh`
-   - **Start Command:** `gunicorn testa_project.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120`
+   - **Build Command:** `pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate --noinput`
+   - **Start Command:** `gunicorn testa_project.wsgi:application --bind 0.0.0.0:$PORT --workers 1 --threads 2 --timeout 180`
    - **Plan:** Free (upgrade if ML models run out of memory)
 
 Or use **Blueprint** deploy with `render.yaml` in the repo root.
@@ -65,11 +65,15 @@ After deploy succeeds:
 
 | Issue | Fix |
 |-------|-----|
+| **Blank page / nothing loads** | Open Render **Logs**; confirm `DATABASE_URL` is set (Supabase Session URI, port **5432**). Test `https://your-app.onrender.com/health/` — should return `{"status":"ok"}`. |
+| **Site spins forever** | Free tier cold start (wait 60–90s). Or DB connection hanging — fix `DATABASE_URL`. |
 | Build fails on `collectstatic` | Check build logs; ensure `whitenoise` in `requirements.txt` |
-| `DisallowedHost` | Confirm `RENDER_EXTERNAL_HOSTNAME` is set (automatic on Render) |
+| `DisallowedHost` | Add `testa-chatbuddy.onrender.com` to `ALLOWED_HOSTS` or rely on `RENDER_EXTERNAL_HOSTNAME` |
 | Database SSL error | `POSTGRES_SSLMODE=require` |
-| 502 / worker timeout | Increase gunicorn `--timeout`; reduce embedding load or use paid plan |
+| 502 / worker OOM | Use `--workers 1`; upgrade Render plan (ML models need RAM) |
 | AI errors | Set `OPENROUTER_API_KEY` in Render env |
+
+**Health check:** `GET /health/` returns JSON without touching the database.
 
 ## 7. Custom domain (optional)
 

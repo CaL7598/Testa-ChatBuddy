@@ -17,6 +17,7 @@ urlpatterns = [
     path('password-reset-complete/', auth_views.PasswordResetCompleteView.as_view(template_name='password_reset_complete.html'), name='password_reset_complete'),
     
     # Core Features
+    path('health/', views.health, name='health'),
     path('', views.index, name='index'),
     path('about/', views.about, name='about'),
     path('pdf_upload/', views.pdf_upload, name='pdf_upload'),

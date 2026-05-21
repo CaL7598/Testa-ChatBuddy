@@ -550,6 +550,11 @@ def logout_view(request):
 
 
 
+def health(request):
+    """Lightweight health check for Render (no DB)."""
+    return JsonResponse({'status': 'ok', 'service': 'testa-studybuddy'})
+
+
 def index(request):
     return render(request, 'index.html')
 

@@ -7,13 +7,12 @@
 ══════════════════════════════════════════ -->
 <div class="relative min-h-screen w-full flex flex-col items-center justify-center overflow-hidden">
 
-    <!-- Background Video -->
-    <div class="absolute inset-0 z-0">
-        <video id="landing-video" autoplay muted loop playsinline class="w-full h-full object-cover scale-105">
+    <!-- Background (gradient always visible; video optional on deploy) -->
+    <div class="absolute inset-0 z-0 bg-gradient-to-br from-indigo-950 via-violet-950 to-slate-950">
+        <video id="landing-video" autoplay muted loop playsinline class="w-full h-full object-cover scale-105 opacity-90" poster="">
             <source src="{% static 'landing page/bckg.mp4' %}" type="video/mp4">
         </video>
-        <!-- Deep gradient overlay – ensures text is always readable -->
-        <div class="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-black/85"></div>
+        <div class="absolute inset-0 bg-gradient-to-b from-black/75 via-black/55 to-black/80"></div>
         <!-- Subtle indigo tint for brand alignment -->
         <div class="absolute inset-0 bg-indigo-950/25"></div>
     </div>

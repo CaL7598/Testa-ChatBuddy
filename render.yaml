@@ -4,8 +4,8 @@ services:
     name: testa-studybuddy
     runtime: python
     plan: free
-    buildCommand: ./build.sh
-    startCommand: gunicorn testa_project.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate --noinput
+    startCommand: gunicorn testa_project.wsgi:application --bind 0.0.0.0:$PORT --workers 1 --threads 2 --timeout 180 --graceful-timeout 30
     envVars:
       - key: PYTHON_VERSION
         value: "3.11.9"

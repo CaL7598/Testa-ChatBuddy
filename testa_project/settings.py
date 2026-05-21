@@ -49,6 +49,13 @@ CSRF_TRUSTED_ORIGINS = [
 if _render_host:
     CSRF_TRUSTED_ORIGINS.append(f'https://{_render_host}')
 
+# Production: cookie sessions avoid a DB round-trip on every page (helps Render cold starts)
+if not DEBUG:
+    SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 
 # Application definition
 
@@ -113,11 +120,13 @@ def _postgres_from_url(url: str) -> dict:
         'PASSWORD': unquote(parsed.password or ''),
         'HOST': parsed.hostname or 'localhost',
         'PORT': str(parsed.port or 5432),
-        'OPTIONS': {},
+        'OPTIONS': {
+            'connect_timeout': int(os.getenv('DB_CONNECT_TIMEOUT', '10')),
+        },
     }
-    # Supabase and most cloud Postgres require SSL
-    if os.getenv('POSTGRES_SSLMODE', 'require').strip():
-        db['OPTIONS']['sslmode'] = os.getenv('POSTGRES_SSLMODE', 'require').strip()
+    sslmode = os.getenv('POSTGRES_SSLMODE', 'require').strip()
+    if sslmode:
+        db['OPTIONS']['sslmode'] = sslmode
     return db
 
 
@@ -135,6 +144,7 @@ if _db_engine in ('postgresql', 'postgres', 'pg'):
                 'PORT': os.getenv('POSTGRES_PORT', '5432'),
                 'OPTIONS': {
                     'sslmode': os.getenv('POSTGRES_SSLMODE', 'prefer'),
+                    'connect_timeout': int(os.getenv('DB_CONNECT_TIMEOUT', '10')),
                 },
             }
         }
