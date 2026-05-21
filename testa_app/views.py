@@ -16,7 +16,6 @@ from .utils import (
     get_file_text, get_text_chunks, get_vector_store, 
     load_vector_store, get_conversational_chain
 )
-from langchain_community.vectorstores import FAISS
 from dotenv import load_dotenv
 from datetime import datetime, date
 from django.utils import timezone

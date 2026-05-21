@@ -11,10 +11,14 @@ from datetime import datetime, timedelta
 from PyPDF2 import PdfReader
 from docx import Document
 from pptx import Presentation
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import FAISS
-from langchain_core.prompts import PromptTemplate
-from .bytez_client import BytezClient, EmbeddingClient, get_bytez_client
+from .bytez_client import BytezClient, get_bytez_client
+
+
+def _ml_enabled():
+    """Local FAISS/embeddings need ~400MB+ RAM; disabled on Render by default."""
+    if os.getenv('RENDER') or os.getenv('RENDER_EXTERNAL_HOSTNAME'):
+        return False
+    return os.environ.get('DISABLE_ML', '').lower() not in ('1', 'true', 'yes')
 
 
 def get_file_text(file):
@@ -66,12 +70,18 @@ def extract_text_from_txt(file):
 
 def get_text_chunks(text, chunk_size=50000, chunk_overlap=1000):
     """Split text into chunks for vector database"""
+    if not text:
+        return []
+    if not _ml_enabled():
+        step = max(chunk_size - chunk_overlap, 1000)
+        return [text[i:i + chunk_size] for i in range(0, len(text), step)] or [text]
+    from langchain_text_splitters import RecursiveCharacterTextSplitter
+
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=chunk_size,
-        chunk_overlap=chunk_overlap
+        chunk_overlap=chunk_overlap,
     )
-    chunks = text_splitter.split_text(text)
-    return chunks
+    return text_splitter.split_text(text)
 
 
 # Cap RAG context sent to the LLM (fewer tokens → faster responses, lower cost)
@@ -104,11 +114,14 @@ _vector_store_mtime = None
 
 def _get_local_embeddings():
     """Return a cached LocalEmbeddings instance, loading the model only once."""
+    if not _ml_enabled():
+        return None
     global _embedding_client_cache, _local_embeddings_cache
     if _local_embeddings_cache is not None:
         return _local_embeddings_cache
 
     from langchain_core.embeddings import Embeddings
+    from .bytez_client import EmbeddingClient
 
     if _embedding_client_cache is None:
         _embedding_client_cache = EmbeddingClient()
@@ -127,6 +140,10 @@ def _get_local_embeddings():
 
 def load_vector_store(index_path=None):
     """Load FAISS vector store; uses an in-process cache to avoid reloading from disk."""
+    if not _ml_enabled():
+        return None
+    from langchain_community.vectorstores import FAISS
+
     global _vector_store_cache, _vector_store_mtime
     if index_path is None:
         index_path = _get_faiss_index_path()
@@ -161,11 +178,17 @@ def load_vector_store(index_path=None):
 
 def get_vector_store(text_chunks, index_path=None):
     """Create or update FAISS vector store; merges new chunks into existing index."""
+    if not _ml_enabled():
+        return None
+    from langchain_community.vectorstores import FAISS
+
     global _vector_store_cache, _vector_store_mtime
     if index_path is None:
         index_path = _get_faiss_index_path()
 
     embeddings = _get_local_embeddings()
+    if embeddings is None:
+        return None
     existing = load_vector_store(index_path)
 
     if existing is not None and text_chunks:

@@ -16,7 +16,7 @@ Ensure `.env` is **not** committed (it is in `.gitignore`).
 2. Connect repository: `CaL7598/Testa-ChatBuddy` (or your fork)
 3. Settings:
    - **Runtime:** Python 3
-   - **Build Command:** `pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate --noinput`
+   - **Build Command:** `pip install -r requirements-render.txt && python manage.py collectstatic --noinput && python manage.py migrate --noinput`
    - **Start Command:** `gunicorn testa_project.wsgi:application --bind 0.0.0.0:$PORT --workers 1 --threads 2 --timeout 180`
    - **Plan:** Free (upgrade if ML models run out of memory)
 
@@ -57,7 +57,7 @@ After deploy succeeds:
 | Item | Note |
 |------|------|
 | **Cold starts** | Free tier spins down; first visit may be slow |
-| **RAM** | `sentence-transformers` + FAISS need memory; upgrade if workers crash |
+| **RAM** | Production uses `requirements-render.txt` (no PyTorch/FAISS). Q&A uses OpenRouter only. Upgrade plan if you need on-server RAG. |
 | **Uploaded files** | Stored on ephemeral disk — **re-upload after redeploy** unless you add persistent disk or S3 |
 | **FAISS index** | Rebuilt when users upload; index lost on redeploy without persistent storage |
 
@@ -70,7 +70,7 @@ After deploy succeeds:
 | Build fails on `collectstatic` | Check build logs; ensure `whitenoise` in `requirements.txt` |
 | `DisallowedHost` | Add `testa-chatbuddy.onrender.com` to `ALLOWED_HOSTS` or rely on `RENDER_EXTERNAL_HOSTNAME` |
 | Database SSL error | `POSTGRES_SSLMODE=require` |
-| 502 / worker OOM | Use `--workers 1`; upgrade Render plan (ML models need RAM) |
+| 502 / worker OOM | Use `requirements-render.txt`, `DISABLE_ML=1`, `--workers 1`. In Render **Settings**, set Build Command to match `render.yaml`. |
 | AI errors | Set `OPENROUTER_API_KEY` in Render env |
 
 **Health check:** `GET /health/` returns JSON without touching the database.
