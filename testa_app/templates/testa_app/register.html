@@ -4,18 +4,17 @@
 {% block title %}Register - Testa StudyBuddy{% endblock %}
 
 {% block content %}
-<div class="relative min-h-screen py-12 px-4 sm:px-6 lg:px-8 overflow-hidden">
-    <!-- Background: gradient always visible; video optional -->
-    <div class="absolute inset-0 z-0 bg-gradient-to-br from-indigo-950 via-violet-950 to-slate-950">
-        <video id="register-video" autoplay muted loop playsinline preload="auto" class="w-full h-full object-cover scale-105 opacity-90">
+<div class="relative min-h-screen py-12 px-4 sm:px-6 lg:px-8 overflow-hidden auth-mobile-page">
+    <div class="video-bg-shell">
+        <video id="register-video" class="video-bg-media" autoplay muted loop playsinline preload="auto" webkit-playsinline>
             <source src="{% static 'testa_app/videos/bckg.mp4' %}" type="video/mp4">
         </video>
-        <div class="absolute inset-0 bg-gradient-to-b from-black/50 via-indigo-900/35 to-black/60 pointer-events-none"></div>
+        <div class="video-bg-overlay video-bg-overlay--auth"></div>
+        <div class="video-bg-tint"></div>
     </div>
     
-    <div class="relative z-10 max-w-2xl mx-auto animate-slide-in">
-        <!-- Register Card -->
-        <div class="bg-white rounded-3xl shadow-2xl p-8 sm:p-10 border border-slate-100">
+    <div class="relative z-10 max-w-2xl mx-auto animate-slide-in w-full">
+        <div class="bg-white rounded-3xl shadow-2xl p-8 sm:p-10 border border-slate-100 auth-mobile-card">
             <!-- Header -->
             <div class="text-center mb-8">
                 <div class="mx-auto w-20 h-20 bg-indigo-600 rounded-full flex items-center justify-center mb-4 shadow-lg">

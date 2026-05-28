@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block email_title %}{{ site_name }}{% endblock %}</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f1f5f9;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#f1f5f9;padding:32px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:520px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(15,23,42,0.08);">
+          <tr>
+            <td style="background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);padding:28px 32px;text-align:center;">
+              <div style="width:48px;height:48px;margin:0 auto 12px;background:#fff;border-radius:12px;line-height:48px;font-weight:800;font-size:22px;color:#4f46e5;">T</div>
+              <h1 style="margin:0;font-size:22px;font-weight:700;color:#ffffff;">{{ site_name }}</h1>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:32px 28px;color:#334155;font-size:16px;line-height:1.6;">
+              {% block email_body %}{% endblock %}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:20px 28px 28px;background:#f8fafc;border-top:1px solid #e2e8f0;text-align:center;font-size:12px;color:#64748b;line-height:1.5;">
+              <p style="margin:0 0 8px;">Built for students · UENR &amp; beyond</p>
+              <p style="margin:0;"><a href="{{ site_url }}" style="color:#4f46e5;text-decoration:none;">{{ site_url }}</a></p>
+              {% if support_email %}
+              <p style="margin:12px 0 0;">Questions? <a href="mailto:{{ support_email }}" style="color:#4f46e5;">{{ support_email }}</a></p>
+              {% endif %}
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

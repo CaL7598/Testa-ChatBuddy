@@ -1,0 +1,13 @@
+{% extends 'testa_app/emails/base_email.html' %}
+{% block email_title %}Welcome to {{ site_name }}{% endblock %}
+{% block email_body %}
+<p style="margin:0 0 16px;font-size:18px;font-weight:600;color:#0f172a;">Hi {{ username }}, welcome aboard! 🎉</p>
+<p style="margin:0 0 20px;">You just joined <strong>{{ site_name }}</strong> — your AI study companion for smarter learning, quizzes, flashcards, and instant answers from your course materials.</p>
+<p style="margin:0 0 24px;">Please verify your email to secure your account and unlock the full experience:</p>
+<p style="margin:0 0 28px;text-align:center;">
+  <a href="{{ verify_link }}" style="display:inline-block;padding:14px 32px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#ffffff;font-weight:700;text-decoration:none;border-radius:12px;font-size:16px;">Verify my email</a>
+</p>
+<p style="margin:0 0 12px;font-size:14px;color:#64748b;">Or copy this link into your browser:</p>
+<p style="margin:0 0 24px;font-size:13px;word-break:break-all;color:#4f46e5;">{{ verify_link }}</p>
+<p style="margin:0;font-size:14px;color:#64748b;">Happy studying!<br>The {{ site_name }} team</p>
+{% endblock %}

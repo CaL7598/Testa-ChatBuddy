@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="relative min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 overflow-hidden auth-mobile-page">
+    <div class="video-bg-shell">
+        <video class="video-bg-media" autoplay muted loop playsinline preload="auto" webkit-playsinline>
+            <source src="{% static 'testa_app/videos/bckg.mp4' %}" type="video/mp4">
+        </video>
+        <div class="video-bg-overlay video-bg-overlay--auth"></div>
+        <div class="video-bg-tint"></div>
+    </div>
+    <div class="relative z-10 max-w-md w-full animate-slide-in">
+        <div class="bg-white rounded-3xl shadow-2xl p-8 sm:p-10 border border-slate-100 auth-mobile-card">
+            <div class="text-center mb-8">
+                <div class="mx-auto w-16 h-16 bg-indigo-600 rounded-full flex items-center justify-center mb-4 shadow-lg">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                    </svg>
+                </div>
+                <h2 class="font-montserrat font-bold text-2xl sm:text-3xl text-slate-900 mb-2">{% block auth_heading %}{% endblock %}</h2>
+                <p class="font-poppins text-slate-600 text-sm sm:text-base">{% block auth_subheading %}{% endblock %}</p>
+            </div>
+            {% block auth_body %}{% endblock %}
+        </div>
+        {% block auth_footer %}{% endblock %}
+    </div>
+</div>
+<style>
+@keyframes slideIn { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+.animate-slide-in { animation: slideIn 0.5s ease-out; }
+</style>
+{% endblock %}

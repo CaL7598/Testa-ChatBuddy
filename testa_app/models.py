@@ -4,6 +4,26 @@ from django.utils import timezone
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 
+class UserProfile(models.Model):
+    """Extended user data — email verification for SendGrid onboarding."""
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    email_verified = models.BooleanField(default=False)
+    email_verified_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'user profile'
+        verbose_name_plural = 'user profiles'
+
+    def __str__(self):
+        return f'Profile: {self.user.username}'
+
+    def mark_verified(self):
+        self.email_verified = True
+        self.email_verified_at = timezone.now()
+        self.save(update_fields=['email_verified', 'email_verified_at'])
+
+
 # Core Chat Models
 class QuestionAnswer(models.Model):
     DIFFICULTY_CHOICES = [

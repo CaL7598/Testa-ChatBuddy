@@ -2,9 +2,26 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5.0, user-scalable=yes">
     <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#4f46e5">
     <title>{% block title %}Testa StudyBuddy{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}{{ seo_description }}{% endblock %}">
+    <meta name="robots" content="{% block meta_robots %}{% if user.is_authenticated and request.resolver_match.url_name != 'index' %}noindex, nofollow{% else %}index, follow{% endif %}{% endblock %}">
+    <link rel="canonical" href="{% block canonical_url %}{{ canonical_url }}{% endblock %}">
+    {% if google_site_verification %}
+    <meta name="google-site-verification" content="{{ google_site_verification }}">
+    {% endif %}
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="{{ site_name }}">
+    <meta property="og:title" content="{% block og_title %}{{ site_name }}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}{{ seo_description }}{% endblock %}">
+    <meta property="og:url" content="{{ canonical_url }}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{% block twitter_title %}{{ site_name }}{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}{{ seo_description }}{% endblock %}">
     <!-- Google Fonts - Montserrat and Poppins -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -33,9 +50,10 @@
     {% load static %}
     <!-- Custom Styles -->
     <link rel="stylesheet" href="{% static 'testa_app/css/main.css' %}">
+    <link rel="stylesheet" href="{% static 'testa_app/css/mobile.css' %}">
     {% block extra_head %}{% endblock %}
 </head>
-<body class="bg-slate-50 min-h-screen flex flex-col font-poppins">
+<body class="bg-slate-50 min-h-screen flex flex-col font-poppins {% if user.is_authenticated and request.resolver_match.url_name != 'index' %}app-shell{% endif %}">
     {% if user.is_authenticated and request.resolver_match.url_name != 'index' %}
     <!-- Sidebar (only for authenticated users, not on landing page) -->
     <aside id="sidebar" class="fixed left-0 top-0 h-full w-64 bg-indigo-600 text-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out lg:translate-x-0 -translate-x-full flex flex-col">
@@ -167,11 +185,11 @@
                         <div class="w-10 h-10 bg-white text-indigo-600 rounded-xl flex items-center justify-center font-montserrat font-bold text-lg shadow-lg group-hover:scale-110 transition-transform">
                             T
                         </div>
-                        <span class="font-montserrat font-bold text-lg sm:text-xl md:text-2xl">Testa studyBuddy</span>
+                        <span class="font-montserrat font-bold text-base sm:text-xl md:text-2xl"><span class="sm:hidden">Testa</span><span class="hidden sm:inline">Testa studyBuddy</span></span>
                     </a>
                 </div>
-                <div class="flex items-center gap-3 sm:gap-4">
-                    <a href="{% url 'about' %}" class="px-4 py-2 text-sm font-medium font-poppins rounded-xl hover:bg-white/20 transition-all duration-300">
+                <div class="flex items-center gap-2 sm:gap-4 nav-desktop-links">
+                    <a href="{% url 'about' %}" class="hidden sm:inline-flex px-4 py-2 text-sm font-medium font-poppins rounded-xl hover:bg-white/20 transition-all duration-300">
                         About
                     </a>
                     {% if user.is_authenticated %}
@@ -193,22 +211,58 @@
                     </a>
                     {% endif %}
                 </div>
+                <button type="button" id="mobileNavToggle" class="nav-mobile-toggle items-center justify-center w-11 h-11 rounded-xl bg-white/15 hover:bg-white/25 ml-1" aria-label="Open menu">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                </button>
             </div>
         </div>
     </nav>
+    <div id="mobileNavSheet" class="mobile-nav-sheet lg:hidden" aria-hidden="true">
+        <div class="mobile-nav-sheet__backdrop" id="mobileNavBackdrop"></div>
+        <div class="mobile-nav-sheet__panel">
+            <div class="flex items-center justify-between mb-6">
+                <span class="font-montserrat font-bold text-lg text-slate-900">Testa studyBuddy</span>
+                <button type="button" id="mobileNavClose" class="p-2 rounded-lg hover:bg-slate-100" aria-label="Close menu">
+                    <svg class="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <a href="{% url 'about' %}" class="mobile-nav-sheet__link">About</a>
+            {% if user.is_authenticated %}
+            <a href="{% url 'question_answer' %}" class="mobile-nav-sheet__link">Ask AI</a>
+            <a href="{% url 'logout' %}" class="mobile-nav-sheet__link mobile-nav-sheet__link--secondary">Logout</a>
+            {% else %}
+            <a href="{% url 'login' %}" class="mobile-nav-sheet__link mobile-nav-sheet__link--secondary">Sign In</a>
+            <a href="{% url 'register' %}" class="mobile-nav-sheet__link mobile-nav-sheet__link--primary">Get Started Free</a>
+            {% endif %}
+        </div>
+    </div>
     {% endif %}
 
     <!-- Main Content Area -->
     <div class="flex-1 flex flex-col {% if user.is_authenticated and request.resolver_match.url_name != 'index' %}lg:ml-64{% endif %}">
+        {% if messages %}
+        <div class="px-4 sm:px-6 pt-3 space-y-2 max-w-4xl mx-auto w-full" role="status">
+            {% for message in messages %}
+            <div class="rounded-xl px-4 py-3 text-sm font-poppins border
+                {% if message.tags == 'error' %}bg-red-50 text-red-800 border-red-200
+                {% elif message.tags == 'warning' %}bg-amber-50 text-amber-900 border-amber-200
+                {% elif message.tags == 'success' %}bg-emerald-50 text-emerald-800 border-emerald-200
+                {% else %}bg-indigo-50 text-indigo-900 border-indigo-200{% endif %}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
         {% if user.is_authenticated and request.resolver_match.url_name != 'index' %}
         <!-- Top Bar (only when sidebar is shown) -->
-        <header class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-30">
+        <header class="app-topbar bg-white shadow-sm border-b border-slate-200 sticky top-0 z-30">
             <div class="flex items-center justify-between px-4 sm:px-6 lg:px-8 h-16">
-                <!-- Mobile Menu Button -->
+                <!-- Mobile Menu Button (desktop sidebar; tab bar has More on phone) -->
                 <button 
                     id="openSidebar" 
                     class="lg:hidden p-2 hover:bg-slate-100 rounded-lg transition-colors"
                     onclick="openSidebar()"
+                    aria-label="Open menu"
                 >
                     <svg class="w-6 h-6 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
@@ -231,10 +285,26 @@
         {% endif %}
 
         <!-- Main Content -->
-        <main class="flex-1">
+        <main class="flex-1 app-main">
+            {% if show_email_verification_banner %}
+            <div class="bg-amber-50 border-b border-amber-200 px-4 py-3">
+                <div class="max-w-4xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <p class="font-poppins text-sm text-amber-900">
+                        <strong>Verify your email</strong> — check your inbox or request a new link.
+                    </p>
+                    <a href="{% url 'resend_verification' %}" class="font-poppins text-sm font-semibold text-indigo-600 hover:underline whitespace-nowrap">
+                        Resend verification
+                    </a>
+                </div>
+            </div>
+            {% endif %}
             {% block content %}
             {% endblock %}
         </main>
+
+        {% if user.is_authenticated and request.resolver_match.url_name != 'index' %}
+        {% include 'testa_app/_mobile_tabbar.html' %}
+        {% endif %}
 
         <!-- Footer: only on public/landing pages, hidden inside the authenticated app -->
         {% if not user.is_authenticated or request.resolver_match.url_name == 'index' %}
@@ -403,7 +473,45 @@
                 closeSidebar();
             }
         });
+
+        document.getElementById('mobileTabMore')?.addEventListener('click', function() {
+            openSidebar();
+        });
         {% endif %}
+
+        // Public mobile nav sheet
+        (function () {
+            const sheet = document.getElementById('mobileNavSheet');
+            const openBtn = document.getElementById('mobileNavToggle');
+            const closeBtn = document.getElementById('mobileNavClose');
+            const backdrop = document.getElementById('mobileNavBackdrop');
+            if (!sheet || !openBtn) return;
+            function openSheet() {
+                sheet.classList.add('is-open');
+                sheet.setAttribute('aria-hidden', 'false');
+                document.body.style.overflow = 'hidden';
+            }
+            function closeSheet() {
+                sheet.classList.remove('is-open');
+                sheet.setAttribute('aria-hidden', 'true');
+                document.body.style.overflow = '';
+            }
+            openBtn.addEventListener('click', openSheet);
+            closeBtn?.addEventListener('click', closeSheet);
+            backdrop?.addEventListener('click', closeSheet);
+        })();
+
+        // Background videos (landing, login, register)
+        document.querySelectorAll('.video-bg-media').forEach(function (video) {
+            video.setAttribute('playsinline', '');
+            video.muted = true;
+            video.loop = true;
+            video.addEventListener('ended', function () {
+                this.currentTime = 0;
+                this.play().catch(function () {});
+            });
+            video.play().catch(function () {});
+        });
 
         // Current year
         document.addEventListener("DOMContentLoaded", function() {

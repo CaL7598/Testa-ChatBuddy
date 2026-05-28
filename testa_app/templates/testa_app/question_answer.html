@@ -162,10 +162,16 @@
 </style>
 {% endblock %}
 
+{% block page_title %}Ask AI{% endblock %}
+
 {% block content %}
-<div class="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-    <!-- Header Section -->
-    <div class="max-w-7xl mx-auto mb-8 animate-slide-in">
+<div class="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8 qa-mobile-page">
+    <div class="qa-mobile-header lg:hidden">
+        <h1>Ask anything</h1>
+        <p>Upload notes • get instant AI answers</p>
+    </div>
+
+    <div class="max-w-7xl mx-auto mb-8 animate-slide-in qa-hero-desktop">
         <div class="text-center mb-8">
             <h1 class="font-montserrat font-bold text-4xl sm:text-5xl md:text-6xl text-indigo-600 mb-4">
                 Ask a Question
@@ -174,8 +180,7 @@
         </div>
     </div>
 
-    <!-- Main Content Grid -->
-    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 qa-main-grid">
         <!-- Left Sidebar - UENR Logo (commented out) -->
         {% comment %}
         <div class="lg:col-span-1 hidden lg:flex items-center justify-center">
@@ -187,7 +192,7 @@
 
         <!-- Center - Question Form -->
         <div class="lg:col-span-3">
-            <div class="gradient-border shadow-2xl animate-slide-in">
+            <div class="gradient-border shadow-2xl animate-slide-in qa-sticky-composer">
                 <div class="gradient-border-inner">
                     <!-- Upload progress (shown during upload) -->
                     <div id="upload-progress-bar" class="hidden mb-4 p-4 bg-gray-50 border border-gray-200 rounded-xl">
@@ -257,8 +262,8 @@
                                 </button>
                             </div>
                         </div>
-                        <div class="flex flex-wrap items-center justify-end gap-3">
-                            <div class="flex items-center gap-3">
+                        <div class="flex flex-wrap items-center justify-end gap-3 qa-composer-actions">
+                            <div class="flex items-center gap-3 flex-wrap">
                                 <button 
                                     type="button" 
                                     id="upload-doc-btn-2"
@@ -333,9 +338,9 @@
     </div>
 
     <!-- Q&A History Section -->
-    <div class="max-w-7xl mx-auto mt-12">
-        <div class="flex items-center justify-between mb-6">
-            <h2 class="font-montserrat font-bold text-3xl text-gray-800">Recent Conversations</h2>
+    <div class="max-w-7xl mx-auto mt-6 sm:mt-12 px-0 sm:px-0 qa-main-grid">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6">
+            <h2 class="font-montserrat font-bold text-xl sm:text-3xl text-gray-800">Recent Conversations</h2>
             <div class="flex items-center gap-3">
                 {% if qa_list %}
                 <button type="button" id="clear-all-history" class="flex items-center gap-2 px-3 py-2 rounded-xl text-red-600 hover:bg-red-50 font-poppins font-medium text-sm transition-colors" title="Clear all history">
@@ -356,7 +361,7 @@
 
         <div id="qa-list" class="grid grid-cols-1 md:grid-cols-2 gap-6">
             {% for qa in qa_list %}
-            <div class="group bg-white rounded-2xl shadow-lg hover:shadow-2xl p-6 border border-gray-100 hover:border-primary/30 transition-all duration-300 transform hover:-translate-y-2 animate-slide-in" data-qa-id="{{ qa.id }}">
+            <div class="group bg-white rounded-2xl shadow-lg hover:shadow-2xl p-4 sm:p-6 border border-gray-100 hover:border-primary/30 transition-all duration-300 transform hover:-translate-y-2 animate-slide-in qa-history-card" data-qa-id="{{ qa.id }}">
                 <div class="flex items-start justify-between mb-4">
                     <div class="flex-1 min-w-0">
                         <p class="font-montserrat font-semibold text-gray-800 mb-2 line-clamp-2">{{ qa.question|truncatewords:15 }}</p>

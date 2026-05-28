@@ -31,6 +31,11 @@ Or use **Blueprint** deploy with `render.yaml` in the repo root.
 | `DATABASE_URL` | Your Supabase Session URI (port 5432) |
 | `POSTGRES_SSLMODE` | `require` |
 | `OPENROUTER_API_KEY` | Your OpenRouter key |
+| `SENDGRID_API_KEY` | SendGrid API key (Mail Send permission) |
+| `DEFAULT_FROM_EMAIL` | `adubeasarah44@gmail.com` (verified SendGrid sender) |
+| `SUPPORT_EMAIL` | `adubeasarah44@gmail.com` |
+| `SITE_URL` | `https://testa-chatbuddy.onrender.com` |
+| `GOOGLE_SITE_VERIFICATION` | (Optional) From [Google Search Console](https://search.google.com/search-console) HTML tag — see `GOOGLE_INDEXING.md` |
 | `SECRET_KEY` | Generate a long random string (or use Render “Generate”) |
 
 Render sets `RENDER_EXTERNAL_HOSTNAME` automatically (used for `ALLOWED_HOSTS` / CSRF).
@@ -42,7 +47,11 @@ Optional after first deploy:
 | `CSRF_TRUSTED_ORIGINS` | `https://your-app.onrender.com` |
 | `ALLOWED_HOSTS` | `your-app.onrender.com` (usually auto via Render host) |
 
-## 4. First deploy
+## 4. Google Search indexing
+
+After deploy, follow **[GOOGLE_INDEXING.md](GOOGLE_INDEXING.md)** to verify the site in Search Console and submit `sitemap.xml`.
+
+## 5. First deploy
 
 After deploy succeeds:
 
@@ -52,7 +61,7 @@ After deploy succeeds:
    python manage.py createsuperuser
    ```
 
-## 5. Limitations on free tier
+## 6. Limitations on free tier
 
 | Item | Note |
 |------|------|
@@ -61,7 +70,7 @@ After deploy succeeds:
 | **Uploaded files** | Stored on ephemeral disk — **re-upload after redeploy** unless you add persistent disk or S3 |
 | **FAISS index** | Rebuilt when users upload; index lost on redeploy without persistent storage |
 
-## 6. Troubleshooting
+## 7. Troubleshooting
 
 | Issue | Fix |
 |-------|-----|
@@ -75,6 +84,6 @@ After deploy succeeds:
 
 **Health check:** `GET /health/` returns JSON without touching the database.
 
-## 7. Custom domain (optional)
+## 8. Custom domain (optional)
 
 Render → your service → **Settings** → **Custom Domain** → add DNS records as shown.

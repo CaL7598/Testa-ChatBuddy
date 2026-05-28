@@ -3,18 +3,19 @@ from . import views
 from . import analytics_views
 from . import study_assistant_views
 from . import search_views
-from django.contrib.auth import views as auth_views
+from . import auth_views
 
 urlpatterns = [
     # Authentication
     path('register/', views.register, name='register'),
     path('logout/', views.logout_view, name='logout'),
     path('login/', views.login_view, name='login'),
-    path('password-reset/', views.forgot_password_view, name='password_reset'),
-    path('password-reset/', auth_views.PasswordResetView.as_view(template_name='forgot_password.html'), name='password_reset'),
-    path('password-reset/done/', auth_views.PasswordResetDoneView.as_view(template_name='password_reset_done.html'), name='password_reset_done'),
-    path('password-reset-confirm/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(template_name='password_reset_confirm.html'), name='password_reset_confirm'),
-    path('password-reset-complete/', auth_views.PasswordResetCompleteView.as_view(template_name='password_reset_complete.html'), name='password_reset_complete'),
+    path('password-reset/', auth_views.TestaPasswordResetView.as_view(), name='password_reset'),
+    path('password-reset/done/', auth_views.TestaPasswordResetDoneView.as_view(), name='password_reset_done'),
+    path('password-reset-confirm/<uidb64>/<token>/', auth_views.TestaPasswordResetConfirmView.as_view(), name='password_reset_confirm'),
+    path('password-reset-complete/', auth_views.TestaPasswordResetCompleteView.as_view(), name='password_reset_complete'),
+    path('verify-email/<uidb64>/<token>/', auth_views.verify_email, name='verify_email'),
+    path('resend-verification/', auth_views.resend_verification, name='resend_verification'),
     
     # Core Features
     path('health/', views.health, name='health'),

@@ -411,14 +411,32 @@ def upload_document_ajax(request):
 
 
 def register(request):
+    from django.contrib import messages
+
+    from .email_service import send_welcome_email
+    from .models import UserProfile
+
     if request.method == 'POST':
         form = UserRegisterForm(request.POST)
         if form.is_valid():
-            form.save()
+            user = form.save()
+            UserProfile.objects.create(user=user, email_verified=False)
+            try:
+                send_welcome_email(user, request)
+            except Exception:
+                messages.warning(
+                    request,
+                    'Account created, but we could not send the welcome email. '
+                    'Use “Resend verification” on the login page.',
+                )
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password1')
             user = authenticate(username=username, password=password)
             login(request, user)
+            messages.success(
+                request,
+                'Welcome to Testa StudyBuddy! Check your email to verify your account.',
+            )
             return redirect('question_answer')
     else:
         form = UserRegisterForm()
@@ -495,44 +513,6 @@ def vote(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
-
-from django.contrib.auth.forms import PasswordResetForm
-from django.contrib.auth import get_user_model
-from django.core.mail import send_mail
-from django.template.loader import render_to_string
-from django.utils.http import urlsafe_base64_encode
-from django.utils.encoding import force_bytes
-from django.contrib.auth.tokens import default_token_generator
-from django.urls import reverse
-from django.conf import settings
-
-User = get_user_model()
-
-def forgot_password_view(request):
-    if request.method == 'POST':
-        form = PasswordResetForm(request.POST)
-        if form.is_valid():
-            email = form.cleaned_data['email']
-            associated_users = User.objects.filter(email=email)
-            if associated_users.exists():
-                for user in associated_users:
-                    subject = "Password Reset Requested"
-                    email_template_name = "password_reset_email.txt"
-                    c = {
-                        "email": user.email,
-                        'domain': request.META['HTTP_HOST'],
-                        'site_name': 'Your Site',
-                        "uid": urlsafe_base64_encode(force_bytes(user.pk)),
-                        "user": user,
-                        'token': default_token_generator.make_token(user),
-                        'protocol': 'http',
-                    }
-                    email = render_to_string(email_template_name, c)
-                    send_mail(subject, email, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=False)
-            return redirect('password_reset_done')
-    else:
-        form = PasswordResetForm()
-    return render(request, 'forgot_password.html', {'form': form})
 
 def about(request):
     return render(request, 'about.html')

@@ -66,7 +66,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
- 'testa_app',
+    'django.contrib.sitemaps',
+    'testa_app',
 ]
 
 MIDDLEWARE = [
@@ -93,6 +94,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'testa_app.context_processors.seo',
+                'testa_app.context_processors.email_verification_banner',
             ],
         },
     },
@@ -220,3 +223,30 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# ─── Email (SendGrid via SMTP) ───────────────────────────────────────────────
+SITE_NAME = os.getenv('SITE_NAME', 'Testa StudyBuddy')
+SITE_URL = os.getenv('SITE_URL', '').strip()
+SEO_DESCRIPTION = os.getenv('SEO_DESCRIPTION', '').strip() or (
+    'Testa StudyBuddy is an AI-powered learning platform for students — '
+    'ask questions from your course materials, flashcards, quizzes, and study analytics.'
+)
+GOOGLE_SITE_VERIFICATION = os.getenv('GOOGLE_SITE_VERIFICATION', '').strip()
+SUPPORT_EMAIL = os.getenv('SUPPORT_EMAIL', '')
+
+_sendgrid_key = os.getenv('SENDGRID_API_KEY', '').strip()
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'adubeasarah44@gmail.com').strip()
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
+
+if _sendgrid_key:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = 'smtp.sendgrid.net'
+    EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+    EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() in ('true', '1', 'yes')
+    EMAIL_HOST_USER = 'apikey'
+    EMAIL_HOST_PASSWORD = _sendgrid_key
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# Password reset links valid for 24 hours
+PASSWORD_RESET_TIMEOUT = 86400

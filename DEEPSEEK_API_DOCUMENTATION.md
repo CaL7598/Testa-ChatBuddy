@@ -32,6 +32,8 @@ Embeddings (turning text into vectors for document search) are **not** sent to D
 
 ## 2. High-Level Architecture
 
+![DeepSeek API high-level architecture](assets/deepseek_api_architecture.png)
+
 ```mermaid
 flowchart TB
     subgraph User["User (browser)"]
@@ -90,6 +92,8 @@ The module `testa_app/bytez_client.py` is the **single integration point** for D
 | `EmbeddingClient` | **Separate** — local embeddings only; no DeepSeek calls |
 
 ### 3.2 Class diagram (logical structure)
+
+![DeepSeek client software structure](assets/deepseek_api_class_structure.png)
 
 ```mermaid
 classDiagram
@@ -183,6 +187,8 @@ The application extracts: `choices[0].message.content`.
 If `error` is present at the top level, the client raises an exception with that message.
 
 ### 4.4 Sequence: question with document context (RAG)
+
+![RAG question-answer sequence with DeepSeek](assets/deepseek_api_sequence_rag.png)
 
 ```mermaid
 sequenceDiagram
@@ -299,7 +305,23 @@ This split is important for academic documentation: the project uses **RAG** (re
 
 ---
 
-## 10. Related project files
+## 10. Diagram assets (PNG)
+
+Generated from this document for reports and slides. Regenerate with:
+
+```bash
+python scripts/generate_deepseek_diagrams.py
+```
+
+| File | Content |
+|------|---------|
+| `assets/deepseek_api_architecture.png` | Section 2 — layers, local vs cloud, Q&A paths |
+| `assets/deepseek_api_class_structure.png` | Section 3 — `BytezClient`, `EmbeddingClient`, callers |
+| `assets/deepseek_api_sequence_rag.png` | Section 4.4 — RAG Q&A sequence |
+
+---
+
+## 11. Related project files
 
 | File | Relevance |
 |------|-----------|
@@ -312,7 +334,7 @@ This split is important for academic documentation: the project uses **RAG** (re
 
 ---
 
-## 11. Suggested wording for thesis / report (optional)
+## 12. Suggested wording for thesis / report (optional)
 
 > *The generative component of Testa StudyBuddy is implemented using the DeepSeek large language model (`deepseek/deepseek-chat`), accessed through the OpenRouter API using an OpenAI-compatible chat completions interface. Retrieved document passages from a local FAISS vector index are injected into the user prompt so that answers are grounded in uploaded course material (retrieval-augmented generation). Auxiliary study features—quizzes, flashcards, and summaries—use the same model with task-specific system prompts and JSON-constrained outputs parsed server-side in Django.*
 

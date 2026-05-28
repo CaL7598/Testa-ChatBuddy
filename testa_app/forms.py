@@ -4,11 +4,23 @@ from django.contrib.auth.forms import UserCreationForm
 from .models import PDFDocument, Bookmark, BookmarkFolder
 
 class UserRegisterForm(UserCreationForm):
-    email = forms.EmailField()
+    email = forms.EmailField(
+        widget=forms.EmailInput(attrs={
+            'class': 'block w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-poppins',
+            'placeholder': 'you@university.edu',
+            'autocomplete': 'email',
+        }),
+    )
 
     class Meta:
         model = User
         fields = ['username', 'email', 'password1', 'password2']
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email', '').strip()
+        if User.objects.filter(email__iexact=email).exists():
+            raise forms.ValidationError('An account with this email already exists.')
+        return email
 
 
 

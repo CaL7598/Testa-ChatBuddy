@@ -1,24 +1,43 @@
 {% extends 'base.html' %}
 {% load static %}
+
+{% block title %}Testa StudyBuddy — AI Learning Platform for Students{% endblock %}
+{% block og_title %}Testa StudyBuddy — AI Learning Platform for Students{% endblock %}
+{% block twitter_title %}Testa StudyBuddy — AI Learning Platform for Students{% endblock %}
+{% block meta_description %}Testa StudyBuddy helps students learn with AI Q&amp;A from course PDFs, smart flashcards, quizzes, and study analytics. Free to register.{% endblock %}
+{% block og_description %}Testa StudyBuddy helps students learn with AI Q&amp;A from course PDFs, smart flashcards, quizzes, and study analytics.{% endblock %}
+
+{% block extra_head %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Testa StudyBuddy",
+  "description": "AI-powered learning platform for students with Q&A, flashcards, and quizzes.",
+  "applicationCategory": "EducationalApplication",
+  "operatingSystem": "Web",
+  "url": "{{ site_url|default:canonical_url }}"
+}
+</script>
+{% endblock %}
+
 {% block content %}
 
 <!-- ═══════════════════════════════════════
      HERO SECTION
 ══════════════════════════════════════════ -->
-<div class="relative min-h-screen w-full flex flex-col items-center justify-center overflow-hidden">
+<div class="relative min-h-screen w-full flex flex-col items-center justify-center overflow-hidden hero-mobile-wrap">
 
-    <!-- Background (gradient always visible; video optional on deploy) -->
-    <div class="absolute inset-0 z-0 bg-gradient-to-br from-indigo-950 via-violet-950 to-slate-950">
-        <video id="landing-video" autoplay muted loop playsinline preload="auto" class="w-full h-full object-cover scale-105 opacity-90">
+    <div class="video-bg-shell">
+        <video id="landing-video" class="video-bg-media" autoplay muted loop playsinline preload="auto" playsinline webkit-playsinline>
             <source src="{% static 'testa_app/videos/bckg.mp4' %}" type="video/mp4">
         </video>
-        <div class="absolute inset-0 bg-gradient-to-b from-black/75 via-black/55 to-black/80"></div>
-        <!-- Subtle indigo tint for brand alignment -->
-        <div class="absolute inset-0 bg-indigo-950/25"></div>
+        <div class="video-bg-overlay video-bg-overlay--hero"></div>
+        <div class="video-bg-tint"></div>
     </div>
 
     <!-- Hero Content -->
-    <div class="relative z-10 text-center px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto pt-24 pb-32">
+    <div class="relative z-10 text-center px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto pt-20 sm:pt-24 pb-20 sm:pb-32 w-full">
 
         <!-- Pill Badge -->
         <div class="hero-badge inline-flex items-center gap-2 px-5 py-2 rounded-full
@@ -105,7 +124,7 @@
 ══════════════════════════════════════════ -->
 <div class="bg-white border-b border-slate-100">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8 text-center mobile-stat-grid">
             <div class="group cursor-default">
                 <p class="font-montserrat font-black text-3xl sm:text-4xl text-indigo-600 group-hover:scale-110 transition-transform duration-300">AI</p>
                 <p class="font-poppins text-slate-500 text-sm mt-1 font-medium">Powered Answers</p>
