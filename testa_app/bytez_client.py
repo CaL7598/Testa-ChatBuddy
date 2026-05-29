@@ -31,6 +31,62 @@ _http_session: Optional[requests.Session] = None
 _bytez_client_lock = threading.Lock()
 _bytez_client_singleton: Optional["BytezClient"] = None
 
+_PLACEHOLDER_KEY_MARKERS = (
+    "your_openrouter",
+    "your_key_here",
+    "xxxxxxxx",
+    "paste_",
+    "sk-or-v1-your",
+)
+
+
+def _normalize_api_key(raw: Optional[str]) -> str:
+    if not raw:
+        return ""
+    key = str(raw).strip()
+    if len(key) >= 2 and key[0] == key[-1] and key[0] in "\"'":
+        key = key[1:-1].strip()
+    return key
+
+
+def _resolve_openrouter_api_key(explicit: Optional[str] = None) -> str:
+    key = _normalize_api_key(explicit or os.getenv("OPENROUTER_API_KEY"))
+    if key:
+        return key
+    try:
+        from django.conf import settings
+
+        return _normalize_api_key(getattr(settings, "OPENROUTER_API_KEY", None))
+    except Exception:
+        return ""
+
+
+def _openrouter_site_referer() -> str:
+    referer = _normalize_api_key(os.getenv("SITE_URL"))
+    if not referer:
+        try:
+            from django.conf import settings
+
+            referer = _normalize_api_key(getattr(settings, "SITE_URL", None))
+        except Exception:
+            referer = ""
+    if not referer:
+        host = os.getenv("RENDER_EXTERNAL_HOSTNAME", "").strip()
+        if host:
+            referer = f"https://{host}"
+    return referer.rstrip("/") or "https://testa-chatbuddy.onrender.com"
+
+
+def _format_api_error_detail(payload) -> str:
+    if isinstance(payload, dict):
+        nested = payload.get("error")
+        if isinstance(nested, dict):
+            return nested.get("message") or str(nested)
+        if nested:
+            return str(nested)
+        return payload.get("message") or str(payload)
+    return str(payload)
+
 
 def _get_http_session() -> requests.Session:
     """Shared Session for TLS connection reuse (lower latency on repeat calls)."""
@@ -70,9 +126,16 @@ class BytezClient:
     """Client for interacting with OpenRouter API (drop-in replacement for Bytez)"""
 
     def __init__(self, api_key: Optional[str] = None, model: Optional[str] = None):
-        self.api_key = api_key or os.getenv("OPENROUTER_API_KEY")
+        self.api_key = _resolve_openrouter_api_key(api_key)
         if not self.api_key:
-            raise ValueError("OPENROUTER_API_KEY not found. Please set it in your .env file.")
+            raise ValueError(
+                "OPENROUTER_API_KEY not found. Set it in .env (local) or Render Environment."
+            )
+        lowered = self.api_key.lower()
+        if any(marker in lowered for marker in _PLACEHOLDER_KEY_MARKERS):
+            raise ValueError(
+                "OPENROUTER_API_KEY looks like a placeholder. Add a real key from openrouter.ai/keys"
+            )
         self.model = model or DEFAULT_MODEL
         self._session = _get_http_session()
 
@@ -91,8 +154,8 @@ class BytezClient:
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
-            "HTTP-Referer": "https://testa-studybuddy.app",
-            "X-Title": "Testa studyBuddy",
+            "HTTP-Referer": _openrouter_site_referer(),
+            "X-Title": "Testa StudyBuddy",
         }
 
         data = {
@@ -170,9 +233,15 @@ class BytezClient:
             except requests.exceptions.HTTPError as e:
                 error_detail = ""
                 try:
-                    error_detail = response.json().get("error", response.text[:200])
+                    error_detail = _format_api_error_detail(response.json())
                 except Exception:
                     error_detail = response.text[:200] if hasattr(response, "text") else str(e)
+
+                logger.warning(
+                    "OpenRouter HTTP %s: %s",
+                    response.status_code,
+                    error_detail[:300] if error_detail else str(e),
+                )
 
                 if response.status_code < 500:
                     raise Exception(f"OpenRouter API error ({response.status_code}): {error_detail}")

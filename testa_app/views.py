@@ -116,9 +116,12 @@ def question_answer(request):
                     else:
                         answer = client.answer_question(user_question, context=context)
                 except ValueError as e2:
-                    # API key missing
                     _safe_log(f"API Key Error: {e2}")
-                    answer = "API configuration error. Please contact support."
+                    answer = (
+                        "OpenRouter API key is not configured correctly. "
+                        "Set OPENROUTER_API_KEY in Render Environment (or .env locally) "
+                        "with a valid key from https://openrouter.ai/keys"
+                    )
                 except Exception as e2:
                     _safe_log(f"Error with Bytez API: {e2}")
                     import traceback
@@ -136,8 +139,15 @@ def question_answer(request):
                                 answer = "⏱️ The AI service is taking too long to respond. This might be due to high traffic. Please try again in a moment."
                             elif "connection" in error_msg.lower() or "fetch failed" in error_msg.lower():
                                 answer = "🔌 Unable to connect to the AI service. Please check your internet connection and try again."
-                            elif "401" in error_msg or "403" in error_msg:
-                                answer = "🔐 Authentication error with the AI service. Please contact support."
+                            elif any(
+                                token in error_msg
+                                for token in ("401", "403", "402", "invalid", "user not found", "credit")
+                            ):
+                                answer = (
+                                    "OpenRouter rejected the API key (invalid, expired, or no credits). "
+                                    "Add or update OPENROUTER_API_KEY in Render → Environment, "
+                                    "then redeploy. Create a key at https://openrouter.ai/keys and add billing/credits."
+                                )
                             elif "500" in error_msg or "server error" in error_msg.lower() or "inference failed" in error_msg.lower():
                                 answer = "⚠️ The AI service is temporarily unavailable. The server is experiencing issues. Please try again in a few moments, or try rephrasing your question."
                             else:
