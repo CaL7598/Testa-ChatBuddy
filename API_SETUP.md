@@ -96,7 +96,9 @@ answer = client.answer_question("What is photosynthesis?", context=document_chun
 | Problem | What to check |
 |---------|----------------|
 | `OPENROUTER_API_KEY not found` | `.env` in project root, correct variable name |
-| 401 / 403 / "Authentication error" | Invalid, expired, or missing `OPENROUTER_API_KEY` on **Render → Environment**; add credits at [openrouter.ai/credits](https://openrouter.ai/credits) |
+| 401 / `User not found` | Key was **deleted or revoked** on OpenRouter — create a **new** key at [openrouter.ai/keys](https://openrouter.ai/keys) and update Render + `.env` |
+| 401 / 403 / "Authentication error" | Invalid or missing `OPENROUTER_API_KEY`; add credits at [openrouter.ai/credits](https://openrouter.ai/credits) |
+| Test on Render | Shell: `python manage.py check_openrouter` |
 | Works locally, fails on Render | Key is only in local `.env` — copy the same `OPENROUTER_API_KEY` to Render and redeploy |
 | Timeout | Network; try again; large `max_tokens` requests take longer |
 | `sentence-transformers not installed` | `pip install sentence-transformers` (embeddings only) |

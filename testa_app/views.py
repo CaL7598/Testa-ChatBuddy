@@ -139,14 +139,21 @@ def question_answer(request):
                                 answer = "⏱️ The AI service is taking too long to respond. This might be due to high traffic. Please try again in a moment."
                             elif "connection" in error_msg.lower() or "fetch failed" in error_msg.lower():
                                 answer = "🔌 Unable to connect to the AI service. Please check your internet connection and try again."
+                            elif "user not found" in error_msg.lower():
+                                answer = (
+                                    "Your OpenRouter API key is no longer valid (OpenRouter returns "
+                                    "'User not found'). Create a new key at https://openrouter.ai/keys, "
+                                    "paste it into Render → Environment as OPENROUTER_API_KEY, then redeploy."
+                                )
                             elif any(
                                 token in error_msg
-                                for token in ("401", "403", "402", "invalid", "user not found", "credit")
+                                for token in ("401", "403", "402", "invalid", "credit")
                             ):
                                 answer = (
                                     "OpenRouter rejected the API key (invalid, expired, or no credits). "
-                                    "Add or update OPENROUTER_API_KEY in Render → Environment, "
-                                    "then redeploy. Create a key at https://openrouter.ai/keys and add billing/credits."
+                                    "Create a new key at https://openrouter.ai/keys, update "
+                                    "OPENROUTER_API_KEY in Render → Environment, add credits if needed, "
+                                    "then redeploy."
                                 )
                             elif "500" in error_msg or "server error" in error_msg.lower() or "inference failed" in error_msg.lower():
                                 answer = "⚠️ The AI service is temporarily unavailable. The server is experiencing issues. Please try again in a few moments, or try rephrasing your question."
