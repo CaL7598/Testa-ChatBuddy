@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.contrib.admin import AdminSite
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
 from django.db.models import Count
@@ -34,7 +35,8 @@ admin.site.site_title = "Testa Admin"
 admin.site.index_title = "Platform management"
 
 
-def _admin_dashboard_stats(request):
+def get_admin_dashboard_stats():
+    """Used by admin index template tag (no request needed)."""
     return {
         "users": User.objects.count(),
         "questions": QuestionAnswer.objects.count(),
@@ -45,18 +47,36 @@ def _admin_dashboard_stats(request):
     }
 
 
-_original_each_context = admin.site.each_context
-
-
-def _each_context_with_stats(request):
-    context = _original_each_context(request)
-    if request.path == "/admin/" or request.path.rstrip("/") == "/admin":
-        context["admin_stats"] = _admin_dashboard_stats(request)
-    return context
-
-
-admin.site.each_context = _each_context_with_stats
 admin.site.index_template = "admin/custom_index.html"
+
+
+class TestaModelAdmin(admin.ModelAdmin):
+    """Safer defaults for production Postgres + Render."""
+
+    list_per_page = 25
+    show_full_result_count = False
+
+
+def _patch_admin_each_context():
+    """Inject dashboard stats on index only; avoid broken bound-method monkey-patches."""
+    if getattr(admin.site, "_testa_each_context_patched", False):
+        return
+
+    def each_context_with_stats(request):
+        context = AdminSite.each_context(admin.site, request)
+        path = request.path.rstrip("/")
+        if path == "/admin":
+            try:
+                context["admin_stats"] = get_admin_dashboard_stats()
+            except Exception:
+                context["admin_stats"] = {}
+        return context
+
+    admin.site.each_context = each_context_with_stats
+    admin.site._testa_each_context_patched = True
+
+
+_patch_admin_each_context()
 
 
 # --- Inlines ---
@@ -69,7 +89,7 @@ class QuizQuestionInline(admin.TabularInline):
 
 # --- Model admins ---
 @admin.register(QuestionAnswer)
-class QuestionAnswerAdmin(admin.ModelAdmin):
+class QuestionAnswerAdmin(TestaModelAdmin):
     list_display = (
         "id",
         "user",
@@ -85,35 +105,36 @@ class QuestionAnswerAdmin(admin.ModelAdmin):
     readonly_fields = ("created_at", "response_time")
     raw_id_fields = ("user", "source_document")
     filter_horizontal = ("tags",)
-    date_hierarchy = "created_at"
-    list_per_page = 25
 
     @admin.display(description="Question")
     def question_preview(self, obj):
+        if not obj or not obj.question:
+            return "—"
         text = obj.question[:80] + ("…" if len(obj.question) > 80 else "")
         return text
 
     @admin.display(description="Votes")
     def votes_display(self, obj):
+        if not obj:
+            return "—"
         return format_html(
             '<span style="color:#16a34a">↑{}</span> <span style="color:#dc2626">↓{}</span>',
-            obj.upvotes,
-            obj.downvotes,
+            obj.upvotes or 0,
+            obj.downvotes or 0,
         )
 
 
 @admin.register(PDFDocument)
-class PDFDocumentAdmin(admin.ModelAdmin):
+class PDFDocumentAdmin(TestaModelAdmin):
     list_display = ("id", "title", "course", "difficulty_level", "uploaded_by", "uploaded_at")
     list_filter = ("difficulty_level", "course", "uploaded_at")
     search_fields = ("title", "file", "course", "uploaded_by__username")
     readonly_fields = ("uploaded_at",)
     raw_id_fields = ("uploaded_by",)
-    date_hierarchy = "uploaded_at"
 
 
 @admin.register(UserAnalytics)
-class UserAnalyticsAdmin(admin.ModelAdmin):
+class UserAnalyticsAdmin(TestaModelAdmin):
     list_display = (
         "user",
         "total_questions",
@@ -129,16 +150,15 @@ class UserAnalyticsAdmin(admin.ModelAdmin):
 
 
 @admin.register(DailyActivity)
-class DailyActivityAdmin(admin.ModelAdmin):
+class DailyActivityAdmin(TestaModelAdmin):
     list_display = ("user", "date", "questions_asked", "study_minutes", "quizzes_completed")
     list_filter = ("date",)
     search_fields = ("user__username",)
-    date_hierarchy = "date"
     raw_id_fields = ("user",)
 
 
 @admin.register(TopicMastery)
-class TopicMasteryAdmin(admin.ModelAdmin):
+class TopicMasteryAdmin(TestaModelAdmin):
     list_display = ("user", "course", "topic", "mastery_level", "questions_answered", "last_practiced")
     list_filter = ("course",)
     search_fields = ("user__username", "course", "topic")
@@ -146,16 +166,15 @@ class TopicMasteryAdmin(admin.ModelAdmin):
 
 
 @admin.register(StudySession)
-class StudySessionAdmin(admin.ModelAdmin):
+class StudySessionAdmin(TestaModelAdmin):
     list_display = ("user", "course", "started_at", "duration", "questions_asked")
     list_filter = ("course", "started_at")
     search_fields = ("user__username", "course")
-    date_hierarchy = "started_at"
     raw_id_fields = ("user",)
 
 
 @admin.register(Recommendation)
-class RecommendationAdmin(admin.ModelAdmin):
+class RecommendationAdmin(TestaModelAdmin):
     list_display = ("title", "user", "recommendation_type", "priority", "is_completed", "created_at")
     list_filter = ("recommendation_type", "is_completed", "priority")
     search_fields = ("title", "user__username", "related_course", "related_topic")
@@ -163,7 +182,7 @@ class RecommendationAdmin(admin.ModelAdmin):
 
 
 @admin.register(Quiz)
-class QuizAdmin(admin.ModelAdmin):
+class QuizAdmin(TestaModelAdmin):
     list_display = ("title", "course", "topic", "difficulty", "created_by", "created_at")
     list_filter = ("difficulty", "course")
     search_fields = ("title", "course", "topic", "created_by__username")
@@ -172,7 +191,7 @@ class QuizAdmin(admin.ModelAdmin):
 
 
 @admin.register(QuizQuestion)
-class QuizQuestionAdmin(admin.ModelAdmin):
+class QuizQuestionAdmin(TestaModelAdmin):
     list_display = ("quiz", "order", "question_type", "question_preview", "points")
     list_filter = ("question_type",)
     search_fields = ("question_text", "quiz__title")
@@ -184,16 +203,15 @@ class QuizQuestionAdmin(admin.ModelAdmin):
 
 
 @admin.register(QuizAttempt)
-class QuizAttemptAdmin(admin.ModelAdmin):
+class QuizAttemptAdmin(TestaModelAdmin):
     list_display = ("user", "quiz", "score", "total_points", "started_at", "completed_at")
     list_filter = ("started_at",)
     search_fields = ("user__username", "quiz__title")
-    date_hierarchy = "started_at"
     raw_id_fields = ("user", "quiz")
 
 
 @admin.register(Flashcard)
-class FlashcardAdmin(admin.ModelAdmin):
+class FlashcardAdmin(TestaModelAdmin):
     list_display = ("user", "course", "topic", "front_preview", "confidence_level", "review_count")
     list_filter = ("confidence_level", "course")
     search_fields = ("front", "back", "user__username", "course", "topic")
@@ -205,14 +223,14 @@ class FlashcardAdmin(admin.ModelAdmin):
 
 
 @admin.register(Vote)
-class VoteAdmin(admin.ModelAdmin):
+class VoteAdmin(TestaModelAdmin):
     list_display = ("user", "question_answer", "vote_type", "created_at")
     list_filter = ("vote_type",)
     raw_id_fields = ("user", "question_answer")
 
 
 @admin.register(Tag)
-class TagAdmin(admin.ModelAdmin):
+class TagAdmin(TestaModelAdmin):
     list_display = ("name", "slug", "color_display", "use_count", "created_at")
     search_fields = ("name", "slug")
     prepopulated_fields = {"slug": ("name",)}
@@ -228,7 +246,7 @@ class TagAdmin(admin.ModelAdmin):
 
 
 @admin.register(Bookmark)
-class BookmarkAdmin(admin.ModelAdmin):
+class BookmarkAdmin(TestaModelAdmin):
     list_display = ("user", "title", "is_favorite", "folder", "created_at")
     list_filter = ("is_favorite",)
     search_fields = ("title", "user__username", "notes")
@@ -236,17 +254,16 @@ class BookmarkAdmin(admin.ModelAdmin):
 
 
 @admin.register(BookmarkFolder)
-class BookmarkFolderAdmin(admin.ModelAdmin):
+class BookmarkFolderAdmin(TestaModelAdmin):
     list_display = ("name", "user", "icon", "parent", "created_at")
     search_fields = ("name", "user__username")
     raw_id_fields = ("user", "parent")
 
 
 @admin.register(SearchHistory)
-class SearchHistoryAdmin(admin.ModelAdmin):
+class SearchHistoryAdmin(TestaModelAdmin):
     list_display = ("user", "query_preview", "results_count", "searched_at")
     search_fields = ("query", "user__username")
-    date_hierarchy = "searched_at"
     raw_id_fields = ("user", "clicked_result")
 
     @admin.display(description="Query")
@@ -255,21 +272,21 @@ class SearchHistoryAdmin(admin.ModelAdmin):
 
 
 @admin.register(SavedSearch)
-class SavedSearchAdmin(admin.ModelAdmin):
+class SavedSearchAdmin(TestaModelAdmin):
     list_display = ("name", "user", "use_count", "last_used")
     search_fields = ("name", "query", "user__username")
     raw_id_fields = ("user",)
 
 
 @admin.register(RecentSearch)
-class RecentSearchAdmin(admin.ModelAdmin):
+class RecentSearchAdmin(TestaModelAdmin):
     list_display = ("user", "query", "result_count", "last_searched")
     search_fields = ("query", "user__username")
     raw_id_fields = ("user",)
 
 
 @admin.register(ExportHistory)
-class ExportHistoryAdmin(admin.ModelAdmin):
+class ExportHistoryAdmin(TestaModelAdmin):
     list_display = ("user", "export_type", "format", "created_at")
     list_filter = ("export_type", "format")
     raw_id_fields = ("user",)
@@ -287,7 +304,7 @@ class UserProfileInline(admin.StackedInline):
 
 
 @admin.register(UserProfile)
-class UserProfileAdmin(admin.ModelAdmin):
+class UserProfileAdmin(TestaModelAdmin):
     list_display = ('user', 'email_verified', 'email_verified_at')
     list_filter = ('email_verified',)
     search_fields = ('user__username', 'user__email')

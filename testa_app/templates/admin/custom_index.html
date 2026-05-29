@@ -1,5 +1,51 @@
 {% extends "admin/index.html" %}
-{% load i18n %}
+{% load i18n static admin_dashboard %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'testa_app/css/admin_custom.css' %}">
+<style>
+  .testa-admin-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 16px;
+    margin: 0 0 28px;
+  }
+  .testa-admin-stat {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 18px 20px;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+  }
+  .testa-admin-stat-value {
+    font-weight: 800;
+    font-size: 1.75rem;
+    color: #4f46e5;
+    line-height: 1.1;
+  }
+  .testa-admin-stat-label {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin-top: 6px;
+  }
+  .testa-admin-quick {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 16px;
+  }
+  .testa-admin-quick a {
+    display: inline-flex;
+    padding: 8px 14px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff !important;
+    text-decoration: none !important;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+  }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="testa-admin-home">
@@ -15,7 +61,7 @@
         </div>
     </div>
 
-    {% if admin_stats %}
+    {% admin_dashboard_stats as admin_stats %}
     <div class="testa-admin-stats">
         <div class="testa-admin-stat">
             <div class="testa-admin-stat-value">{{ admin_stats.users }}</div>
@@ -42,7 +88,6 @@
             <div class="testa-admin-stat-label">Quiz attempts</div>
         </div>
     </div>
-    {% endif %}
 </div>
 
 {{ block.super }}

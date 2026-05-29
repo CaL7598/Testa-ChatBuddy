@@ -129,11 +129,13 @@ class DailyActivity(models.Model):
     flashcards_reviewed = models.IntegerField(default=0)
     
     class Meta:
+        verbose_name = 'daily activity'
+        verbose_name_plural = 'daily activities'
         unique_together = ('user', 'date')
         indexes = [
             models.Index(fields=['user', 'date']),
         ]
-    
+
     def __str__(self):
         return f"{self.user.username} - {self.date}"
 
@@ -389,7 +391,11 @@ class ExportHistory(models.Model):
     filters_applied = models.JSONField(default=dict, blank=True)
     file_path = models.CharField(max_length=500, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    
+
+    class Meta:
+        verbose_name = 'export history'
+        verbose_name_plural = 'export history'
+
     def __str__(self):
         return f"{self.user.username} - {self.export_type} - {self.format}"
 
