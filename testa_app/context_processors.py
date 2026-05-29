@@ -25,9 +25,15 @@ def seo(request):
 def email_verification_banner(request):
     if not request.user.is_authenticated:
         return {}
-    from .models import UserProfile
+    if request.path.startswith('/admin/'):
+        return {}
+    try:
+        from django.db import DatabaseError
+        from .models import UserProfile
 
-    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+        profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    except DatabaseError:
+        return {}
     if profile.email_verified:
         return {}
     return {'show_email_verification_banner': True}

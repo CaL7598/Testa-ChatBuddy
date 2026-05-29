@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
+from django.db.models import Count
 from django.utils.html import format_html
 
 from .models import (
@@ -22,6 +23,7 @@ from .models import (
     Tag,
     TopicMastery,
     UserAnalytics,
+    UserProfile,
     Vote,
 )
 
@@ -54,7 +56,7 @@ def _each_context_with_stats(request):
 
 
 admin.site.each_context = _each_context_with_stats
-admin.site.index_template = "admin/index.html"
+admin.site.index_template = "admin/custom_index.html"
 
 
 # --- Inlines ---
@@ -277,11 +279,30 @@ class ExportHistoryAdmin(admin.ModelAdmin):
 admin.site.unregister(User)
 
 
+class UserProfileInline(admin.StackedInline):
+    model = UserProfile
+    can_delete = False
+    extra = 0
+    fields = ('email_verified', 'email_verified_at')
+
+
+@admin.register(UserProfile)
+class UserProfileAdmin(admin.ModelAdmin):
+    list_display = ('user', 'email_verified', 'email_verified_at')
+    list_filter = ('email_verified',)
+    search_fields = ('user__username', 'user__email')
+    raw_id_fields = ('user',)
+
+
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
+    inlines = (UserProfileInline,)
     list_display = ("username", "email", "first_name", "last_name", "is_staff", "date_joined", "qa_count")
     list_filter = ("is_staff", "is_superuser", "is_active", "date_joined")
 
+    def get_queryset(self, request):
+        return super().get_queryset(request).annotate(_qa_count=Count('questionanswer'))
+
     @admin.display(description="Q&A count")
     def qa_count(self, obj):
-        return obj.questionanswer_set.count()
+        return getattr(obj, '_qa_count', 0)
