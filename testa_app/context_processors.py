@@ -5,6 +5,8 @@ _DEFAULT_DESCRIPTION = (
 
 
 def seo(request):
+    if request.path.startswith('/admin/'):
+        return {}
     from django.conf import settings
 
     site_url = getattr(settings, 'SITE_URL', '').strip().rstrip('/')

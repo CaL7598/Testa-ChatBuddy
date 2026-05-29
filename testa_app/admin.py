@@ -1,5 +1,4 @@
 from django.contrib import admin
-from django.contrib.admin import AdminSite
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
 from django.db.models import Count
@@ -56,27 +55,15 @@ class TestaModelAdmin(admin.ModelAdmin):
     list_per_page = 25
     show_full_result_count = False
 
+    def changelist_view(self, request, extra_context=None):
+        import logging
 
-def _patch_admin_each_context():
-    """Inject dashboard stats on index only; avoid broken bound-method monkey-patches."""
-    if getattr(admin.site, "_testa_each_context_patched", False):
-        return
-
-    def each_context_with_stats(request):
-        context = AdminSite.each_context(admin.site, request)
-        path = request.path.rstrip("/")
-        if path == "/admin":
-            try:
-                context["admin_stats"] = get_admin_dashboard_stats()
-            except Exception:
-                context["admin_stats"] = {}
-        return context
-
-    admin.site.each_context = each_context_with_stats
-    admin.site._testa_each_context_patched = True
-
-
-_patch_admin_each_context()
+        logger = logging.getLogger(__name__)
+        try:
+            return super().changelist_view(request, extra_context=extra_context)
+        except Exception:
+            logger.exception("Admin changelist failed for %s", self.model._meta.label)
+            raise
 
 
 # --- Inlines ---
