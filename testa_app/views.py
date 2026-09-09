@@ -16,6 +16,7 @@ from .utils import (
     get_file_text, get_text_chunks, get_vector_store, 
     load_vector_store, get_conversational_chain
 )
+from .document_retrieval import retrieve_context, store_document_text
 from dotenv import load_dotenv
 from datetime import datetime, date
 from django.utils import timezone
@@ -89,19 +90,34 @@ def question_answer(request):
             
             _safe_log("Received question: " + (user_question[:200] if user_question else ""))
 
-            # Load vector store and search (uses absolute path; includes all uploaded docs)
+            # Retrieve from the user's uploaded documents. This path works with
+            # or without the ML stack, which is disabled in production.
             answer = None
             context = ""
+            sources = []
             try:
-                vector_store = load_vector_store()
-                if vector_store:
-                    docs = vector_store.similarity_search(user_question, k=3)
-                    context = "\n\n".join([doc.page_content for doc in docs]).strip()
-                    if context:
-                        chain = get_conversational_chain()
-                        answer = chain(context, user_question)
+                context, sources = retrieve_context(request.user, user_question)
+                if sources:
+                    _safe_log("Document context from: " + ", ".join(sources))
             except Exception as e:
-                _safe_log(f"Error with vector store: {e}")
+                _safe_log(f"Error retrieving document context: {e}")
+
+            # Supplement with the FAISS index when it is available (local dev).
+            if not context:
+                try:
+                    vector_store = load_vector_store()
+                    if vector_store:
+                        docs = vector_store.similarity_search(user_question, k=3)
+                        context = "\n\n".join([doc.page_content for doc in docs]).strip()
+                except Exception as e:
+                    _safe_log(f"Error with vector store: {e}")
+
+            if context:
+                try:
+                    chain = get_conversational_chain()
+                    answer = chain(context, user_question)
+                except Exception as e:
+                    _safe_log(f"Error answering from document context: {e}")
             
             # If no answer from document context, use Bytez with clear instructions when no context
             if not answer:
@@ -111,7 +127,7 @@ def question_answer(request):
                         # No uploaded docs or no relevant passages — avoid "I don't have access to files"
                         answer = client.answer_question(
                             user_question,
-                            context="No document context was found. Reply helpfully: if they asked about an uploaded document, say you couldn't find relevant content in their uploaded documents and suggest they upload the file first or rephrase; otherwise answer from your general knowledge. Do not say you cannot access files or external documents."
+                            guidance="No excerpts from the student's uploaded documents matched this question. If they asked about an uploaded document, say you could not find relevant content in their uploaded documents and suggest they upload the file or rephrase; otherwise answer from your general knowledge. Do not say you cannot access files or external documents."
                         )
                     else:
                         answer = client.answer_question(user_question, context=context)
@@ -382,7 +398,15 @@ def pdf_upload(request):
             pdf_doc.save()
             
             file = request.FILES['file']
-            raw_text = get_file_text(file)
+            raw_text = store_document_text(pdf_doc, file)
+            if not raw_text:
+                messages.warning(
+                    request,
+                    f'"{pdf_doc.title}" was uploaded, but no readable text could be '
+                    'extracted from it (it may be a scanned or image-only file), so '
+                    'questions about it cannot be answered.'
+                )
+                return redirect('pdf_upload')
             text_chunks = get_text_chunks(raw_text)
             get_vector_store(text_chunks)
             messages.success(request, f'Successfully uploaded "{pdf_doc.title}"! You can now ask questions about this document.')
@@ -406,14 +430,20 @@ def upload_document_ajax(request):
     if ext not in allowed_extensions:
         return JsonResponse({'success': False, 'error': 'Unsupported file type. Use PDF, DOCX, PPTX, or TXT.'}, status=400)
     try:
-        raw_text = get_file_text(file)
-        text_chunks = get_text_chunks(raw_text)
         pdf_doc = PDFDocument(
             file=file,
             title=file.name,
             uploaded_by=request.user
         )
         pdf_doc.save()
+        raw_text = store_document_text(pdf_doc, file)
+        if not raw_text:
+            return JsonResponse({
+                'success': False,
+                'error': 'No readable text could be extracted from this file. '
+                         'It may be scanned or image-only.'
+            }, status=400)
+        text_chunks = get_text_chunks(raw_text)
         get_vector_store(text_chunks)
         return JsonResponse({
             'success': True,

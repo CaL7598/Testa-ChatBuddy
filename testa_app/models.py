@@ -80,6 +80,11 @@ class PDFDocument(models.Model):
     title = models.CharField(max_length=200, blank=True)
     course = models.CharField(max_length=100, blank=True)
     difficulty_level = models.CharField(max_length=20, choices=DIFFICULTY_CHOICES, blank=True)
+    content_text = models.TextField(
+        blank=True,
+        default='',
+        help_text="Extracted text, used to answer questions about this document",
+    )
     
     def __str__(self):
         return self.title or self.file.name

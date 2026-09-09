@@ -28,8 +28,8 @@ def generate_quiz(request):
         document = get_object_or_404(PDFDocument, id=document_id)
         
         # Extract text from document
-        from .utils import get_file_text
-        document_text = get_file_text(document.file)
+        from .document_retrieval import get_document_text
+        document_text = get_document_text(document)
         
         # Generate quiz using AI
         generator = QuizGenerator()
@@ -195,8 +195,8 @@ def generate_flashcards(request):
         document = get_object_or_404(PDFDocument, id=document_id)
         
         # Extract text
-        from .utils import get_file_text
-        document_text = get_file_text(document.file)
+        from .document_retrieval import get_document_text
+        document_text = get_document_text(document)
         
         # Generate flashcards
         generator = FlashcardGenerator()
@@ -301,8 +301,8 @@ def generate_summary(request):
         document = get_object_or_404(PDFDocument, id=document_id)
         
         # Extract text
-        from .utils import get_file_text
-        document_text = get_file_text(document.file)
+        from .document_retrieval import get_document_text
+        document_text = get_document_text(document)
         
         # Generate summary
         generator = SummaryGenerator()
@@ -333,8 +333,8 @@ def generate_study_guide(request, doc_id):
     topic = request.GET.get('topic', document.topic or 'General')
     
     # Extract text
-    from .utils import get_file_text
-    document_text = get_file_text(document.file)
+    from .document_retrieval import get_document_text
+    document_text = get_document_text(document)
     
     # Generate study guide
     generator = SummaryGenerator()

@@ -283,13 +283,16 @@ class BytezClient:
 
         return self.chat(messages, **kwargs)
 
-    def answer_question(self, question: str, context: str = None, **kwargs) -> str:
+    def answer_question(self, question: str, context: str = None, guidance: str = None, **kwargs) -> str:
         """
         Answer a question, optionally with context
 
         Args:
             question: The question to answer
-            context: Optional context to base answer on
+            context: Optional document excerpts to base the answer on
+            guidance: Optional instructions for how to respond. Use this instead
+                of stuffing directions into ``context``, which is presented to
+                the model as real document content.
             **kwargs: Additional parameters
 
         Returns:
@@ -302,15 +305,25 @@ Provide helpful explanations suitable for students from any academic discipline.
 When you include tables, use GitHub-flavored markdown pipe tables: (1) one header row with pipes, (2) exactly ONE separator row on the next line using only pipes and dashes (e.g. | --- | --- | --- |) with the same number of columns as the header — never split the separator across multiple lines, (3) then body rows. Do not use ASCII box-drawing (+---+) or multi-line dash separators."""
 
         if context:
-            prompt = f"""Context:
+            prompt = f"""The following excerpts come from a document the student
+uploaded. Each excerpt is labelled with the file it came from. Treat this as the
+document's actual content — you do have access to it.
+
 {context}
 
 Question:
 {question}
 
-Provide a clear, educational answer with examples where appropriate."""
+Answer using the excerpts above, referring to the document by name where it
+helps. Never claim you cannot access the document or its file. If the excerpts
+genuinely do not cover the question, say which part is missing and answer the
+rest from the excerpts. Provide a clear, educational answer with examples where
+appropriate."""
         else:
             prompt = f"Question: {question}\n\nProvide a clear, educational answer."
+
+        if guidance:
+            system_prompt = f"{system_prompt}\n\n{guidance}"
 
         return self.generate_text(
             prompt,
