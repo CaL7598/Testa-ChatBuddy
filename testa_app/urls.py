@@ -16,6 +16,7 @@ urlpatterns = [
     path('password-reset-complete/', auth_views.TestaPasswordResetCompleteView.as_view(), name='password_reset_complete'),
     path('verify-email/<uidb64>/<token>/', auth_views.verify_email, name='verify_email'),
     path('resend-verification/', auth_views.resend_verification, name='resend_verification'),
+    path('dismiss-verification-banner/', auth_views.dismiss_verification_banner, name='dismiss_verification_banner'),
     
     # Core Features
     path('health/', views.health, name='health'),

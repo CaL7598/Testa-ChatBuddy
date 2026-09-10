@@ -10,6 +10,11 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     email_verified = models.BooleanField(default=False)
     email_verified_at = models.DateTimeField(null=True, blank=True)
+    verification_banner_dismissed = models.BooleanField(
+        default=False,
+        help_text="Set when the user closes the verify-your-email banner. "
+                  "Verification is optional, so the banner stays closed.",
+    )
 
     class Meta:
         verbose_name = 'user profile'

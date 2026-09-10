@@ -287,13 +287,13 @@ class UserProfileInline(admin.StackedInline):
     model = UserProfile
     can_delete = False
     extra = 0
-    fields = ('email_verified', 'email_verified_at')
+    fields = ('email_verified', 'email_verified_at', 'verification_banner_dismissed')
 
 
 @admin.register(UserProfile)
 class UserProfileAdmin(TestaModelAdmin):
-    list_display = ('user', 'email_verified', 'email_verified_at')
-    list_filter = ('email_verified',)
+    list_display = ('user', 'email_verified', 'email_verified_at', 'verification_banner_dismissed')
+    list_filter = ('email_verified', 'verification_banner_dismissed')
     search_fields = ('user__username', 'user__email')
     raw_id_fields = ('user',)
 

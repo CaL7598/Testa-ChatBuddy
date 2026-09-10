@@ -8,10 +8,13 @@ from django.contrib.auth.views import (
     PasswordResetDoneView,
     PasswordResetView,
 )
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils.encoding import force_str
-from django.utils.http import urlsafe_base64_decode
+from django.utils.http import url_has_allowed_host_and_scheme, urlsafe_base64_decode
+from django.views.decorators.http import require_POST
 
 from .email_service import get_site_url, send_verification_email
 from .models import UserProfile
@@ -112,3 +115,28 @@ def resend_verification(request):
     return render(request, 'testa_app/auth/resend_verification.html', {
         'site_url': get_site_url(request),
     })
+
+
+@login_required
+@require_POST
+def dismiss_verification_banner(request):
+    """Close the verify-your-email banner for good.
+
+    Email verification is optional — nothing in the app is gated on it — so a
+    student who closes the reminder should not see it again.
+    """
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    if not profile.verification_banner_dismissed:
+        profile.verification_banner_dismissed = True
+        profile.save(update_fields=['verification_banner_dismissed'])
+
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'success': True})
+
+    # No-JS fallback: return the student to the page they were on.
+    next_url = request.POST.get('next') or request.META.get('HTTP_REFERER', '')
+    if next_url and url_has_allowed_host_and_scheme(
+        next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        return redirect(next_url)
+    return redirect('question_answer')

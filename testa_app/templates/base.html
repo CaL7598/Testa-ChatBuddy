@@ -287,16 +287,50 @@
         <!-- Main Content -->
         <main class="flex-1 app-main">
             {% if show_email_verification_banner %}
-            <div class="bg-amber-50 border-b border-amber-200 px-4 py-3">
+            <div id="email-verification-banner" class="bg-amber-50 border-b border-amber-200 px-4 py-3">
                 <div class="max-w-4xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <p class="font-poppins text-sm text-amber-900">
-                        <strong>Verify your email</strong> — check your inbox or request a new link.
+                        <strong>Verify your email</strong> &mdash; optional, but it lets us send you
+                        password resets and account notices.
                     </p>
-                    <a href="{% url 'resend_verification' %}" class="font-poppins text-sm font-semibold text-indigo-600 hover:underline whitespace-nowrap">
-                        Resend verification
-                    </a>
+                    <div class="flex items-center gap-3 shrink-0">
+                        <a href="{% url 'resend_verification' %}" class="font-poppins text-sm font-semibold text-indigo-600 hover:underline whitespace-nowrap">
+                            Resend verification
+                        </a>
+                        <form method="post" action="{% url 'dismiss_verification_banner' %}" id="dismiss-verification-form" class="flex">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                            <button type="submit"
+                                    class="p-1.5 rounded-md text-amber-700 hover:text-amber-900 hover:bg-amber-100 transition-colors"
+                                    aria-label="Dismiss email verification reminder"
+                                    title="Dismiss">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
+            <script>
+                // Hide the banner at once and record the dismissal in the
+                // background; without JS the form posts and redirects back.
+                (function () {
+                    var form = document.getElementById('dismiss-verification-form');
+                    var banner = document.getElementById('email-verification-banner');
+                    if (!form || !banner) { return; }
+                    form.addEventListener('submit', function (event) {
+                        event.preventDefault();
+                        banner.remove();
+                        fetch(form.action, {
+                            method: 'POST',
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                            body: new FormData(form),
+                            credentials: 'same-origin'
+                        }).catch(function () { /* reappears next load; harmless */ });
+                    });
+                })();
+            </script>
             {% endif %}
             {% block content %}
             {% endblock %}

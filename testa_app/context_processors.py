@@ -36,6 +36,7 @@ def email_verification_banner(request):
         profile, _ = UserProfile.objects.get_or_create(user=request.user)
     except DatabaseError:
         return {}
-    if profile.email_verified:
+    # Verification is optional: once the banner is closed it stays closed.
+    if profile.email_verified or profile.verification_banner_dismissed:
         return {}
     return {'show_email_verification_banner': True}
